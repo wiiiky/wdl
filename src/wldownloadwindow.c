@@ -1,0 +1,401 @@
+/*
+ * Copyright (C) 2014-2014 Wiky L(wiiiky@yeah.net)
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3 of the License, or (at your option) any later version.
+	 *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include "wldownloadwindow.h"
+
+
+#define WL_DL_WINDOW_TITLE  "wdl"
+#define WL_DL_WINDOW_WIDTH  (600)
+#define WL_DL_WINDOW_HEIGHT (420)
+
+enum {
+	WL_DL_WINDOW_PROPERTY_TITLE = 1,
+};
+
+G_DEFINE_TYPE(WlDownloadWindow, wl_download_window, GTK_TYPE_WINDOW);
+
+static void wl_download_window_getter(GObject * object, guint property_id,
+									  GValue * value, GParamSpec * ps);
+static void wl_download_window_setter(GObject * object, guint property_id,
+									  const GValue * value,
+									  GParamSpec * ps);
+
+static void wl_dl_window_open_url(GtkMenuItem * item, gpointer data);
+static void wl_dl_window_show_about_dialog(GtkMenuItem * item,
+										   gpointer data);
+static void wl_dl_window_start_download(GtkToolButton * button,
+										gpointer data);
+static void wl_dl_window_pause_download(GtkToolButton * button,
+										gpointer data);
+static void wl_dl_window_remove_download(GtkToolButton * button,
+										 gpointer data);
+
+static void wl_dl_window_destroy(GtkWidget * window, gpointer data);
+static GtkWidget *wl_dl_window_about_dialog(void);
+/* 返回TRUE表示覆盖，FALSE则取消 */
+static gboolean wl_dl_window_overwrite_dialog(WlDownloadWindow * window,
+											  const gchar * path);
+
+
+static void wl_download_window_init(WlDownloadWindow * window)
+{
+	gtk_window_set_title(GTK_WINDOW(window), WL_DL_WINDOW_TITLE);
+	//gtk_window_set_icon_name (GTK_WINDOW(window),"midori");
+	gtk_window_set_default_icon_name("midori");
+	gtk_widget_set_size_request(GTK_WIDGET(window),
+								WL_DL_WINDOW_WIDTH, WL_DL_WINDOW_HEIGHT);
+	gtk_container_set_border_width(GTK_CONTAINER(window), 0);
+	gtk_window_move(GTK_WINDOW(window), gdk_screen_width() / 5,
+					gdk_screen_height() / 8);
+
+	GtkWidget *mainBox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+	gtk_container_add(GTK_CONTAINER(window), mainBox);
+
+	GtkWidget *menuBar = gtk_menu_bar_new();
+	gtk_box_pack_start(GTK_BOX(mainBox), menuBar, FALSE, FALSE, 0);
+	GtkWidget *fileMenuItem = gtk_menu_item_new_with_label("File");
+	gtk_menu_shell_append(GTK_MENU_SHELL(menuBar), fileMenuItem);
+	GtkWidget *fileMenu = gtk_menu_new();
+	gtk_menu_item_set_submenu(GTK_MENU_ITEM(fileMenuItem), fileMenu);
+	GtkWidget *urlMenuItem = gtk_menu_item_new_with_label("Open URL");
+	gtk_menu_shell_append(GTK_MENU_SHELL(fileMenu), urlMenuItem);
+	GtkWidget *btMenuItem = gtk_menu_item_new_with_label("Open Torrent");
+	gtk_menu_shell_append(GTK_MENU_SHELL(fileMenu), btMenuItem);
+	gtk_menu_shell_append(GTK_MENU_SHELL(fileMenu),
+						  gtk_separator_menu_item_new());
+	GtkWidget *quitMenuItem = gtk_menu_item_new_with_label("Quit");
+	gtk_menu_shell_append(GTK_MENU_SHELL(fileMenu), quitMenuItem);
+
+	GtkWidget *helpMenuItem = gtk_menu_item_new_with_label("Help");
+	gtk_menu_shell_append(GTK_MENU_SHELL(menuBar), helpMenuItem);
+	GtkWidget *helpMenu = gtk_menu_new();
+	gtk_menu_item_set_submenu(GTK_MENU_ITEM(helpMenuItem), helpMenu);
+	GtkWidget *aboutMenuItem = gtk_menu_item_new_with_label("About");
+	gtk_menu_shell_append(GTK_MENU_SHELL(helpMenu), aboutMenuItem);
+
+	GtkWidget *toolBar = gtk_toolbar_new();
+	gtk_box_pack_start(GTK_BOX(mainBox), toolBar, FALSE, FALSE, 0);
+	gtk_style_context_add_class(gtk_widget_get_style_context(toolBar),
+								GTK_STYLE_CLASS_PRIMARY_TOOLBAR);
+	gtk_container_set_border_width(GTK_CONTAINER(toolBar), 0);
+
+	GtkToolItem *menuButton =
+		gtk_menu_tool_button_new_from_stock(GTK_STOCK_NEW);
+	GtkWidget *newMenu = gtk_menu_new();
+	GtkWidget *httpItem = gtk_menu_item_new_with_label("Open URL");
+	gtk_menu_shell_append(GTK_MENU_SHELL(newMenu), httpItem);
+	GtkWidget *btItem = gtk_menu_item_new_with_label("Open Torrent");
+	gtk_menu_shell_append(GTK_MENU_SHELL(newMenu), btItem);
+	gtk_widget_show_all(newMenu);
+	gtk_menu_tool_button_set_menu(GTK_MENU_TOOL_BUTTON(menuButton),
+								  newMenu);
+	gtk_toolbar_insert(GTK_TOOLBAR(toolBar), menuButton, -1);
+
+	GtkToolItem *startButton =
+		gtk_tool_button_new_from_stock(GTK_STOCK_MEDIA_PLAY);
+	gtk_widget_set_tooltip_text(GTK_WIDGET(startButton), "Start");
+	gtk_toolbar_insert(GTK_TOOLBAR(toolBar), startButton, -1);
+
+	GtkToolItem *pauseButton =
+		gtk_tool_button_new_from_stock(GTK_STOCK_MEDIA_PAUSE);
+	gtk_widget_set_tooltip_text(GTK_WIDGET(pauseButton), "Pause");
+	gtk_toolbar_insert(GTK_TOOLBAR(toolBar), pauseButton, -1);
+
+	gtk_toolbar_insert(GTK_TOOLBAR(toolBar),
+					   gtk_separator_tool_item_new(), -1);
+
+	GtkToolItem *rmButton =
+		gtk_tool_button_new_from_stock(GTK_STOCK_REMOVE);
+	gtk_widget_set_tooltip_text(GTK_WIDGET(rmButton), "Remove");
+	gtk_toolbar_insert(GTK_TOOLBAR(toolBar), rmButton, -1);
+
+	WlDownloader *downloader = wl_downloader_new();
+	gtk_box_pack_start(GTK_BOX(mainBox), GTK_WIDGET(downloader), TRUE,
+					   TRUE, 0);
+
+	/* 创建快捷键 */
+	GtkAccelGroup *accelGroup = gtk_accel_group_new();
+	gtk_window_add_accel_group(GTK_WINDOW(window), accelGroup);
+	gtk_widget_add_accelerator(urlMenuItem, "activate",
+							   accelGroup, GDK_KEY_u, GDK_CONTROL_MASK,
+							   GTK_ACCEL_VISIBLE);
+	gtk_widget_add_accelerator(btMenuItem, "activate",
+							   accelGroup, GDK_KEY_t, GDK_CONTROL_MASK,
+							   GTK_ACCEL_VISIBLE);
+	gtk_widget_add_accelerator(quitMenuItem, "activate",
+							   accelGroup, GDK_KEY_q, GDK_CONTROL_MASK,
+							   GTK_ACCEL_VISIBLE);
+
+	g_signal_connect(G_OBJECT(startButton), "clicked",
+					 G_CALLBACK(wl_dl_window_start_download), window);
+	g_signal_connect(G_OBJECT(pauseButton), "clicked",
+					 G_CALLBACK(wl_dl_window_pause_download), window);
+	g_signal_connect(G_OBJECT(rmButton), "clicked",
+					 G_CALLBACK(wl_dl_window_remove_download), window);
+
+	g_signal_connect(G_OBJECT(menuButton), "clicked",
+					 G_CALLBACK(wl_dl_window_open_url), window);
+	g_signal_connect(G_OBJECT(urlMenuItem), "activate",
+					 G_CALLBACK(wl_dl_window_open_url), window);
+	g_signal_connect(G_OBJECT(httpItem), "activate",
+					 G_CALLBACK(wl_dl_window_open_url), window);
+	g_signal_connect(G_OBJECT(quitMenuItem), "activate",
+					 G_CALLBACK(wl_dl_window_destroy), NULL);
+	g_signal_connect(G_OBJECT(aboutMenuItem), "activate",
+					 G_CALLBACK(wl_dl_window_show_about_dialog), NULL);
+	g_signal_connect(G_OBJECT(window), "destroy",
+					 G_CALLBACK(wl_dl_window_destroy), NULL);
+
+	window->downloader = downloader;
+	window->urlDialog = wl_url_dialog_new();
+}
+
+static void wl_download_window_finalize(GObject * object)
+{
+	WlDownloadWindow *window = WL_DOWNLOAD_WINDOW(object);
+	gtk_widget_destroy(GTK_WIDGET(window->urlDialog));
+}
+
+static void wl_download_window_class_init(WlDownloadWindowClass * klass)
+{
+	GObjectClass *objClass = G_OBJECT_CLASS(klass);
+	objClass->get_property = wl_download_window_getter;
+	objClass->set_property = wl_download_window_setter;
+	objClass->finalize = wl_download_window_finalize;
+
+	GParamSpec *ps;
+	ps = g_param_spec_string("title",
+							 "window title",
+							 "Window Title",
+							 WL_DL_WINDOW_TITLE,
+							 G_PARAM_READABLE | G_PARAM_WRITABLE);
+	g_object_class_install_property(objClass, WL_DL_WINDOW_PROPERTY_TITLE,
+									ps);
+}
+
+static void wl_download_window_getter(GObject * object, guint property_id,
+									  GValue * value, GParamSpec * ps)
+{
+	WlDownloadWindow *type = WL_DOWNLOAD_WINDOW(object);
+	switch (property_id) {
+	case WL_DL_WINDOW_PROPERTY_TITLE:
+		g_value_set_string(value, gtk_window_get_title(GTK_WINDOW(type)));
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, ps);
+		break;
+	}
+}
+
+static void wl_download_window_setter(GObject * object, guint property_id,
+									  const GValue * value,
+									  GParamSpec * ps)
+{
+	WlDownloadWindow *type = WL_DOWNLOAD_WINDOW(object);
+	switch (property_id) {
+	case WL_DL_WINDOW_PROPERTY_TITLE:
+		gtk_window_set_title(GTK_WINDOW(type), g_value_get_string(value));
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, ps);
+		break;
+	}
+}
+
+static void wl_dl_window_destroy(GtkWidget * window, gpointer data)
+{
+	gtk_main_quit();
+}
+
+#define DEFAULT_SITE_NAME   "wdl_index.html"
+
+static gchar *url_get_last(const gchar * url)
+{
+	if (url == NULL)
+		return NULL;
+	const gchar *ptr = g_strstr_len(url, -1, "//");
+	if (ptr) {
+		ptr = ptr + 2;
+	} else
+		ptr = url;
+	const gchar *tptr = ptr;
+	ptr = g_strstr_len(tptr, -1, "/");
+	while (ptr) {
+		ptr = g_strstr_len(tptr, -1, "/");
+		if (ptr == NULL) {
+			ptr = tptr;
+			break;
+		} else {
+			tptr = ptr + 1;
+		}
+	}
+	if (ptr == NULL || *ptr == '\0')
+		return g_strdup(DEFAULT_SITE_NAME);
+	const gchar *mark;
+	mark = g_strstr_len(ptr, -1, "?");
+	if (mark == NULL)
+		mark = g_strstr_len(ptr, -1, "#");
+	if (mark == NULL)
+		return g_strdup(ptr);
+	if (mark - ptr == 0)
+		return g_strdup(DEFAULT_SITE_NAME);
+	return g_strndup(ptr, mark - ptr);
+}
+
+static gchar *wl_dl_window_get_filename_from_url(const gchar * url,
+												 const gchar * filename)
+{
+	if (url == NULL || filename == NULL)
+		return NULL;
+	if (filename[0] != '\0')
+		return g_strdup(filename);
+	return url_get_last(url);
+}
+
+static gboolean wl_dl_window_overwrite_dialog(WlDownloadWindow * window,
+											  const gchar * path)
+{
+	if (g_file_test(path, G_FILE_TEST_EXISTS)) {
+		gchar *message = g_strdup_printf("'%s' exists! Overwrite?",
+										 path);
+		GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(window),
+												   GTK_DIALOG_MODAL |
+												   GTK_DIALOG_DESTROY_WITH_PARENT,
+												   GTK_MESSAGE_INFO,
+												   GTK_BUTTONS_YES_NO,
+												   "%s", message);
+		gint response = gtk_dialog_run(GTK_DIALOG(dialog));
+		gtk_widget_destroy(dialog);
+		g_free(message);
+		if (response == GTK_RESPONSE_YES)
+			return TRUE;
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static void wl_dl_window_open_url(GtkMenuItem * item, gpointer data)
+{
+	WlDownloadWindow *window = (WlDownloadWindow *) data;
+	const gchar *url;
+	const gchar *dir;
+	const gchar *filename;
+	gint response = wl_url_dialog_run(window->urlDialog, NULL, NULL);
+	if (response == GTK_RESPONSE_YES) {
+		url = wl_url_dialog_get_url(window->urlDialog);
+		dir = wl_url_dialog_get_folder(window->urlDialog);
+		filename = wl_url_dialog_get_filename(window->urlDialog);
+		if (dir == NULL || dir[0] == '\0')
+			return;
+		gchar *basename =
+			wl_dl_window_get_filename_from_url(url, filename);
+		if (basename == NULL)
+			return;
+		gchar *fullpath = g_strdup_printf("%s/%s", dir, basename);
+		if (wl_dl_window_overwrite_dialog(window, fullpath))
+			wl_downloader_append_httper(window->downloader, url, fullpath);
+		g_free(fullpath);
+		g_free(basename);
+	}
+}
+
+static gboolean wl_dl_window_about_dialog_close(GtkWidget * widget,
+												GdkEvent * event,
+												gpointer data)
+{
+	gtk_widget_hide(widget);
+	return TRUE;
+}
+
+static GtkWidget *wl_dl_window_about_dialog(void)
+{
+	static GtkWidget *dialog = NULL;
+	if (dialog == NULL) {
+		dialog = gtk_about_dialog_new();
+		gtk_about_dialog_set_program_name(GTK_ABOUT_DIALOG(dialog), "wdl");
+		gtk_about_dialog_set_copyright(GTK_ABOUT_DIALOG(dialog),
+									   "Copyright (c) Wiky L");
+		gtk_about_dialog_set_logo_icon_name(GTK_ABOUT_DIALOG(dialog),
+											"midori");
+		gtk_about_dialog_set_comments(GTK_ABOUT_DIALOG(dialog),
+									  "A Simple Download Manager");
+		gtk_about_dialog_set_version(GTK_ABOUT_DIALOG(dialog), "0.1");
+		gtk_about_dialog_set_website(GTK_ABOUT_DIALOG(dialog),
+									 "https://launchpad.net/wdl");
+		const gchar *authors[] = {
+			"Wiky L(wiiiky@yeah.net)",
+			NULL
+		};
+		gtk_about_dialog_set_authors(GTK_ABOUT_DIALOG(dialog), authors);
+		gtk_about_dialog_set_artists(GTK_ABOUT_DIALOG(dialog), authors);
+		gtk_about_dialog_set_license_type(GTK_ABOUT_DIALOG(dialog),
+										  GTK_LICENSE_GPL_3_0);
+		gtk_about_dialog_set_wrap_license(GTK_ABOUT_DIALOG(dialog), TRUE);
+
+		GtkWidget *close =
+			gtk_dialog_get_widget_for_response(GTK_DIALOG(dialog),
+											   GTK_RESPONSE_CANCEL);
+		g_signal_connect_swapped(G_OBJECT(close), "pressed",
+								 G_CALLBACK(gtk_widget_hide), dialog);
+		g_signal_connect(G_OBJECT(dialog), "delete-event",
+						 G_CALLBACK(wl_dl_window_about_dialog_close),
+						 NULL);
+	}
+	return dialog;
+}
+
+static void wl_dl_window_show_about_dialog(GtkMenuItem * item,
+										   gpointer data)
+{
+	GtkWidget *dialog = wl_dl_window_about_dialog();
+	gtk_dialog_run(GTK_DIALOG(dialog));
+
+}
+
+static void wl_dl_window_start_download(GtkToolButton * button,
+										gpointer data)
+{
+	WlDownloadWindow *window = (WlDownloadWindow *) data;
+	gint status = wl_downloader_get_selected_status(window->downloader);
+	if (status == WL_HTTPER_STATUS_PAUSE)
+		wl_downloader_continue_selected(window->downloader);
+	else if (status != WL_HTTPER_STATUS_COMPLETE)
+		wl_downloader_start_selected(window->downloader);
+}
+
+static void wl_dl_window_pause_download(GtkToolButton * button,
+										gpointer data)
+{
+	WlDownloadWindow *window = (WlDownloadWindow *) data;
+	wl_downloader_pause_selected(window->downloader);
+}
+
+static void wl_dl_window_remove_download(GtkToolButton * button,
+										 gpointer data)
+{
+	WlDownloadWindow *window = (WlDownloadWindow *) data;
+	wl_downloader_remove_selected(window->downloader);
+}
+
+/******************************************************
+ * PUBLIC
+ ***************************************************/
+WlDownloadWindow *wl_download_window_new(void)
+{
+	WlDownloadWindow *window = g_object_new(WL_TYPE_DOWNLOAD_WINDOW, NULL);
+	return window;
+}
