@@ -17,69 +17,98 @@
 
 #include "wlbter.h"
 
-G_DEFINE_TYPE(WlBter,wl_bter,GTK_TYPE_EVENT_BOX);
+enum {
+	WL_BTER_PROPERTY_SESSION = 1,
+};
 
-static void wl_bter_getter(GObject *object,guint property_id,
-								GValue *value,GParamSpec *ps);
-static void wl_bter_setter(GObject *object,guint property_id,
-								const GValue *value,GParamSpec *ps);
+G_DEFINE_TYPE(WlBter, wl_bter, GTK_TYPE_EVENT_BOX);
 
-static void wl_bter_init(WlBter *bter)
+static void wl_bter_getter(GObject * object, guint property_id,
+						   GValue * value, GParamSpec * ps);
+static void wl_bter_setter(GObject * object, guint property_id,
+						   const GValue * value, GParamSpec * ps);
+
+static void wl_bter_init(WlBter * bter)
 {
-	GtkWidget *hBox=gtk_box_new(GTK_ORIENTATION_HORIZONTAL,6);
-	gtk_container_set_border_width(GTK_CONTAINER(hBox),0);
-	gtk_container_add(GTK_CONTAINER(bter),hBox);
+	GtkWidget *hBox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
+	gtk_container_set_border_width(GTK_CONTAINER(hBox), 0);
+	gtk_container_add(GTK_CONTAINER(bter), hBox);
 
-	GtkIconSize iconSize=GTK_ICON_SIZE_DIALOG;
-	GtkWidget *image=gtk_image_new_from_icon_name("html",
-				iconSize);
-	gtk_box_pack_start(GTK_BOX(hBox),image,FALSE,FALSE,0);
+	GtkIconSize iconSize = GTK_ICON_SIZE_DIALOG;
+	GtkWidget *image = gtk_image_new_from_icon_name("html",
+													iconSize);
+	gtk_box_pack_start(GTK_BOX(hBox), image, FALSE, FALSE, 0);
 
-	GtkWidget *vBox=gtk_box_new(GTK_ORIENTATION_VERTICAL,3);
-	gtk_container_set_border_width(GTK_CONTAINER(vBox),8);
-	gtk_box_pack_start(GTK_BOX(hBox),vBox,TRUE,TRUE,0);
+	GtkWidget *vBox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 3);
+	gtk_container_set_border_width(GTK_CONTAINER(vBox), 8);
+	gtk_box_pack_start(GTK_BOX(hBox), vBox, TRUE, TRUE, 0);
 
-	GtkWidget *titleLabel=gtk_label_new("New BitTorrent Download");
-	PangoAttrList *attrList=pango_attr_list_new();
+	GtkWidget *titleLabel = gtk_label_new("New BitTorrent Download");
+	PangoAttrList *attrList = pango_attr_list_new();
 	pango_attr_list_insert(attrList,
-				pango_attr_weight_new(PANGO_WEIGHT_BOLD));
-	gtk_label_set_attributes(GTK_LABEL(titleLabel),attrList);
-	gtk_widget_set_halign(titleLabel,GTK_ALIGN_START);
-	gtk_label_set_ellipsize(GTK_LABEL(titleLabel),PANGO_ELLIPSIZE_END);
-	gtk_label_set_single_line_mode(GTK_LABEL(titleLabel),TRUE);
-	gtk_box_pack_start(GTK_BOX(vBox),titleLabel,TRUE,TRUE,0);
+						   pango_attr_weight_new(PANGO_WEIGHT_BOLD));
+	gtk_label_set_attributes(GTK_LABEL(titleLabel), attrList);
+	gtk_widget_set_halign(titleLabel, GTK_ALIGN_START);
+	gtk_label_set_ellipsize(GTK_LABEL(titleLabel), PANGO_ELLIPSIZE_END);
+	gtk_label_set_single_line_mode(GTK_LABEL(titleLabel), TRUE);
+	gtk_box_pack_start(GTK_BOX(vBox), titleLabel, TRUE, TRUE, 0);
 
 
 
-	bter->session=NULL;
-	bter->torrent=NULL;
+	bter->session = NULL;
+	bter->torrent = NULL;
 }
 
-static void wl_bter_class_init(WlBterClass *klass)
+static void wl_bter_class_init(WlBterClass * klass)
 {
-	GObjectClass *objClass=G_OBJECT_CLASS(klass);
-	objClass->get_property=wl_bter_getter;
-	objClass->set_property=wl_bter_setter;
+	GObjectClass *objClass = G_OBJECT_CLASS(klass);
+	objClass->get_property = wl_bter_getter;
+	objClass->set_property = wl_bter_setter;
+
+	GParamSpec *ps;
+	ps = g_param_spec_pointer("bt-session",
+							  "libtransmission session",
+							  "Libtransmission Session",
+							  G_PARAM_READABLE | G_PARAM_WRITABLE |
+							  G_PARAM_CONSTRUCT_ONLY);
+	g_object_class_install_property(objClass, WL_BTER_PROPERTY_SESSION,
+									ps);
 }
 
-static void wl_bter_getter(GObject *object,guint property_id,
-								GValue *value,GParamSpec *ps)
+static void wl_bter_getter(GObject * object, guint property_id,
+						   GValue * value, GParamSpec * ps)
 {
-	WlBter *bter=WL_BTER(object);
-	switch(property_id){
-		default:
-			G_OBJECT_WARN_INVALID_PROPERTY_ID(object,property_id,ps);
-			break;
+	WlBter *bter = WL_BTER(object);
+	switch (property_id) {
+	case WL_BTER_PROPERTY_SESSION:
+		g_value_set_pointer(value, bter->session);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, ps);
+		break;
 	}
 }
-static void wl_bter_setter(GObject *object,guint property_id,
-								const GValue *value,GParamSpec *ps)
+
+static void wl_bter_setter(GObject * object, guint property_id,
+						   const GValue * value, GParamSpec * ps)
 {
-	WlBter *bter=WL_BTER(object);
-	switch(property_id){
-		default:
-			G_OBJECT_WARN_INVALID_PROPERTY_ID(object,property_id,ps);
-			break;
+	WlBter *bter = WL_BTER(object);
+	switch (property_id) {
+		bter->session = g_value_get_pointer(value);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, ps);
+		break;
 	}
 }
 
+/**********************************************************
+ * PUBLIC
+ *******************************************************/
+WlBter *wl_bter_new(tr_session * session)
+{
+	WlBter *bter = (WlBter *) g_object_new(WL_TYPE_BTER,
+										   "bt-session", session,
+										   NULL);
+	return bter;
+}

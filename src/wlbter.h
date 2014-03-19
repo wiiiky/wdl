@@ -75,6 +75,7 @@ GType wl_bter_get_type(void) G_GNUC_CONST;
 /*************************************************
  * PUBLIC
  ***********************************************/
+WlBter *wl_bter_new(tr_session * session);
 
 G_END_DECLS						/* __WL_BTER_H__ */
 #endif
