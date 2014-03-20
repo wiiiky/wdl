@@ -34,6 +34,19 @@ static void wl_download_window_setter(GObject * object, guint property_id,
 									  const GValue * value,
 									  GParamSpec * ps);
 
+static inline void wl_dl_window_set_start_enabled(WlDownloadWindow *
+												  window,
+												  gboolean enabled);
+static inline void wl_dl_window_set_pause_enabled(WlDownloadWindow *
+												  window,
+												  gboolean enabled);
+static inline void wl_dl_window_set_remove_enabled(WlDownloadWindow *
+												   window,
+												   gboolean enabled);
+static inline void
+wl_dl_window_enable_button_by_httper_status(WlDownloadWindow * window,
+											WlHttperStatus status);
+
 static void wl_dl_window_open_url(GtkMenuItem * item, gpointer data);
 static void wl_dl_window_show_about_dialog(GtkMenuItem * item,
 										   gpointer data);
@@ -43,6 +56,10 @@ static void wl_dl_window_pause_download(GtkToolButton * button,
 										gpointer data);
 static void wl_dl_window_remove_download(GtkToolButton * button,
 										 gpointer data);
+static void wl_dl_window_downloader_selected_callback(WlDownloader * dl,
+													  gpointer data);
+static void wl_dl_window_httper_status_callback(WlHttper * httper,
+												gpointer data);
 
 static void wl_dl_window_destroy(GtkWidget * window, gpointer data);
 static GtkWidget *wl_dl_window_about_dialog(void);
@@ -124,6 +141,12 @@ static void wl_download_window_init(WlDownloadWindow * window)
 	gtk_toolbar_insert(GTK_TOOLBAR(toolBar), rmButton, -1);
 
 	WlDownloader *downloader = wl_downloader_new();
+	wl_downloader_set_selected_callback(downloader,
+										wl_dl_window_downloader_selected_callback,
+										window);
+	wl_downloader_set_httper_status_callback(downloader,
+											 wl_dl_window_httper_status_callback,
+											 window);
 	gtk_box_pack_start(GTK_BOX(mainBox), GTK_WIDGET(downloader), TRUE,
 					   TRUE, 0);
 
@@ -160,8 +183,15 @@ static void wl_download_window_init(WlDownloadWindow * window)
 	g_signal_connect(G_OBJECT(window), "destroy",
 					 G_CALLBACK(wl_dl_window_destroy), NULL);
 
+	window->start = startButton;
+	window->pause = pauseButton;
+	window->remove = rmButton;
 	window->downloader = downloader;
 	window->urlDialog = wl_url_dialog_new();
+
+	wl_dl_window_set_start_enabled(window, FALSE);
+	wl_dl_window_set_pause_enabled(window, FALSE);
+	wl_dl_window_set_remove_enabled(window, FALSE);
 }
 
 static void wl_download_window_finalize(GObject * object)
@@ -216,12 +246,85 @@ static void wl_download_window_setter(GObject * object, guint property_id,
 	}
 }
 
+static inline void wl_dl_window_set_start_enabled(WlDownloadWindow *
+												  window, gboolean enabled)
+{
+	gtk_widget_set_sensitive(GTK_WIDGET(window->start), enabled);
+}
+
+static inline void wl_dl_window_set_pause_enabled(WlDownloadWindow *
+												  window, gboolean enabled)
+{
+	gtk_widget_set_sensitive(GTK_WIDGET(window->pause), enabled);
+}
+
+static inline void wl_dl_window_set_remove_enabled(WlDownloadWindow *
+												   window,
+												   gboolean enabled)
+{
+	gtk_widget_set_sensitive(GTK_WIDGET(window->remove), enabled);
+}
+
+static inline void
+wl_dl_window_enable_button_by_httper_status(WlDownloadWindow * window,
+											WlHttperStatus status)
+{
+
+	switch (status) {
+	case WL_HTTPER_STATUS_NOT_START:
+	case WL_HTTPER_STATUS_ABORT:
+	case WL_HTTPER_STATUS_PAUSE:
+		wl_dl_window_set_start_enabled(window, TRUE);
+		wl_dl_window_set_pause_enabled(window, FALSE);
+		wl_dl_window_set_remove_enabled(window, TRUE);
+		break;
+	case WL_HTTPER_STATUS_START:
+		wl_dl_window_set_start_enabled(window, FALSE);
+		wl_dl_window_set_pause_enabled(window, TRUE);
+		wl_dl_window_set_remove_enabled(window, TRUE);
+		break;
+	case WL_HTTPER_STATUS_COMPLETE:
+		wl_dl_window_set_start_enabled(window, FALSE);
+		wl_dl_window_set_pause_enabled(window, FALSE);
+		wl_dl_window_set_remove_enabled(window, TRUE);
+		break;
+	default:
+		g_warning("unknown status!");
+	}
+}
+
+static void wl_dl_window_downloader_selected_callback(WlDownloader * dl,
+													  gpointer data)
+{
+	WlDownloadWindow *window = (WlDownloadWindow *) data;
+	gpointer selected = wl_downloader_get_selected(dl);
+	if (selected) {
+		if (WL_IS_HTTPER(selected)) {
+			WlHttperStatus status =
+				wl_httper_get_status(WL_HTTPER(selected));
+			wl_dl_window_enable_button_by_httper_status(window, status);
+		}
+	} else {
+		wl_dl_window_set_pause_enabled(window, FALSE);
+		wl_dl_window_set_remove_enabled(window, FALSE);
+		wl_dl_window_set_start_enabled(window, FALSE);
+	}
+}
+
+static void wl_dl_window_httper_status_callback(WlHttper * httper,
+												gpointer data)
+{
+	WlDownloadWindow *window = (WlDownloadWindow *) data;
+	WlHttperStatus status = wl_httper_get_status(httper);
+	wl_dl_window_enable_button_by_httper_status(window, status);
+}
+
 static void wl_dl_window_destroy(GtkWidget * window, gpointer data)
 {
 	gtk_main_quit();
 }
 
-#define DEFAULT_SITE_NAME   "wdl_index.html"
+#define DEFAULT_SITE_NAME   "index.html"
 
 static gchar *url_get_last(const gchar * url)
 {

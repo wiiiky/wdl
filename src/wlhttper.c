@@ -37,6 +37,8 @@ static inline void wl_httper_set_total_size(WlHttper * httper,
 											guint64 size);
 static inline void wl_httper_set_dl_size(WlHttper * httper, guint64 size);
 static inline void wl_httper_set_rtime(WlHttper * httper, guint64 time);
+static inline void wl_httper_set_status(WlHttper * httper,
+										WlHttperStatus status);
 static inline void wl_httper_set_complete_info(WlHttper * httper);
 static inline void wl_httper_set_abort_info(WlHttper * httper);
 static inline void wl_httper_set_invalid_info(WlHttper * httper,
@@ -133,6 +135,8 @@ static void wl_httper_init(WlHttper * httper)
 	httper->userData = NULL;
 	httper->finishCallback = NULL;
 	httper->cbData = NULL;
+	httper->statusCallback = NULL;
+	httper->sData = NULL;
 }
 
 static void wl_httper_finalize(GObject * object)
@@ -237,6 +241,14 @@ static inline void wl_httper_set_default_data(WlHttper * httper)
 	httper->dlTotal = 0;
 }
 
+static inline void wl_httper_set_status(WlHttper * httper,
+										WlHttperStatus status)
+{
+	httper->status = status;
+	if (httper->statusCallback)
+		httper->statusCallback(httper, httper->sData);
+}
+
 static inline void wl_httper_add_timeout(WlHttper * httper)
 {
 	httper->timeout =
@@ -294,7 +306,7 @@ static inline void wl_httper_set_complete_info(WlHttper * httper)
 	gtk_label_set_text(GTK_LABEL(httper->timeLabel), "");
 	gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(httper->progressBar),
 								  1.0);
-	httper->status = WL_HTTPER_STATUS_COMPLETE;
+	wl_httper_set_status(httper, WL_HTTPER_STATUS_COMPLETE);
 }
 
 static inline void wl_httper_set_invalid_info(WlHttper * httper,
@@ -313,7 +325,7 @@ static inline void wl_httper_set_invalid_info(WlHttper * httper,
 	}
 	gtk_label_set_attributes(GTK_LABEL(httper->speedLabel), attrList);
 	g_free(label);
-	httper->status = WL_HTTPER_STATUS_ABORT;
+	wl_httper_set_status(httper, WL_HTTPER_STATUS_ABORT);
 }
 
 static inline void wl_httper_set_abort_info(WlHttper * httper)
@@ -331,7 +343,7 @@ static inline void wl_httper_set_abort_info(WlHttper * httper)
 		(GTK_PROGRESS_BAR(httper->progressBar)) == 0)
 		gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR
 									  (httper->progressBar), 0);
-	httper->status = WL_HTTPER_STATUS_ABORT;
+	wl_httper_set_status(httper, WL_HTTPER_STATUS_ABORT);
 }
 
 static inline void wl_httper_set_pause_info(WlHttper * httper)
@@ -345,7 +357,7 @@ static inline void wl_httper_set_pause_info(WlHttper * httper)
 														 65535 / 2, 0));
 	}
 	gtk_label_set_attributes(GTK_LABEL(httper->speedLabel), attrList);
-	httper->status = WL_HTTPER_STATUS_PAUSE;
+	wl_httper_set_status(httper, WL_HTTPER_STATUS_PAUSE);
 }
 
 static inline void wl_httper_set_start_info(WlHttper * httper)
@@ -358,7 +370,7 @@ static inline void wl_httper_set_start_info(WlHttper * httper)
 														 65535 / 2));
 	}
 	gtk_label_set_attributes(GTK_LABEL(httper->speedLabel), attrList);
-	httper->status = WL_HTTPER_STATUS_START;
+	wl_httper_set_status(httper, WL_HTTPER_STATUS_START);
 }
 
 static inline void wl_httper_set_dl_speed(WlHttper * httper, gdouble speed)
@@ -768,7 +780,7 @@ void wl_httper_redownload(WlHttper * httper)
 	wl_httper_remove_timeout(httper);
 	wl_httper_async_queue_unref(httper);
 
-	httper->status = WL_HTTPER_STATUS_NOT_START;
+	wl_httper_set_status(httper, WL_HTTPER_STATUS_NOT_START);
 	wl_httper_start(httper);
 }
 
@@ -870,4 +882,13 @@ inline const gchar *wl_httper_get_title(WlHttper * httper)
 {
 	g_return_val_if_fail(WL_IS_HTTPER(httper), NULL);
 	return gtk_label_get_text(GTK_LABEL(httper->titleLabel));
+}
+
+void wl_httper_set_status_callback(WlHttper * httper,
+								   WlHttperStatusCallback callback,
+								   gpointer data)
+{
+	g_return_if_fail(WL_IS_HTTPER(httper));
+	httper->statusCallback = callback;
+	httper->sData = data;
 }

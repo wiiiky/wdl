@@ -33,9 +33,6 @@ static gpointer wl_downloader_httper_pressed_callback(GtkWidget * widget,
 													  gpointer data);
 static inline void wl_downloader_set_httper_selected(WlDownloader * dl,
 													 WlHttper * httper);
-static inline GtkWidget *wl_downloader_httper_popmenu(WlHttper * httper);
-static void on_remove_httper_activate(GtkMenuItem * item, gpointer data);
-static void on_delete_files_activate(GtkMenuItem * item, gpointer data);
 
 static void wl_downloader_init(WlDownloader * dl)
 {
@@ -48,6 +45,10 @@ static void wl_downloader_init(WlDownloader * dl)
 	dl->vBox = vBox;
 	dl->list = NULL;
 	dl->selected = NULL;
+	dl->httperSelected = NULL;
+	dl->httperSelectedData = NULL;
+	dl->httperStatus = NULL;
+	dl->httperStatusData = NULL;
 }
 
 static void wl_downloader_finalize(GObject * object)
@@ -109,11 +110,26 @@ static inline void wl_downloader_set_httper_selected(WlDownloader * dl,
 	if (dl->selected == (gpointer) httper)
 		return;
 	if (dl->selected) {
-		if (WL_IS_HTTPER(dl->selected))
+		if (WL_IS_HTTPER(dl->selected)) {
 			wl_httper_clear_highlight(WL_HTTPER(dl->selected));
+			wl_httper_set_status_callback(WL_HTTPER(dl->selected), NULL,
+										  NULL);
+		}
 	}
+	dl->selected = NULL;
+	if (httper == NULL) {
+		goto CALLBACK;
+	} else if (WL_IS_HTTPER(httper)) {
+		wl_httper_highlight(httper);
+		wl_httper_set_status_callback(httper, dl->httperStatus,
+									  dl->httperStatusData);
+	} else
+		return;					/* unknown type */
+
 	dl->selected = (gpointer) httper;
-	wl_httper_highlight(httper);
+  CALLBACK:
+	if (dl->httperSelected)
+		dl->httperSelected(dl, dl->httperSelectedData);
 }
 
 static void on_remove_httper_activate(GtkMenuItem * item, gpointer data)
@@ -233,6 +249,7 @@ void wl_downloader_remove_httper(WlDownloader * dl, WlHttper * httper)
 	dl->list = g_list_remove(dl->list, httper);
 	wl_httper_abort(httper);
 	gtk_container_remove(GTK_CONTAINER(dl->vBox), GTK_WIDGET(httper));
+	wl_downloader_set_httper_selected(dl, NULL);
 }
 
 void wl_downloader_start_selected(WlDownloader * dl)
@@ -278,6 +295,12 @@ WlHttperStatus wl_downloader_get_selected_status(WlDownloader * dl)
 	return 0;
 }
 
+gpointer wl_downloader_get_selected(WlDownloader * dl)
+{
+	g_return_val_if_fail(WL_IS_DOWNLOADER(dl), NULL);
+	return dl->selected;
+}
+
 void wl_downloader_remove_selected(WlDownloader * dl)
 {
 	g_return_if_fail(WL_IS_DOWNLOADER(dl));
@@ -286,4 +309,22 @@ void wl_downloader_remove_selected(WlDownloader * dl)
 	if (WL_IS_HTTPER(dl->selected)) {
 		wl_downloader_remove_httper(dl, WL_HTTPER(dl->selected));
 	}
+}
+
+void wl_downloader_set_selected_callback(WlDownloader * dl,
+										 WlHttperSelectedCallback callback,
+										 gpointer data)
+{
+	g_return_if_fail(WL_IS_DOWNLOADER(dl));
+	dl->httperSelected = callback;
+	dl->httperSelectedData = data;
+}
+
+void wl_downloader_set_httper_status_callback(WlDownloader * dl,
+											  WlHttperStatusCallback
+											  callback, gpointer data)
+{
+	g_return_if_fail(WL_IS_DOWNLOADER(dl));
+	dl->httperStatus = callback;
+	dl->httperStatusData = data;
 }

@@ -39,6 +39,7 @@ typedef struct _WlHttper WlHttper;
 typedef struct _WlHttperClass WlHttperClass;
 typedef enum _WlHttperStatus WlHttperStatus;
 typedef void (*WlHttperCallback) (gint code, gpointer data);
+typedef void (*WlHttperStatusCallback) (WlHttper * httper, gpointer data);
 
 
 struct _WlHttper {
@@ -88,6 +89,9 @@ struct _WlHttper {
 	/* 完成下载后的回调函数,第一个参数是下载结果 */
 	WlHttperCallback finishCallback;
 	gpointer cbData;
+	/* 状态改变的回调函数 */
+	WlHttperStatusCallback statusCallback;
+	gpointer sData;
 };
 
 struct _WlHttperClass {
@@ -196,6 +200,12 @@ inline const GDateTime *wl_httper_get_ctime(WlHttper * httper);
  * @description 获取文件名
  */
 inline const gchar *wl_httper_get_title(WlHttper * httper);
+/*
+ * @descriptio 设置状态改变回调函数
+ */
+void wl_httper_set_status_callback(WlHttper * httper,
+								   WlHttperStatusCallback callback,
+								   gpointer data);
 
 G_END_DECLS
 #endif							/* __WL_HTTPER_H__ */

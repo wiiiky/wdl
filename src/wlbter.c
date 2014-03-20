@@ -112,3 +112,18 @@ WlBter *wl_bter_new(tr_session * session)
 										   NULL);
 	return bter;
 }
+
+WlBter *wl_bter_new_from_file(tr_session * session, const gchar * path)
+{
+	WlBter *bter = wl_bter_new(session);
+	wl_bter_add_torrent_from_file(bter, path);
+	return bter;
+}
+
+void wl_bter_add_torrent_from_file(WlBter * bter, const gchar * path)
+{
+	g_return_if_fail(WL_IS_BTER(bter));
+	tr_ctor *ctor = tr_ctorNew(bter->session);
+	bter->torrent = tr_torrentNew(ctor, NULL, NULL);
+	tr_ctorFree(ctor);
+}

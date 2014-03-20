@@ -21,6 +21,26 @@
 #include "wlhttpermenu.h"
 
 G_BEGIN_DECLS
+/***
+****
+***/
+#define MEM_K 1024
+#define MEM_K_STR "KiB"
+#define MEM_M_STR "MiB"
+#define MEM_G_STR "GiB"
+#define MEM_T_STR "TiB"
+#define DISK_K 1000
+#define DISK_B_STR   "B"
+#define DISK_K_STR "kB"
+#define DISK_M_STR "MB"
+#define DISK_G_STR "GB"
+#define DISK_T_STR "TB"
+#define SPEED_K 1000
+#define SPEED_B_STR  "B/s"
+#define SPEED_K_STR "kB/s"
+#define SPEED_M_STR "MB/s"
+#define SPEED_G_STR "GB/s"
+#define SPEED_T_STR "TB/s"
 /*
  * Type macros
  */
@@ -38,12 +58,21 @@ G_BEGIN_DECLS
 typedef struct _WlDownloader WlDownloader;
 typedef struct _WlDownloaderClass WlDownloaderClass;
 
+typedef void (*WlHttperSelectedCallback) (WlDownloader * dl,
+										  gpointer data);
+
 struct _WlDownloader {
 	GtkScrolledWindow parent;
 	/* Private */
 	GtkWidget *vBox;
 	GList *list;
 	gpointer *selected;
+
+	/* Callback */
+	WlHttperSelectedCallback httperSelected;
+	gpointer httperSelectedData;
+	WlHttperStatusCallback httperStatus;
+	gpointer httperStatusData;
 };
 
 struct _WlDownloaderClass {
@@ -86,9 +115,31 @@ void wl_downloader_continue_selected(WlDownloader * dl);
  */
 WlHttperStatus wl_downloader_get_selected_status(WlDownloader * dl);
 /*
+ * @description 选中的目标
+ * @return 返回选中的目标或者NULL
+ */
+gpointer wl_downloader_get_selected(WlDownloader * dl);
+/*
  * @description 删除选中的任务
  */
 void wl_downloader_remove_selected(WlDownloader * dl);
+
+/*
+ * @description 设置选中的HTTPER改变时的回调函数
+ * @param callback
+ * @param data
+ */
+void wl_downloader_set_selected_callback(WlDownloader * dl,
+										 WlHttperSelectedCallback callback,
+										 gpointer data);
+/*
+ * @description
+ * @param callback
+ * @param data
+ */
+void wl_downloader_set_httper_status_callback(WlDownloader * dl,
+											  WlHttperStatusCallback
+											  callback, gpointer data);
 
 
 G_END_DECLS
