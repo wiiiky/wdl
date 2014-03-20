@@ -57,7 +57,8 @@ GType wl_bter_get_type(void) G_GNUC_CONST;
  ***********************************************/
 WlBter *wl_bter_new(tr_session * session);
 WlBter *wl_bter_new_from_file(tr_session * session, const gchar * path);
-void wl_bter_add_torrent_from_file(WlBter * bter, const gchar * path);
+void wl_bter_load_torrent_from_file(WlBter * bter, const gchar * path);
+void wl_bter_start(WlBter * bter);
 
 G_END_DECLS						/* __WL_BTER_H__ */
 #endif

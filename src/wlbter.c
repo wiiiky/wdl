@@ -53,6 +53,7 @@ static void wl_bter_init(WlBter * bter)
 	gtk_label_set_single_line_mode(GTK_LABEL(titleLabel), TRUE);
 	gtk_box_pack_start(GTK_BOX(vBox), titleLabel, TRUE, TRUE, 0);
 
+	/* TODO */
 
 
 	bter->session = NULL;
@@ -116,14 +117,20 @@ WlBter *wl_bter_new(tr_session * session)
 WlBter *wl_bter_new_from_file(tr_session * session, const gchar * path)
 {
 	WlBter *bter = wl_bter_new(session);
-	wl_bter_add_torrent_from_file(bter, path);
+	wl_bter_load_torrent_from_file(bter, path);
 	return bter;
 }
 
-void wl_bter_add_torrent_from_file(WlBter * bter, const gchar * path)
+void wl_bter_load_torrent_from_file(WlBter * bter, const gchar * path)
 {
 	g_return_if_fail(WL_IS_BTER(bter));
 	tr_ctor *ctor = tr_ctorNew(bter->session);
 	bter->torrent = tr_torrentNew(ctor, NULL, NULL);
 	tr_ctorFree(ctor);
+}
+
+void wl_bter_start(WlBter * bter)
+{
+	g_return_if_fail(WL_IS_BTER(bter) && bter->torrent != NULL);
+	tr_torrentStart(bter->torrent);
 }

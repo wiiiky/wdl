@@ -36,7 +36,8 @@ typedef struct _WlDownloadWindow WlDownloadWindow;
 typedef struct _WlDownloadWindowClass WlDownloadWindowClass;
 
 struct _WlDownloadWindow {
-	GtkWindow parent;
+	GtkWindow parent;			/* Parent */
+
 	GtkToolItem *start;
 	GtkToolItem *pause;
 	GtkToolItem *remove;
