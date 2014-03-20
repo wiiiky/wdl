@@ -3,6 +3,11 @@
 一个可以FTP、HTTP和BitTorrent下载的下载器
 
 
+使用libcurl(http://curl.haxx.se/)来实现FTP和HTTP的下载功能
+使用libtransmission(transmission2.82源代码目录下)来实现BitTorrent的下载功能
+界面使用GTK+来完成
+
+
 
 Wiky L(wiiiky@yeah.net)
 2014-2-27更新

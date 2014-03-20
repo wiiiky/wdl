@@ -35,7 +35,7 @@ G_BEGIN_DECLS
 				WL_TYPE_HTTPER))
 #define WL_HTTPER_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_TYPE((obj),\
 				WL_TYPE_HTTPER,WlHttperClass))
-typedef struct _WlHttper WlHttper;
+ /**/ typedef struct _WlHttper WlHttper;
 typedef struct _WlHttperClass WlHttperClass;
 typedef enum _WlHttperStatus WlHttperStatus;
 typedef void (*WlHttperCallback) (gint code, gpointer data);
