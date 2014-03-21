@@ -487,11 +487,32 @@ static void wl_dl_window_pause_download(GtkToolButton * button,
 	wl_downloader_pause_selected(window->downloader);
 }
 
+static GtkWidget *wl_dl_window_remove_dialog(WlDownloadWindow * window)
+{
+	static GtkWidget *dialog = NULL;
+	if (dialog == NULL) {
+		dialog = gtk_message_dialog_new(GTK_WINDOW(window),
+										GTK_DIALOG_MODAL |
+										GTK_DIALOG_DESTROY_WITH_PARENT,
+										GTK_MESSAGE_QUESTION,
+										GTK_BUTTONS_OK_CANCEL,
+										"Remove task?");
+		gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG
+												 (dialog),
+												 "The file will not be delete from the file system!");
+	}
+	return dialog;
+}
+
 static void wl_dl_window_remove_download(GtkToolButton * button,
 										 gpointer data)
 {
 	WlDownloadWindow *window = (WlDownloadWindow *) data;
-	wl_downloader_remove_selected(window->downloader);
+	GtkWidget *dialog = wl_dl_window_remove_dialog(window);
+	gint response = gtk_dialog_run(GTK_DIALOG(dialog));
+	gtk_widget_hide(dialog);
+	if (response == GTK_RESPONSE_OK)
+		wl_downloader_remove_selected(window->downloader);
 }
 
 /******************************************************
