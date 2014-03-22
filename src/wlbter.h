@@ -43,6 +43,7 @@ struct _WlBter {
 	GtkEventBox parent;
 	/* libtransmission的会话，由外部传递进来 */
 	tr_session *session;
+	/* torrent的指针，可以是外部传递，也可以是自身创建 */
 	tr_torrent *torrent;
 };
 
