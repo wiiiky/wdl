@@ -3,7 +3,7 @@ Maximized=1
 Geometry=1366x713+0+27
 
 [File Loader]
-Files=../../src/wlbter.h#46%%%../../src/wlbter.c#60%%%../../src/main.c#1%%%../../src/wldownloadwindow.c#480%%%../../src/wldownloadwindow.h#1%%%../../src/wldownloader.h#1%%%../../src/wlhttper.h#1%%%../../src/wlhttpermenu.c#1%%%../../src/wldownloader.c#1%%%../../src/wlurldialog.c#1%%%../../src/wlhttperproperties.c#1
+Files=../../src/wlbter.h#46%%%../../src/wlbter.c#60%%%../../src/main.c#1%%%../../src/wldownloadwindow.c#480%%%../../src/wldownloadwindow.h#1%%%../../src/wldownloader.h#1%%%../../src/wlhttper.h#1%%%../../src/wlhttpermenu.c#1%%%../../src/wldownloader.c#1%%%../../src/wlurldialog.c#1%%%../../src/wlhttperproperties.c#10
 
 [Document Manager]
 bookmarks=<?xml version="1.0" encoding="UTF-8"?>\n<bookmarks/>\n
