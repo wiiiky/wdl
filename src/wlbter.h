@@ -38,13 +38,32 @@ G_BEGIN_DECLS
 			(obj),WL_TYPE_BTER,WlBterClass))
 typedef struct _WlBter WlBter;
 typedef struct _WlBterClass WlBterClass;
+typedef enum _WlBterStatus WlBterStatus;
+
+enum _WlBterStatus {
+	WL_BTER_STATUS_START = 11111,
+	WL_BTER_STATUS_PAUSE = 22222,
+	WL_BTER_STATUS_COMPLETE = 33333,
+	WL_BTER_STATUS_NOT_START = 44444,
+	WL_BTER_STATUS_ABORT = 55555,
+};
 
 struct _WlBter {
 	GtkEventBox parent;
+	/* GUI */
+	GtkWidget *dlLabel;
+	GtkWidget *totalLabel;
+	GtkWidget *speedLabel;
+	GtkWidget *timeLabel;
+
 	/* libtransmission的会话，由外部传递进来 */
 	tr_session *session;
 	/* torrent的指针，可以是外部传递，也可以是自身创建 */
 	tr_torrent *torrent;
+	/* 当前的下载状态 */
+	WlBterStatus status;
+	/* 定时器 */
+	guint timeout;
 };
 
 struct _WlBterClass {
@@ -60,7 +79,15 @@ WlBter *wl_bter_new(tr_session * session, tr_torrent * torrent);
 WlBter *wl_bter_new_from_file(tr_session * session, const gchar * path);
 WlBter *wl_bter_new_from_magnetlink(tr_session * session,
 									const gchar * link);
+/*
+ * @description 开始下载任务
+ */
 void wl_bter_start(WlBter * bter);
+#define wl_bter_continue(bter)  wl_bter_start ((bter));
+/*
+ * @description 暂停任务
+ */
+void wl_bter_pause(WlBter * bter);
 
 G_END_DECLS						/* __WL_BTER_H__ */
 #endif

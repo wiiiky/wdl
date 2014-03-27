@@ -578,11 +578,11 @@ wdl-main.o: /home/wiky/Documents/CODE/Bazaar/wdl/src/main.c \
  /usr/include/curl/typecheck-gcc.h \
  /home/wiky/Documents/CODE/Bazaar/wdl/src/wlhttpermenu.h \
  /home/wiky/Documents/CODE/Bazaar/wdl/src/wlhttperproperties.h \
- /home/wiky/Documents/CODE/Bazaar/wdl/src/wlurldialog.h \
  /home/wiky/Documents/CODE/Bazaar/wdl/src/libtransmission/transmission.h \
  /usr/include/inttypes.h \
  /usr/lib/gcc/x86_64-linux-gnu/4.8/include/stdint.h /usr/include/stdint.h \
  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+ /home/wiky/Documents/CODE/Bazaar/wdl/src/wlurldialog.h \
  /home/wiky/Documents/CODE/Bazaar/wdl/src/libtransmission/variant.h \
  /home/wiky/Documents/CODE/Bazaar/wdl/src/libtransmission/quark.h
 
@@ -1854,8 +1854,6 @@ wdl-main.o: /home/wiky/Documents/CODE/Bazaar/wdl/src/main.c \
 
 /home/wiky/Documents/CODE/Bazaar/wdl/src/wlhttperproperties.h:
 
-/home/wiky/Documents/CODE/Bazaar/wdl/src/wlurldialog.h:
-
 /home/wiky/Documents/CODE/Bazaar/wdl/src/libtransmission/transmission.h:
 
 /usr/include/inttypes.h:
@@ -1865,6 +1863,8 @@ wdl-main.o: /home/wiky/Documents/CODE/Bazaar/wdl/src/main.c \
 /usr/include/stdint.h:
 
 /usr/include/x86_64-linux-gnu/bits/wchar.h:
+
+/home/wiky/Documents/CODE/Bazaar/wdl/src/wlurldialog.h:
 
 /home/wiky/Documents/CODE/Bazaar/wdl/src/libtransmission/variant.h:
 

@@ -285,7 +285,7 @@ void wl_downloader_continue_selected(WlDownloader * dl)
 	}
 }
 
-WlHttperStatus wl_downloader_get_selected_status(WlDownloader * dl)
+gint wl_downloader_get_selected_status(WlDownloader * dl)
 {
 	g_return_val_if_fail(WL_IS_DOWNLOADER(dl), 0);
 	if (dl->selected == NULL)

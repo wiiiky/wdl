@@ -19,6 +19,7 @@
 
 #include "wlhttper.h"
 #include "wlhttpermenu.h"
+#include "libtransmission/transmission.h"
 
 G_BEGIN_DECLS
 /***
@@ -67,6 +68,7 @@ struct _WlDownloader {
 	GtkWidget *vBox;
 	GList *list;
 	gpointer *selected;
+	tr_session *session;
 
 	/* Callback */
 	WlHttperSelectedCallback httperSelected;
@@ -113,7 +115,7 @@ void wl_downloader_continue_selected(WlDownloader * dl);
  * @description 获取选中任务的状态
  * @return 如果没有选中，返回0
  */
-WlHttperStatus wl_downloader_get_selected_status(WlDownloader * dl);
+gint wl_downloader_get_selected_status(WlDownloader * dl);
 /*
  * @description 选中的目标
  * @return 返回选中的目标或者NULL

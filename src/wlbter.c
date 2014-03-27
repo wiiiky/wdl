@@ -22,12 +22,18 @@ enum {
 	WL_BTER_PROPERTY_TORRENT,
 };
 
+#define WL_BTER_TIMEOUT (500)
+
 G_DEFINE_TYPE(WlBter, wl_bter, GTK_TYPE_EVENT_BOX);
 
 static void wl_bter_getter(GObject * object, guint property_id,
 						   GValue * value, GParamSpec * ps);
 static void wl_bter_setter(GObject * object, guint property_id,
 						   const GValue * value, GParamSpec * ps);
+
+static inline void wl_bter_add_timeout(WlBter * bter);
+static inline void wl_bter_remove_timeout(WlBter * bter);
+static gboolean wl_bter_timeout(gpointer data);
 
 static void wl_bter_init(WlBter * bter)
 {
@@ -84,9 +90,14 @@ static void wl_bter_init(WlBter * bter)
 
 	/* TODO */
 
+	bter->dlLabel = dlLabel;
+	bter->totalLabel = totalLabel;
+	bter->speedLabel = speedLabel;
+	bter->timeLabel = timeLabel;
 
 	bter->session = NULL;
 	bter->torrent = NULL;
+	bter->timeout = -1;
 }
 
 static void wl_bter_class_init(WlBterClass * klass)
@@ -147,6 +158,34 @@ static void wl_bter_setter(GObject * object, guint property_id,
 	}
 }
 
+/*
+ * @description 添加定时器
+ */
+static inline void wl_bter_add_timeout(WlBter * bter)
+{
+	wl_bter_remove_timeout(bter);
+	bter->timeout = g_timeout_add(WL_BTER_TIMEOUT, wl_bter_timeout, bter);
+}
+
+/*
+ * @description 删除定时器
+ */
+static inline void wl_bter_remove_timeout(WlBter * bter)
+{
+	if (bter->timeout < 0)
+		return;
+	g_source_remove(bter->timeout);
+	bter->timeout = -1;
+}
+
+/*
+ * @description 周期性调用
+ */
+static gboolean wl_bter_timeout(gpointer data)
+{
+	WlBter *bter = WL_BTER(data);
+	tr_torrent *torrent = bter->torrent;
+}
 
 /**********************************************************
  * PUBLIC
@@ -204,9 +243,19 @@ WlBter *wl_bter_new_from_magnetlink(tr_session * session,
 	return bter;
 }
 
-
+/*
+ * @description 开始和继续
+ */
 void wl_bter_start(WlBter * bter)
 {
 	g_return_if_fail(WL_IS_BTER(bter) && bter->torrent != NULL);
 	tr_torrentStart(bter->torrent);
+	wl_bter_add_timeout(bter);
+}
+
+void wl_bter_pause(WlBter * bter)
+{
+	g_return_if_fail(WL_IS_BTER(bter) && bter->torrent != NULL);
+	tr_torrentStop(bter->torrent);
+	wl_bter_remove_timeout(bter);
 }

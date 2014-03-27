@@ -23,6 +23,9 @@ enum {
 	WL_HTTPER_PROPERTY_CTIME,	/* 创建时间 */
 };
 
+/* 定时器的时间周期ms */
+#define WL_HTTPER_TIMEOUT   (500)
+
 G_DEFINE_TYPE(WlHttper, wl_httper, GTK_TYPE_EVENT_BOX);
 
 static void wl_httper_getter(GObject * object, guint property_id,
@@ -264,7 +267,8 @@ static inline void wl_httper_set_status(WlHttper * httper,
 static inline void wl_httper_add_timeout(WlHttper * httper)
 {
 	httper->timeout =
-		g_timeout_add(300, wl_httper_download_timeout, httper);
+		g_timeout_add(WL_HTTPER_TIMEOUT, wl_httper_download_timeout,
+					  httper);
 }
 
 static inline void wl_httper_remove_timeout(WlHttper * httper)

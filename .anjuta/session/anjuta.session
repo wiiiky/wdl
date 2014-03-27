@@ -3,7 +3,7 @@ Maximized=1
 Geometry=1301x744+65+24
 
 [File Loader]
-Files=../../src/wlbter.h#61%%%../../src/wlbter.c#183%%%../../src/wlhttper.c#111
+Files=../../src/wlbter.h#57%%%../../src/wlbter.c#174%%%../../src/wlhttper.c#27%%%../../src/wlhttper.h#105
 
 [Document Manager]
 bookmarks=<?xml version="1.0" encoding="UTF-8"?>\n<bookmarks/>\n

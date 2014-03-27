@@ -577,7 +577,11 @@ wdl-wldownloader.o: \
  /usr/include/curl/multi.h /usr/include/curl/curl.h \
  /usr/include/curl/typecheck-gcc.h \
  /home/wiky/Documents/CODE/Bazaar/wdl/src/wlhttpermenu.h \
- /home/wiky/Documents/CODE/Bazaar/wdl/src/wlhttperproperties.h
+ /home/wiky/Documents/CODE/Bazaar/wdl/src/wlhttperproperties.h \
+ /home/wiky/Documents/CODE/Bazaar/wdl/src/libtransmission/transmission.h \
+ /usr/include/inttypes.h \
+ /usr/lib/gcc/x86_64-linux-gnu/4.8/include/stdint.h /usr/include/stdint.h \
+ /usr/include/x86_64-linux-gnu/bits/wchar.h
 
 /usr/include/stdc-predef.h:
 
@@ -1844,3 +1848,13 @@ wdl-wldownloader.o: \
 /home/wiky/Documents/CODE/Bazaar/wdl/src/wlhttpermenu.h:
 
 /home/wiky/Documents/CODE/Bazaar/wdl/src/wlhttperproperties.h:
+
+/home/wiky/Documents/CODE/Bazaar/wdl/src/libtransmission/transmission.h:
+
+/usr/include/inttypes.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/4.8/include/stdint.h:
+
+/usr/include/stdint.h:
+
+/usr/include/x86_64-linux-gnu/bits/wchar.h:
