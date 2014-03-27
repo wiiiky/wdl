@@ -76,7 +76,7 @@ static void wl_bter_init(WlBter * bter)
 	gtk_label_set_single_line_mode(GTK_LABEL(speedLabel), TRUE);
 	gtk_box_pack_start(GTK_BOX(iBox), speedLabel, FALSE, FALSE, 0);
 
-	GtkWidget *timeLabel = gtk_label_new(" (unknown)");
+	GtkWidget *timeLabel = gtk_label_new(" (unknown time remaining)");
 	gtk_label_set_single_line_mode(GTK_LABEL(timeLabel), TRUE);
 	gtk_box_pack_start(GTK_BOX(iBox), timeLabel, FALSE, FALSE, 0);
 

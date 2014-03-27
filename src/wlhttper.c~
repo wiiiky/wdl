@@ -305,7 +305,7 @@ static inline void wl_httper_set_default_info(WlHttper * httper)
 
 static inline void wl_httper_set_complete_info(WlHttper * httper)
 {
-	gtk_label_set_text(GTK_LABEL(httper->speedLabel), "complete");
+	gtk_label_set_text(GTK_LABEL(httper->speedLabel), " complete");
 	static PangoAttrList *attrList = NULL;
 	if (attrList == NULL) {
 		attrList = pango_attr_list_new();
@@ -341,7 +341,7 @@ static inline void wl_httper_set_invalid_info(WlHttper * httper,
 
 static inline void wl_httper_set_abort_info(WlHttper * httper)
 {
-	gtk_label_set_text(GTK_LABEL(httper->speedLabel), "aborted");
+	gtk_label_set_text(GTK_LABEL(httper->speedLabel), " aborted");
 	static PangoAttrList *attrList = NULL;
 	if (attrList == NULL) {
 		attrList = pango_attr_list_new();
@@ -359,7 +359,7 @@ static inline void wl_httper_set_abort_info(WlHttper * httper)
 
 static inline void wl_httper_set_pause_info(WlHttper * httper)
 {
-	gtk_label_set_text(GTK_LABEL(httper->speedLabel), "paused");
+	gtk_label_set_text(GTK_LABEL(httper->speedLabel), " paused");
 	static PangoAttrList *attrList = NULL;
 	if (attrList == NULL) {
 		attrList = pango_attr_list_new();
