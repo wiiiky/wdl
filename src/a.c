@@ -21,7 +21,8 @@ int main(int argc, char *argv[])
 	session = tr_sessionInit("gtk", configDir, true, &settings);
 	tr_variantFree(&settings);
 
-	WlBter *bter = wl_bter_new(session);
+	WlBter *bter = wl_bter_new_from_file(session,
+										 "/home/wiky/test.torrent");
 	gtk_box_pack_start(GTK_BOX(box), GTK_WIDGET(bter), FALSE, FALSE, 0);
 
 	gtk_widget_show_all(window);

@@ -102,13 +102,14 @@ static void wl_httper_init(WlHttper * httper)
 	gtk_label_set_single_line_mode(GTK_LABEL(info_total), TRUE);
 	gtk_box_pack_start(GTK_BOX(iBox), info_total, FALSE, FALSE, 0);
 
-	GtkWidget *arrow=gtk_arrow_new (GTK_ARROW_DOWN,GTK_SHADOW_ETCHED_OUT);
-	gtk_box_pack_start (GTK_BOX(iBox),arrow,FALSE,FALSE,0);
+	GtkWidget *arrow =
+		gtk_arrow_new(GTK_ARROW_DOWN, GTK_SHADOW_ETCHED_OUT);
+	gtk_box_pack_start(GTK_BOX(iBox), arrow, FALSE, FALSE, 0);
 	GtkWidget *info_speed = gtk_label_new("0.00 KB/S");
 	gtk_label_set_single_line_mode(GTK_LABEL(info_speed), TRUE);
 	gtk_box_pack_start(GTK_BOX(iBox), info_speed, FALSE, FALSE, 0);
 
-	GtkWidget *info_time = gtk_label_new(" (unknown)");
+	GtkWidget *info_time = gtk_label_new(" (unknown time remaining)");
 	gtk_label_set_single_line_mode(GTK_LABEL(info_time), TRUE);
 	gtk_box_pack_start(GTK_BOX(iBox), info_time, FALSE, FALSE, 0);
 

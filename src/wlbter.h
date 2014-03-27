@@ -56,9 +56,10 @@ GType wl_bter_get_type(void) G_GNUC_CONST;
 /*************************************************
  * PUBLIC
  ***********************************************/
-WlBter *wl_bter_new(tr_session * session);
+WlBter *wl_bter_new(tr_session * session, tr_torrent * torrent);
 WlBter *wl_bter_new_from_file(tr_session * session, const gchar * path);
-void wl_bter_load_torrent_from_file(WlBter * bter, const gchar * path);
+WlBter *wl_bter_new_from_magnetlink(tr_session * session,
+									const gchar * link);
 void wl_bter_start(WlBter * bter);
 
 G_END_DECLS						/* __WL_BTER_H__ */
