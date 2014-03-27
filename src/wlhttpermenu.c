@@ -31,7 +31,7 @@ static inline void wl_httper_menu_set_sensitive(WlHttperMenu * menu);
 static void on_properties_activate(GtkMenuItem * item, gpointer data);
 static void on_open_folder_activate(GtkMenuItem * item, gpointer data);
 static void on_copy_url_activate(GtkMenuItem * item, gpointer data);
-static void on_httper_finished(gint code, gpointer data);
+static void on_httper_status_changed(WlHttper * httper, gpointer data);
 static void on_start_action_activate(GtkMenuItem * item, gpointer data);
 static void on_pause_action_activate(GtkMenuItem * item, gpointer data);
 static void on_abort_action_activate(GtkMenuItem * item, gpointer data);
@@ -170,7 +170,8 @@ static void wl_httper_menu_setter(GObject * object, guint property_id,
 		g_signal_connect(G_OBJECT(menu->redlAction), "activate",
 						 G_CALLBACK(on_redl_action_activate), menu);
 		wl_httper_menu_set_sensitive(menu);
-		wl_httper_set_callback(httper, on_httper_finished, menu);
+		wl_httper_set_status_callback(httper, on_httper_status_changed,
+									  menu);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, ps);
@@ -262,7 +263,7 @@ static void on_redl_action_activate(GtkMenuItem * item, gpointer data)
 	wl_httper_menu_set_sensitive(menu);
 }
 
-static void on_httper_finished(gint code, gpointer data)
+static void on_httper_status_changed(WlHttper * httper, gpointer data)
 {
 	WlHttperMenu *menu = (WlHttperMenu *) data;
 	wl_httper_menu_set_sensitive(menu);

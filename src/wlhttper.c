@@ -82,10 +82,13 @@ static void wl_httper_init(WlHttper * httper)
 	/*gtk_label_set_use_markup(GTK_LABEL(title), TRUE); */
 	gtk_box_pack_start(GTK_BOX(vBox), title, TRUE, TRUE, 0);
 
+	/* 进度条 */
 	GtkWidget *progressBar = gtk_progress_bar_new();
 	/*gtk_progress_bar_set_pulse_step(GTK_PROGRESS_BAR(progressBar),0.1); */
 	gtk_box_pack_start(GTK_BOX(vBox), progressBar, TRUE, TRUE, 0);
 
+
+	/* 下载信息，下载速度、下载量等 */
 	GtkWidget *iBox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 3);
 	gtk_box_pack_start(GTK_BOX(vBox), iBox, TRUE, TRUE, 0);
 
@@ -135,8 +138,9 @@ static void wl_httper_init(WlHttper * httper)
 	httper->userData = NULL;
 	httper->finishCallback = NULL;
 	httper->cbData = NULL;
-	httper->statusCallback = NULL;
-	httper->sData = NULL;
+	httper->statusCallbackS = NULL;
+	//httper->statusCallback = NULL;
+	//httper->sData = NULL;
 }
 
 static void wl_httper_finalize(GObject * object)
@@ -151,6 +155,7 @@ static void wl_httper_finalize(GObject * object)
 	g_date_time_unref(httper->cdt);
 	if (httper->popMenu)
 		gtk_widget_destroy(httper->popMenu);
+	g_list_free_full(httper->statusCallbackS, g_free);
 }
 
 static void wl_httper_class_init(WlHttperClass * klass)
@@ -245,8 +250,12 @@ static inline void wl_httper_set_status(WlHttper * httper,
 										WlHttperStatus status)
 {
 	httper->status = status;
-	if (httper->statusCallback)
-		httper->statusCallback(httper, httper->sData);
+	GList *lp = httper->statusCallbackS;
+	while (lp) {
+		struct _WlHttperStatusCallback *cb = lp->data;
+		cb->callback(httper, cb->data);
+		lp = g_list_next(lp);
+	}
 }
 
 static inline void wl_httper_add_timeout(WlHttper * httper)
@@ -889,6 +898,9 @@ void wl_httper_set_status_callback(WlHttper * httper,
 								   gpointer data)
 {
 	g_return_if_fail(WL_IS_HTTPER(httper));
-	httper->statusCallback = callback;
-	httper->sData = data;
+	struct _WlHttperStatusCallback *cb =
+		g_new(struct _WlHttperStatusCallback, 1);
+	cb->callback = callback;
+	cb->data = data;
+	httper->statusCallbackS = g_list_append(httper->statusCallbackS, cb);
 }

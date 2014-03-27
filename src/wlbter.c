@@ -53,6 +53,16 @@ static void wl_bter_init(WlBter * bter)
 	gtk_label_set_single_line_mode(GTK_LABEL(titleLabel), TRUE);
 	gtk_box_pack_start(GTK_BOX(vBox), titleLabel, TRUE, TRUE, 0);
 
+	/* 进度条 */
+	GtkWidget *progressBar = gtk_progress_bar_new();
+	gtk_box_pack_start(GTK_BOX(vBox), progressBar, TRUE, TRUE, 0);
+
+	/* 下载信息，速度等 */
+	GtkWidget *iBox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 3);
+	gtk_box_pack_start(GTK_BOX(vBox), iBox, TRUE, TRUE, 0);
+
+	//GtkWidget *
+
 	/* TODO */
 
 
@@ -67,7 +77,7 @@ static void wl_bter_class_init(WlBterClass * klass)
 	objClass->set_property = wl_bter_setter;
 
 	GParamSpec *ps;
-	ps = g_param_spec_pointer("bt-session",
+	ps = g_param_spec_pointer("session",
 							  "libtransmission session",
 							  "Libtransmission Session",
 							  G_PARAM_READABLE | G_PARAM_WRITABLE |
@@ -95,6 +105,7 @@ static void wl_bter_setter(GObject * object, guint property_id,
 {
 	WlBter *bter = WL_BTER(object);
 	switch (property_id) {
+	case WL_BTER_PROPERTY_SESSION:
 		bter->session = g_value_get_pointer(value);
 		break;
 	default:
@@ -108,8 +119,9 @@ static void wl_bter_setter(GObject * object, guint property_id,
  *******************************************************/
 WlBter *wl_bter_new(tr_session * session)
 {
+	g_return_val_if_fail(session != NULL, NULL);
 	WlBter *bter = (WlBter *) g_object_new(WL_TYPE_BTER,
-										   "bt-session", session,
+										   "session", session,
 										   NULL);
 	return bter;
 }

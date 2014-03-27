@@ -1,9 +1,9 @@
 [Anjuta]
 Maximized=1
-Geometry=1366x713+0+27
+Geometry=1301x744+65+24
 
 [File Loader]
-Files=../../src/wlbter.h#46%%%../../src/wlbter.c#60%%%../../src/main.c#1%%%../../src/wldownloadwindow.c#268%%%../../src/wldownloadwindow.h#1%%%../../src/wldownloader.h#119%%%../../src/wlhttper.h#101%%%../../src/wlhttpermenu.c#1%%%../../src/wldownloader.c#131%%%../../src/wlurldialog.c#1%%%../../src/wlhttperproperties.c#10%%%../../src/wlhttpermenu.h#16%%%../../src/wlhttperproperties.h#1%%%../../src/wlurldialog.h#1%%%../../src/wlhttper.c#497
+Files=../../src/wlbter.h#1%%%../../src/wlbter.c#64%%%../../src/wlhttper.c#902%%%../../src/wlhttpermenu.h#1%%%../../src/wlhttpermenu.c#33%%%../../src/wlhttper.h#97
 
 [Document Manager]
 bookmarks=<?xml version="1.0" encoding="UTF-8"?>\n<bookmarks/>\n
