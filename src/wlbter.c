@@ -38,7 +38,9 @@ static gboolean wl_bter_timeout(gpointer data);
 static inline void wl_bter_set_dl_size(WlBter * bter, guint64 dlSize);
 static inline void wl_bter_set_total_size(WlBter * bter,
 										  guint64 totalSize);
-static inline void wl_bter_set_dl_speed(WlBter * bter, guint64 totalSize);
+static inline void wl_bter_set_dl_speed(WlBter * bter, gdouble Kbs);
+static inline void wl_bter_set_rtime(WlBter * bter, gdouble Kbs,
+									 guint64 left);
 
 static void wl_bter_init(WlBter * bter)
 {
@@ -100,6 +102,7 @@ static void wl_bter_init(WlBter * bter)
 	bter->speedLabel = speedLabel;
 	bter->timeLabel = timeLabel;
 	bter->progressBar = progressBar;
+	bter->totalLast = -1;
 
 	bter->session = NULL;
 	bter->torrent = NULL;
@@ -196,18 +199,88 @@ static gboolean wl_bter_timeout(gpointer data)
 	gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(bter->progressBar),
 								  stat->percentDone);
 	/* 下载速度 */
-	gchar *dlSpeed =
-		g_strdup_printf(" %.2f kB/s", stat->pieceDownloadSpeed_KBps);
-	gtk_label_set_text(GTK_LABEL(bter->speedLabel), dlSpeed);
+	wl_bter_set_dl_speed(bter, stat->pieceDownloadSpeed_KBps);
 	/* 已下载数据和总数据 */
-	gchar *totalSize = g_strdup_printf("of %lu B -", stat->sizeWhenDone);
-	gtk_label_set_text(GTK_LABEL(bter->totalLabel), totalSize);
-	gchar *dlSize = g_strdup_printf(" %lu B", stat->haveValid);
-	gtk_label_set_text(GTK_LABEL(bter->dlLabel), dlSize);
+	wl_bter_set_total_size(bter, stat->sizeWhenDone);
+	wl_bter_set_dl_size(bter, stat->haveValid);
+	/* 剩余时间 */
+	wl_bter_set_rtime(bter, stat->pieceDownloadSpeed_KBps,
+					  stat->leftUntilDone);
+}
 
-	g_free(dlSpeed);
-	g_free(totalSize);
-	g_free(dlSize);
+static inline void wl_bter_set_dl_size(WlBter * bter, guint64 dlSize)
+{
+	gchar label[20];
+	if (dlSize > 1000 * 1000 * 1000) {	/* GB */
+		g_snprintf(label, 20, " %.2f GB",
+				   ((gdouble) dlSize) / (1000.0 * 1000.0 * 1000.0));
+	} else if (dlSize > 1000 * 1000) {	/* MB */
+		g_snprintf(label, 20, " %.2f MB",
+				   ((gdouble) dlSize) / (1000.0 * 1000.0));
+	} else if (dlSize > 1000) {	/* KB */
+		g_snprintf(label, 20, " %.2f KB", ((gdouble) dlSize) / 1000.0);
+	} else {					/* B */
+		g_snprintf(label, 20, " %lu B", dlSize);
+	}
+	gtk_label_set_text(GTK_LABEL(bter->dlLabel), label);
+}
+
+static inline void wl_bter_set_total_size(WlBter * bter, guint64 totalSize)
+{
+	gchar label[25];
+	if (bter->totalLast == totalSize)
+		return;
+	if (totalSize > 1000 * 1000 * 1000) {	/* GB */
+		g_snprintf(label, 25, "of %.2f GB -",
+				   ((gdouble) totalSize) / (1000.0 * 1000.0 * 1000.0));
+	} else if (totalSize > 1000 * 1000) {	/* MB */
+		g_snprintf(label, 25, "of %.2f MB -",
+				   ((gdouble) totalSize) / (1000.0 * 1000.0));
+	} else if (totalSize > 1000) {	/* KB */
+		g_snprintf(label, 25, "of %.2f KB -",
+				   ((gdouble) totalSize) / 1000.0);
+	} else {					/* B */
+		g_snprintf(label, 25, "of %lu B -", totalSize);
+	}
+	gtk_label_set_text(GTK_LABEL(bter->totalLabel), label);
+}
+
+static inline void wl_bter_set_dl_speed(WlBter * bter, gdouble Kbs)
+{
+	gchar label[20];
+	if (Kbs > 1000) {			/* mB/s */
+		g_snprintf(label, 20, " %.2f mB/s", Kbs / 1000);
+	} else if (Kbs < 1) {
+		g_snprintf(label, 20, " %.0f B/s", Kbs * 1000);
+	} else {
+		g_snprintf(label, 20, " %.2f kB/s", Kbs);
+	}
+	gtk_label_set_text(GTK_LABEL(bter->speedLabel), label);
+}
+
+static inline void wl_bter_set_rtime(WlBter * bter, gdouble Kbs,
+									 guint64 left)
+{
+	gchar label[30];
+	if (Kbs <= 0) {
+		gtk_label_set_text(GTK_LABEL(bter->timeLabel),
+						   " (unknown time remaining)");
+		return;
+	}
+	guint64 time = left / (Kbs * 1000);
+	if (time >= 24 * 60 * 60)
+		g_snprintf(label, 30, " (%lu d %lu h remaining)",
+				   time / (24 * 60 * 60),
+				   time % (24 * 60 * 60) / (60 * 60));
+	else if (time >= 60 * 60)
+		g_snprintf(label, 30, " (%lu h %lu m remaining)",
+				   time / (60 * 60), time % (60 * 60) / 60);
+	else if (time > 60)
+		g_snprintf(label, 30, " (%lu m %lu s remaining)",
+				   time / 60, time % 60);
+	else
+		g_snprintf(label, 30, " (%lu s remaining)", time);
+	gtk_label_set_text(GTK_LABEL(bter->timeLabel), label);
 }
 
 /**********************************************************

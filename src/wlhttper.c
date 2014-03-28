@@ -389,10 +389,10 @@ static inline void wl_httper_set_start_info(WlHttper * httper)
 static inline void wl_httper_set_dl_speed(WlHttper * httper, gdouble speed)
 {
 	gchar *label;
-	if (speed >= 1024 * 1024)
-		label = g_strdup_printf("%.2f mB/s", speed / (1024 * 1024));
-	else if (speed >= 1024)
-		label = g_strdup_printf("%.2f kB/s", speed / 1024);
+	if (speed >= 1000 * 1000)
+		label = g_strdup_printf("%.2f mB/s", speed / (1000 * 1000));
+	else if (speed >= 1000)
+		label = g_strdup_printf("%.2f kB/s", speed / 1000);
 	else
 		label = g_strdup_printf("%.2f B/s", speed);
 	gtk_label_set_text(GTK_LABEL(httper->speedLabel), label);
@@ -426,13 +426,13 @@ static inline void wl_httper_set_total_size(WlHttper * httper,
 	httper->totalLast = size;
 	gchar *label;
 	gdouble dsize = (gdouble) size;
-	if (size >= 1024 * 1024 * 1024)
+	if (size >= 1000 * 1000 * 1000)
 		label = g_strdup_printf("of %.2f GB -",
-								dsize / (1024 * 1024 * 1024));
-	else if (size >= 1024 * 1024)
-		label = g_strdup_printf("of %.2f MB -", dsize / (1024 * 1024));
-	else if (size >= 1024)
-		label = g_strdup_printf("of %.2f KB -", dsize / 1024);
+								dsize / (1000 * 1000 * 1000));
+	else if (size >= 1000 * 1000)
+		label = g_strdup_printf("of %.2f MB -", dsize / (1000 * 1000));
+	else if (size >= 1000)
+		label = g_strdup_printf("of %.2f KB -", dsize / 1000);
 	else
 		label = g_strdup_printf("of %lu B -", size);
 	gtk_label_set_text(GTK_LABEL(httper->totalLabel), label);
@@ -443,12 +443,12 @@ static inline void wl_httper_set_dl_size(WlHttper * httper, guint64 size)
 {
 	gchar *label;
 	gdouble dsize = (gdouble) size;
-	if (size >= 1024 * 1024 * 1024)
-		label = g_strdup_printf(" %.2f GB", dsize / (1024 * 1024 * 1024));
-	else if (size >= 1024 * 1024)
-		label = g_strdup_printf(" %.2f MB", dsize / (1024 * 1024));
-	else if (size >= 1024)
-		label = g_strdup_printf(" %.2f KB", dsize / 1024);
+	if (size >= 1000 * 1000 * 1000)
+		label = g_strdup_printf(" %.2f GB", dsize / (1000 * 1000 * 1000));
+	else if (size >= 1000 * 1000)
+		label = g_strdup_printf(" %.2f MB", dsize / (1000 * 1000));
+	else if (size >= 1000)
+		label = g_strdup_printf(" %.2f KB", dsize / 1000);
 	else
 		label = g_strdup_printf(" %lu B", size);
 	gtk_label_set_text(GTK_LABEL(httper->dlLabel), label);
