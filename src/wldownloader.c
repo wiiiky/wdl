@@ -15,6 +15,8 @@
  * License along with this library. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "wldownloader.h"
+#include "libtransmission/transmission.h"
+#include "libtransmission/variant.h"
 
 enum {
 	WL_DOWNLOADER_PROPERTY_SPACING = 1,
@@ -42,6 +44,20 @@ static void wl_downloader_init(WlDownloader * dl)
 	GtkWidget *vBox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
 	gtk_container_add(GTK_CONTAINER(dl), vBox);
 
+	tr_session *session;
+	tr_variant settings;
+	const char *configDir = tr_getDefaultConfigDir("wdl");
+	tr_variantInitDict(&settings, 0);
+	if (!tr_sessionLoadSettings(&settings, configDir, "wdl"))
+		tr_sessionGetDefaultSettings(&settings);
+	session = tr_sessionInit("gtk", configDir, false, &settings);
+	tr_variantFree(&settings);
+
+	tr_formatter_speed_init(SPEED_K, SPEED_K_STR, SPEED_M_STR, SPEED_G_STR,
+							SPEED_T_STR);
+
+	dl->session = session;
+
 	dl->vBox = vBox;
 	dl->list = NULL;
 	dl->selected = NULL;
@@ -56,6 +72,7 @@ static void wl_downloader_finalize(GObject * object)
 	WlDownloader *dl = WL_DOWNLOADER(object);
 	if (dl->list)
 		g_list_free(dl->list);
+	tr_sessionClose(dl->session);
 }
 
 static void wl_downloader_class_init(WlDownloaderClass * klass)

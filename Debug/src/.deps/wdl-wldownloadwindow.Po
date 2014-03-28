@@ -579,10 +579,13 @@ wdl-wldownloadwindow.o: \
  /usr/include/curl/typecheck-gcc.h \
  /home/wiky/Documents/CODE/Bazaar/wdl/src/wlhttpermenu.h \
  /home/wiky/Documents/CODE/Bazaar/wdl/src/wlhttperproperties.h \
+ /home/wiky/Documents/CODE/Bazaar/wdl/src/wlbter.h \
  /home/wiky/Documents/CODE/Bazaar/wdl/src/libtransmission/transmission.h \
  /usr/include/inttypes.h \
  /usr/lib/gcc/x86_64-linux-gnu/4.8/include/stdint.h /usr/include/stdint.h \
  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+ /home/wiky/Documents/CODE/Bazaar/wdl/src/libtransmission/variant.h \
+ /home/wiky/Documents/CODE/Bazaar/wdl/src/libtransmission/quark.h \
  /home/wiky/Documents/CODE/Bazaar/wdl/src/wlurldialog.h
 
 /usr/include/stdc-predef.h:
@@ -1853,6 +1856,8 @@ wdl-wldownloadwindow.o: \
 
 /home/wiky/Documents/CODE/Bazaar/wdl/src/wlhttperproperties.h:
 
+/home/wiky/Documents/CODE/Bazaar/wdl/src/wlbter.h:
+
 /home/wiky/Documents/CODE/Bazaar/wdl/src/libtransmission/transmission.h:
 
 /usr/include/inttypes.h:
@@ -1862,5 +1867,9 @@ wdl-wldownloadwindow.o: \
 /usr/include/stdint.h:
 
 /usr/include/x86_64-linux-gnu/bits/wchar.h:
+
+/home/wiky/Documents/CODE/Bazaar/wdl/src/libtransmission/variant.h:
+
+/home/wiky/Documents/CODE/Bazaar/wdl/src/libtransmission/quark.h:
 
 /home/wiky/Documents/CODE/Bazaar/wdl/src/wlurldialog.h:

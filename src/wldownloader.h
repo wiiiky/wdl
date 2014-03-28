@@ -19,6 +19,7 @@
 
 #include "wlhttper.h"
 #include "wlhttpermenu.h"
+#include "wlbter.h"
 #include "libtransmission/transmission.h"
 
 G_BEGIN_DECLS
