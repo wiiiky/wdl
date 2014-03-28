@@ -86,11 +86,17 @@ WlBter *wl_bter_new_from_magnetlink(tr_session * session,
  * @description 开始下载任务
  */
 void wl_bter_start(WlBter * bter);
+/* 继续任务 */
 #define wl_bter_continue(bter)  wl_bter_start ((bter));
 /*
  * @description 暂停任务
  */
 void wl_bter_pause(WlBter * bter);
+/*
+ * @description 当前下载状态
+ * @return WlBterStatus
+ */
+gint wl_bter_get_status(WlBter * bter);
 
 G_END_DECLS						/* __WL_BTER_H__ */
 #endif

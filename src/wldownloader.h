@@ -101,6 +101,19 @@ WlHttper *wl_downloader_append_httper(WlDownloader * dl, const gchar * url,
  */
 void wl_downloader_remove_httper(WlDownloader * dl, WlHttper * httper);
 /*
+ * @description 添加一个BT下载任务
+ * @param torrent 一个tr_torrent指针
+ * @return 返回添加的WlBter对象
+ */
+WlBter *wl_downloader_append_bter(WlDownloader * dl, tr_torrent * torrent);
+/*
+ * @description 添加一个BT下载任务，指定种子源文件
+ * @param path 种子文件的路径
+ * @param 返回添加的WlBter对象,失败返回NULL
+ */
+WlBter *wl_downloader_append_bter_from_file(WlDownloader * dl,
+											const gchar * path);
+/*
  * @description 开始选中的下载任务
  */
 void wl_downloader_start_selected(WlDownloader * dl);

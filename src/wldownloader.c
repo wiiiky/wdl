@@ -267,6 +267,37 @@ void wl_downloader_remove_httper(WlDownloader * dl, WlHttper * httper)
 	wl_downloader_set_httper_selected(dl, NULL);
 }
 
+WlBter *wl_downloader_append_bter(WlDownloader * dl, tr_torrent * torrent)
+{
+	g_return_val_if_fail(WL_IS_DOWNLOADER(dl), NULL);
+	WlBter *bter = wl_bter_new(dl->session, torrent);
+
+	if (bter == NULL)
+		return NULL;
+
+	gtk_box_pack_start(GTK_BOX(dl->vBox), GTK_WIDGET(bter), FALSE, FALSE,
+					   0);
+	dl->list = g_list_append(dl->list, bter);
+	gtk_widget_show_all(GTK_WIDGET(bter));
+	return bter;
+}
+
+WlBter *wl_downloader_append_bter_from_file(WlDownloader * dl,
+											const gchar * path)
+{
+	g_return_val_if_fail(WL_IS_DOWNLOADER(dl), NULL);
+	WlBter *bter = wl_bter_new_from_file(dl->session, path);
+
+	if (bter == NULL)
+		return NULL;
+
+	gtk_box_pack_start(GTK_BOX(dl->vBox), GTK_WIDGET(bter), FALSE, FALSE,
+					   0);
+	dl->list = g_list_append(dl->list, bter);
+	gtk_widget_show_all(GTK_WIDGET(bter));
+	return bter;
+}
+
 void wl_downloader_start_selected(WlDownloader * dl)
 {
 	g_return_if_fail(WL_IS_DOWNLOADER(dl));
@@ -275,6 +306,8 @@ void wl_downloader_start_selected(WlDownloader * dl)
 	if (WL_IS_HTTPER(dl->selected)) {
 		WlHttper *httper = WL_HTTPER(dl->selected);
 		wl_httper_start(httper);
+	} else if (WL_IS_BTER(dl->selected)) {
+		wl_bter_start(WL_BTER(dl->selected));
 	}
 }
 
@@ -286,6 +319,8 @@ void wl_downloader_pause_selected(WlDownloader * dl)
 	if (WL_IS_HTTPER(dl->selected)) {
 		WlHttper *httper = WL_HTTPER(dl->selected);
 		wl_httper_pause(httper);
+	} else if (WL_IS_BTER(dl->selected)) {
+		wl_bter_pause(WL_BTER(dl->selected));
 	}
 }
 
@@ -297,6 +332,8 @@ void wl_downloader_continue_selected(WlDownloader * dl)
 	if (WL_IS_HTTPER(dl->selected)) {
 		WlHttper *httper = WL_HTTPER(dl->selected);
 		wl_httper_continue(httper);
+	} else if (WL_IS_BTER(dl->selected)) {
+		wl_bter_continue(WL_BTER(dl->selected));
 	}
 }
 

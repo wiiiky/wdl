@@ -41,6 +41,8 @@ static inline void wl_bter_set_total_size(WlBter * bter,
 static inline void wl_bter_set_dl_speed(WlBter * bter, gdouble Kbs);
 static inline void wl_bter_set_rtime(WlBter * bter, gdouble Kbs,
 									 guint64 left);
+/* 将libtransmission定义的状态转化为wdl定义的状态 */
+static inline gint wl_bter_convert_status(tr_torrent_activity activity);
 
 static void wl_bter_init(WlBter * bter)
 {
@@ -165,6 +167,23 @@ static void wl_bter_setter(GObject * object, guint property_id,
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, ps);
 		break;
 	}
+}
+
+static inline gint wl_bter_convert_status(tr_torrent_activity activity)
+{
+	switch (activity) {
+	case TR_STATUS_STOPPED:
+		return WL_BTER_STATUS_PAUSE;
+		break;
+	case TR_STATUS_SEED:
+	case TR_STATUS_SEED_WAIT:
+		return WL_BTER_STATUS_COMPLETE;
+		break;
+	default:
+		return WL_BTER_STATUS_NOT_START;
+		break;
+	}
+	return 0;
 }
 
 /*
@@ -354,4 +373,11 @@ void wl_bter_pause(WlBter * bter)
 	g_return_if_fail(WL_IS_BTER(bter) && bter->torrent != NULL);
 	tr_torrentStop(bter->torrent);
 	wl_bter_remove_timeout(bter);
+}
+
+gint wl_bter_get_status(WlBter * bter)
+{
+	g_return_val_if_fail(WL_IS_BTER(bter), 0);
+	const tr_stat *stat = tr_torrentStat(bter->torrent);
+	return wl_bter_convert_status(stat->activity);
 }
