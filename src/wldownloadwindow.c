@@ -441,10 +441,10 @@ static void wl_dl_window_open_torrent(GtkMenuItem * item, gpointer data)
 	if (response == GTK_RESPONSE_ACCEPT) {
 		gchar *file =
 			gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
-		WlBter *bter =
-			wl_downloader_append_bter_from_file(window->downloader, file);
+		tr_torrent *torrent =
+			wl_downloader_create_torrent(window->downloader, file);
 		g_free(file);
-		if (bter == NULL) {
+		if (torrent == NULL) {
 			GtkWidget *info = gtk_message_dialog_new(GTK_WINDOW(window),
 													 GTK_DIALOG_MODAL |
 													 GTK_DIALOG_DESTROY_WITH_PARENT,
@@ -455,6 +455,7 @@ static void wl_dl_window_open_torrent(GtkMenuItem * item, gpointer data)
 			gtk_widget_destroy(info);
 			goto OPEN_TORRENT;
 		}
+		tr_torrentRemove(torrent, FALSE, NULL);
 	} else {
 	}
 	gtk_widget_destroy(dialog);

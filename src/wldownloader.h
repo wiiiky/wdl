@@ -156,6 +156,13 @@ void wl_downloader_set_selected_callback(WlDownloader * dl,
 void wl_downloader_set_httper_status_callback(WlDownloader * dl,
 											  WlHttperStatusCallback
 											  callback, gpointer data);
+/*
+ * @description 创建种子tr_torrent*对象，但不添加Wlbter
+ * @param path 种子文件路径
+ * @return 返回tr_torrent*对象
+ */
+tr_torrent *wl_downloader_create_torrent(WlDownloader * dl,
+										 const gchar * path);
 
 
 G_END_DECLS

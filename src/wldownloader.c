@@ -380,3 +380,15 @@ void wl_downloader_set_httper_status_callback(WlDownloader * dl,
 	dl->httperStatus = callback;
 	dl->httperStatusData = data;
 }
+
+tr_torrent *wl_downloader_create_torrent(WlDownloader * dl,
+										 const gchar * path)
+{
+	g_return_val_if_fail(WL_IS_DOWNLOADER(dl), NULL);
+	tr_ctor *ctor = tr_ctorNew(dl->session);
+	tr_ctorSetMetainfoFromFile(ctor, path);
+	tr_torrent *torrent = tr_torrentNew(ctor, NULL, NULL);
+	tr_ctorFree(ctor);
+
+	return torrent;
+}
