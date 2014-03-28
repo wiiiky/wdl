@@ -50,7 +50,7 @@ static void wl_downloader_init(WlDownloader * dl)
 	tr_variantInitDict(&settings, 0);
 	if (!tr_sessionLoadSettings(&settings, configDir, "wdl"))
 		tr_sessionGetDefaultSettings(&settings);
-	session = tr_sessionInit("gtk", configDir, false, &settings);
+	session = tr_sessionInit("gtk", configDir, true, &settings);
 	tr_variantFree(&settings);
 
 	tr_formatter_speed_init(SPEED_K, SPEED_K_STR, SPEED_M_STR, SPEED_G_STR,

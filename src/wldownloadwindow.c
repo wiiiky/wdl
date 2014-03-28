@@ -48,6 +48,7 @@ wl_dl_window_enable_button_by_httper_status(WlDownloadWindow * window,
 											WlHttperStatus status);
 
 static void wl_dl_window_open_url(GtkMenuItem * item, gpointer data);
+static void wl_dl_window_open_torrent(GtkMenuItem * item, gpointer data);
 static void wl_dl_window_show_about_dialog(GtkMenuItem * item,
 										   gpointer data);
 static void wl_dl_window_start_download(GtkToolButton * button,
@@ -176,6 +177,10 @@ static void wl_download_window_init(WlDownloadWindow * window)
 					 G_CALLBACK(wl_dl_window_open_url), window);
 	g_signal_connect(G_OBJECT(httpItem), "activate",
 					 G_CALLBACK(wl_dl_window_open_url), window);
+	g_signal_connect(G_OBJECT(btItem), "activate",
+					 G_CALLBACK(wl_dl_window_open_torrent), window);
+	g_signal_connect(G_OBJECT(btMenuItem), "activate",
+					 G_CALLBACK(wl_dl_window_open_torrent), window);
 	g_signal_connect(G_OBJECT(quitMenuItem), "activate",
 					 G_CALLBACK(wl_dl_window_destroy), NULL);
 	g_signal_connect(G_OBJECT(aboutMenuItem), "activate",
@@ -414,6 +419,45 @@ static void wl_dl_window_open_url(GtkMenuItem * item, gpointer data)
 		g_free(fullpath);
 		g_free(basename);
 	}
+}
+
+static void wl_dl_window_open_torrent(GtkMenuItem * item, gpointer data)
+{
+	WlDownloadWindow *window = WL_DOWNLOAD_WINDOW(data);
+	GtkWidget *dialog = gtk_file_chooser_dialog_new("Open Torrent",
+													GTK_WINDOW(window),
+													GTK_FILE_CHOOSER_ACTION_OPEN,
+													"Open",
+													GTK_RESPONSE_ACCEPT,
+													"Cancel",
+													GTK_RESPONSE_CANCEL,
+													NULL);
+	gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
+										g_get_home_dir());
+
+	gint response;
+  OPEN_TORRENT:
+	response = gtk_dialog_run(GTK_DIALOG(dialog));
+	if (response == GTK_RESPONSE_ACCEPT) {
+		gchar *file =
+			gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+		WlBter *bter =
+			wl_downloader_append_bter_from_file(window->downloader, file);
+		g_free(file);
+		if (bter == NULL) {
+			GtkWidget *info = gtk_message_dialog_new(GTK_WINDOW(window),
+													 GTK_DIALOG_MODAL |
+													 GTK_DIALOG_DESTROY_WITH_PARENT,
+													 GTK_MESSAGE_ERROR,
+													 GTK_BUTTONS_OK,
+													 "Invalid Torrent File!");
+			gtk_dialog_run(GTK_DIALOG(info));
+			gtk_widget_destroy(info);
+			goto OPEN_TORRENT;
+		}
+	} else {
+	}
+	gtk_widget_destroy(dialog);
 }
 
 static gboolean wl_dl_window_about_dialog_close(GtkWidget * widget,
