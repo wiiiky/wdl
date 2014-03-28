@@ -35,6 +35,11 @@ static inline void wl_bter_add_timeout(WlBter * bter);
 static inline void wl_bter_remove_timeout(WlBter * bter);
 static gboolean wl_bter_timeout(gpointer data);
 
+static inline void wl_bter_set_dl_size(WlBter * bter, guint64 dlSize);
+static inline void wl_bter_set_total_size(WlBter * bter,
+										  guint64 totalSize);
+static inline void wl_bter_set_dl_speed(WlBter * bter, guint64 totalSize);
+
 static void wl_bter_init(WlBter * bter)
 {
 	GtkWidget *hBox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
@@ -80,7 +85,7 @@ static void wl_bter_init(WlBter * bter)
 	GtkWidget *arrow =
 		gtk_arrow_new(GTK_ARROW_DOWN, GTK_SHADOW_ETCHED_OUT);
 	gtk_box_pack_start(GTK_BOX(iBox), arrow, FALSE, FALSE, 0);
-	GtkWidget *speedLabel = gtk_label_new(" 0.00 KB/S");
+	GtkWidget *speedLabel = gtk_label_new(" 0.00 kB/s");
 	gtk_label_set_single_line_mode(GTK_LABEL(speedLabel), TRUE);
 	gtk_box_pack_start(GTK_BOX(iBox), speedLabel, FALSE, FALSE, 0);
 
@@ -94,6 +99,7 @@ static void wl_bter_init(WlBter * bter)
 	bter->totalLabel = totalLabel;
 	bter->speedLabel = speedLabel;
 	bter->timeLabel = timeLabel;
+	bter->progressBar = progressBar;
 
 	bter->session = NULL;
 	bter->torrent = NULL;
@@ -185,6 +191,23 @@ static gboolean wl_bter_timeout(gpointer data)
 {
 	WlBter *bter = WL_BTER(data);
 	tr_torrent *torrent = bter->torrent;
+	const tr_stat *stat = tr_torrentStatCached(torrent);
+	/* 下载百分比 */
+	gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(bter->progressBar),
+								  stat->percentDone);
+	/* 下载速度 */
+	gchar *dlSpeed =
+		g_strdup_printf(" %.2f kB/s", stat->pieceDownloadSpeed_KBps);
+	gtk_label_set_text(GTK_LABEL(bter->speedLabel), dlSpeed);
+	/* 已下载数据和总数据 */
+	gchar *totalSize = g_strdup_printf("of %lu B -", stat->sizeWhenDone);
+	gtk_label_set_text(GTK_LABEL(bter->totalLabel), totalSize);
+	gchar *dlSize = g_strdup_printf(" %lu B", stat->haveValid);
+	gtk_label_set_text(GTK_LABEL(bter->dlLabel), dlSize);
+
+	g_free(dlSpeed);
+	g_free(totalSize);
+	g_free(dlSize);
 }
 
 /**********************************************************

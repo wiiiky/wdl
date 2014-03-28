@@ -158,30 +158,27 @@ static void on_delete_files_activate(GtkMenuItem * item, gpointer data)
 
 static inline GtkWidget *wl_downloader_httper_popmenu(WlHttper * httper)
 {
-	GtkWidget *menu = wl_httper_get_popmenu(httper);
-	if (menu == NULL) {
-		menu = wl_httper_menu_new(httper);
-		wl_httper_menu_append_separator(WL_HTTPER_MENU(menu));
+	GtkWidget *menu = wl_httper_menu_new(httper);
+	wl_httper_menu_append_separator(WL_HTTPER_MENU(menu));
 
-		GtkWidget *rmHttper =
-			gtk_image_menu_item_new_from_stock(GTK_STOCK_REMOVE, NULL);
-		gtk_menu_item_set_label(GTK_MENU_ITEM(rmHttper), "Remove");
-		gtk_image_menu_item_set_always_show_image(GTK_IMAGE_MENU_ITEM
-												  (rmHttper), TRUE);
-		g_signal_connect(G_OBJECT(rmHttper), "activate",
-						 G_CALLBACK(on_remove_httper_activate), httper);
-		wl_httper_menu_append(WL_HTTPER_MENU(menu), rmHttper);
+	GtkWidget *rmHttper =
+		gtk_image_menu_item_new_from_stock(GTK_STOCK_REMOVE, NULL);
+	gtk_menu_item_set_label(GTK_MENU_ITEM(rmHttper), "Remove");
+	gtk_image_menu_item_set_always_show_image(GTK_IMAGE_MENU_ITEM
+											  (rmHttper), TRUE);
+	g_signal_connect(G_OBJECT(rmHttper), "activate",
+					 G_CALLBACK(on_remove_httper_activate), httper);
+	wl_httper_menu_append(WL_HTTPER_MENU(menu), rmHttper);
 
-		GtkWidget *dFile =
-			gtk_image_menu_item_new_from_stock(GTK_STOCK_DELETE, NULL);
-		gtk_menu_item_set_label(GTK_MENU_ITEM(dFile),
-								"Remove and Delete Files");
-		gtk_image_menu_item_set_always_show_image(GTK_IMAGE_MENU_ITEM
-												  (dFile), TRUE);
-		g_signal_connect(G_OBJECT(dFile), "activate",
-						 G_CALLBACK(on_delete_files_activate), httper);
-		wl_httper_menu_append(WL_HTTPER_MENU(menu), dFile);
-	}
+	GtkWidget *dFile =
+		gtk_image_menu_item_new_from_stock(GTK_STOCK_DELETE, NULL);
+	gtk_menu_item_set_label(GTK_MENU_ITEM(dFile),
+							"Remove and Delete Files");
+	gtk_image_menu_item_set_always_show_image(GTK_IMAGE_MENU_ITEM
+											  (dFile), TRUE);
+	g_signal_connect(G_OBJECT(dFile), "activate",
+					 G_CALLBACK(on_delete_files_activate), httper);
+	wl_httper_menu_append(WL_HTTPER_MENU(menu), dFile);
 	return menu;
 }
 
@@ -199,7 +196,7 @@ static gpointer wl_downloader_httper_pressed_callback(GtkWidget * widget,
 			/* 左键 */
 			/*wl_downloader_set_httper_selected(dl, httper); */
 		} else if (event->button == 3) {
-			popmenu = wl_downloader_httper_popmenu(httper);
+			popmenu = wl_httper_get_popmenu(httper);
 			gtk_menu_popup(GTK_MENU(popmenu), NULL, NULL, NULL, NULL,
 						   event->button,
 						   gdk_event_get_time((GdkEvent *) event));
@@ -231,6 +228,7 @@ WlHttper *wl_downloader_append_httper(WlDownloader * dl, const gchar * url,
 {
 	g_return_if_fail(WL_IS_DOWNLOADER(dl));
 	WlHttper *httper = wl_httper_new(url, path);
+	GtkWidget *menu = wl_downloader_httper_popmenu(httper);
 	wl_httper_set_user_data(httper, dl);
 	g_signal_connect(G_OBJECT(httper), "button-press-event",
 					 G_CALLBACK(wl_downloader_httper_pressed_callback),

@@ -16,6 +16,7 @@
  */
 
 #include "wlhttper.h"
+#include "wlhttpermenu.h"
 
 enum {
 	WL_HTTPER_PROPERTY_URL = 1,
@@ -108,7 +109,7 @@ static void wl_httper_init(WlHttper * httper)
 	GtkWidget *arrow =
 		gtk_arrow_new(GTK_ARROW_DOWN, GTK_SHADOW_ETCHED_OUT);
 	gtk_box_pack_start(GTK_BOX(iBox), arrow, FALSE, FALSE, 0);
-	GtkWidget *info_speed = gtk_label_new("0.00 KB/S");
+	GtkWidget *info_speed = gtk_label_new("0.00 kB/s");
 	gtk_label_set_single_line_mode(GTK_LABEL(info_speed), TRUE);
 	gtk_box_pack_start(GTK_BOX(iBox), info_speed, FALSE, FALSE, 0);
 
@@ -135,6 +136,7 @@ static void wl_httper_init(WlHttper * httper)
 	httper->timeout = 0;
 	httper->dlNow = 0;
 	httper->dlTotal = 0;
+	httper->totalLast = 0;
 	httper->fOutput = NULL;
 	httper->status = WL_HTTPER_STATUS_NOT_START;
 	httper->cdt = g_date_time_new_now_local();
@@ -144,9 +146,8 @@ static void wl_httper_init(WlHttper * httper)
 	httper->userData = NULL;
 	httper->finishCallback = NULL;
 	httper->cbData = NULL;
-	httper->statusCallbackS = NULL;
-	//httper->statusCallback = NULL;
-	//httper->sData = NULL;
+	httper->statusCallback = NULL;
+	httper->statusData = NULL;
 }
 
 static void wl_httper_finalize(GObject * object)
@@ -161,7 +162,6 @@ static void wl_httper_finalize(GObject * object)
 	g_date_time_unref(httper->cdt);
 	if (httper->popMenu)
 		gtk_widget_destroy(httper->popMenu);
-	g_list_free_full(httper->statusCallbackS, g_free);
 }
 
 static void wl_httper_class_init(WlHttperClass * klass)
@@ -256,12 +256,9 @@ static inline void wl_httper_set_status(WlHttper * httper,
 										WlHttperStatus status)
 {
 	httper->status = status;
-	GList *lp = httper->statusCallbackS;
-	while (lp) {
-		struct _WlHttperStatusCallback *cb = lp->data;
-		cb->callback(httper, cb->data);
-		lp = g_list_next(lp);
-	}
+	wl_httper_menu_set_sensitive(WL_HTTPER_MENU(httper->popMenu));
+	if (httper->statusCallback)
+		httper->statusCallback(httper, httper->statusData);
 }
 
 static inline void wl_httper_add_timeout(WlHttper * httper)
@@ -300,7 +297,7 @@ static inline void wl_httper_set_default_info(WlHttper * httper)
 {
 	gtk_label_set_text(GTK_LABEL(httper->dlLabel), " 0 KB");
 	/*gtk_label_set_text(GTK_LABEL(httper->totalLabel), "of 0 KB -"); */
-	gtk_label_set_text(GTK_LABEL(httper->speedLabel), " 0.00 KB/S");
+	gtk_label_set_text(GTK_LABEL(httper->speedLabel), " 0.00 kB/s");
 	gtk_label_set_text(GTK_LABEL(httper->timeLabel),
 					   " (unknown time remaining)");
 	gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(httper->progressBar),
@@ -393,11 +390,11 @@ static inline void wl_httper_set_dl_speed(WlHttper * httper, gdouble speed)
 {
 	gchar *label;
 	if (speed >= 1024 * 1024)
-		label = g_strdup_printf("%.2f MB/S", speed / (1024 * 1024));
+		label = g_strdup_printf("%.2f mB/s", speed / (1024 * 1024));
 	else if (speed >= 1024)
-		label = g_strdup_printf("%.2f KB/S", speed / 1024);
+		label = g_strdup_printf("%.2f kB/s", speed / 1024);
 	else
-		label = g_strdup_printf("%.2f B/S", speed);
+		label = g_strdup_printf("%.2f B/s", speed);
 	gtk_label_set_text(GTK_LABEL(httper->speedLabel), label);
 	g_free(label);
 }
@@ -424,10 +421,9 @@ static inline void wl_httper_set_rtime(WlHttper * httper, guint64 time)
 static inline void wl_httper_set_total_size(WlHttper * httper,
 											guint64 size)
 {
-	static guint64 last = 0;
-	if (last == size)
+	if (httper->totalLast == size)
 		return;
-	last = size;
+	httper->totalLast = size;
 	gchar *label;
 	gdouble dsize = (gdouble) size;
 	if (size >= 1024 * 1024 * 1024)
@@ -905,9 +901,6 @@ void wl_httper_set_status_callback(WlHttper * httper,
 								   gpointer data)
 {
 	g_return_if_fail(WL_IS_HTTPER(httper));
-	struct _WlHttperStatusCallback *cb =
-		g_new(struct _WlHttperStatusCallback, 1);
-	cb->callback = callback;
-	cb->data = data;
-	httper->statusCallbackS = g_list_append(httper->statusCallbackS, cb);
+	httper->statusCallback = callback;
+	httper->statusData = data;
 }

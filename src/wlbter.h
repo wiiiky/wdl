@@ -55,6 +55,7 @@ struct _WlBter {
 	GtkWidget *totalLabel;
 	GtkWidget *speedLabel;
 	GtkWidget *timeLabel;
+	GtkWidget *progressBar;
 
 	/* libtransmission的会话，由外部传递进来 */
 	tr_session *session;

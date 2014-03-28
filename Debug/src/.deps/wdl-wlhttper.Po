@@ -573,7 +573,9 @@ wdl-wlhttper.o: /home/wiky/Documents/CODE/Bazaar/wdl/src/wlhttper.c \
  /usr/include/asm-generic/sockios.h /usr/include/curl/curlrules.h \
  /usr/include/x86_64-linux-gnu/sys/time.h /usr/include/curl/easy.h \
  /usr/include/curl/multi.h /usr/include/curl/curl.h \
- /usr/include/curl/typecheck-gcc.h
+ /usr/include/curl/typecheck-gcc.h \
+ /home/wiky/Documents/CODE/Bazaar/wdl/src/wlhttpermenu.h \
+ /home/wiky/Documents/CODE/Bazaar/wdl/src/wlhttperproperties.h
 
 /usr/include/stdc-predef.h:
 
@@ -1834,3 +1836,7 @@ wdl-wlhttper.o: /home/wiky/Documents/CODE/Bazaar/wdl/src/wlhttper.c \
 /usr/include/curl/curl.h:
 
 /usr/include/curl/typecheck-gcc.h:
+
+/home/wiky/Documents/CODE/Bazaar/wdl/src/wlhttpermenu.h:
+
+/home/wiky/Documents/CODE/Bazaar/wdl/src/wlhttperproperties.h:

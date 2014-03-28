@@ -42,11 +42,6 @@ typedef void (*WlHttperCallback) (gint code, gpointer data);
 typedef void (*WlHttperStatusCallback) (WlHttper * httper, gpointer data);
 
 
-struct _WlHttperStatusCallback {
-	WlHttperStatusCallback callback;
-	gpointer data;
-};
-
 struct _WlHttper {
 	GtkEventBox parent;
 	GtkWidget *iconImage;
@@ -79,6 +74,7 @@ struct _WlHttper {
 	/* 已下载的数据和总数据 */
 	guint64 dlNow;
 	guint64 dlTotal;
+	guint64 totalLast;
 	/* 当前的状态 */
 	gint status;
 	/* 完成后返回结果 */
@@ -94,8 +90,9 @@ struct _WlHttper {
 	/* 完成下载后的回调函数,第一个参数是下载结果 */
 	WlHttperCallback finishCallback;
 	gpointer cbData;
-	/* 状态改变的回调函数,可以注册多个 */
-	GList *statusCallbackS;
+	/* 状态改变的回调函数 */
+	WlHttperStatusCallback statusCallback;
+	gpointer statusData;
 };
 
 struct _WlHttperClass {
