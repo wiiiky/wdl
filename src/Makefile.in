@@ -95,7 +95,8 @@ PROGRAMS = $(bin_PROGRAMS)
 am_wdl_OBJECTS = wdl-main.$(OBJEXT) wdl-wldownloader.$(OBJEXT) \
 	wdl-wldownloadwindow.$(OBJEXT) wdl-wlhttper.$(OBJEXT) \
 	wdl-wlhttpermenu.$(OBJEXT) wdl-wlhttperproperties.$(OBJEXT) \
-	wdl-wlurldialog.$(OBJEXT) wdl-wlbter.$(OBJEXT)
+	wdl-wlurldialog.$(OBJEXT) wdl-wlbter.$(OBJEXT) \
+	wdl-wlbtfilechooser.$(OBJEXT)
 wdl_OBJECTS = $(am_wdl_OBJECTS)
 am__DEPENDENCIES_1 =
 wdl_DEPENDENCIES = $(srcdir)/libtransmission.a $(srcdir)/libdht.a \
@@ -386,7 +387,9 @@ wdl_SOURCES = \
 			   wlurldialog.c \
 			   wlurldialog.h \
 			   wlbter.c \
-			   wlbter.h
+			   wlbter.h \
+			   wlbtfilechooser.c \
+			   wlbtfilechooser.h
 
 wdl_LDFLAGS = \
 			  -Wl,--export-dynamic 
@@ -501,6 +504,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wdl-main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wdl-wlbter.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wdl-wlbtfilechooser.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wdl-wldownloader.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wdl-wldownloadwindow.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wdl-wlhttper.Po@am__quote@
@@ -640,6 +644,20 @@ wdl-wlbter.obj: wlbter.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wlbter.c' object='wdl-wlbter.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(wdl_CFLAGS) $(CFLAGS) -c -o wdl-wlbter.obj `if test -f 'wlbter.c'; then $(CYGPATH_W) 'wlbter.c'; else $(CYGPATH_W) '$(srcdir)/wlbter.c'; fi`
+
+wdl-wlbtfilechooser.o: wlbtfilechooser.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(wdl_CFLAGS) $(CFLAGS) -MT wdl-wlbtfilechooser.o -MD -MP -MF $(DEPDIR)/wdl-wlbtfilechooser.Tpo -c -o wdl-wlbtfilechooser.o `test -f 'wlbtfilechooser.c' || echo '$(srcdir)/'`wlbtfilechooser.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/wdl-wlbtfilechooser.Tpo $(DEPDIR)/wdl-wlbtfilechooser.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wlbtfilechooser.c' object='wdl-wlbtfilechooser.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(wdl_CFLAGS) $(CFLAGS) -c -o wdl-wlbtfilechooser.o `test -f 'wlbtfilechooser.c' || echo '$(srcdir)/'`wlbtfilechooser.c
+
+wdl-wlbtfilechooser.obj: wlbtfilechooser.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(wdl_CFLAGS) $(CFLAGS) -MT wdl-wlbtfilechooser.obj -MD -MP -MF $(DEPDIR)/wdl-wlbtfilechooser.Tpo -c -o wdl-wlbtfilechooser.obj `if test -f 'wlbtfilechooser.c'; then $(CYGPATH_W) 'wlbtfilechooser.c'; else $(CYGPATH_W) '$(srcdir)/wlbtfilechooser.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/wdl-wlbtfilechooser.Tpo $(DEPDIR)/wdl-wlbtfilechooser.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wlbtfilechooser.c' object='wdl-wlbtfilechooser.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(wdl_CFLAGS) $(CFLAGS) -c -o wdl-wlbtfilechooser.obj `if test -f 'wlbtfilechooser.c'; then $(CYGPATH_W) 'wlbtfilechooser.c'; else $(CYGPATH_W) '$(srcdir)/wlbtfilechooser.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
