@@ -45,4 +45,5 @@ Makefile
 src/Makefile
 po/Makefile.in
 src/libtransmission/Makefile
+data/Makefile
 ])

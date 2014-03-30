@@ -370,7 +370,7 @@ target_alias =
 top_build_prefix = 
 top_builddir = .
 top_srcdir = /home/wiky/Documents/CODE/Bazaar/wdl
-SUBDIRS = src po
+SUBDIRS = src po data
 wdldocdir = ${prefix}/doc/wdl
 wdldoc_DATA = \
 	README\

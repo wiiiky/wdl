@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <!-- interface-requires gtk+ 3.0 -->
-  <object class="GtkListStore" id="file_list">
+  <object class="GtkTreeStore" id="file_tree">
     <columns>
       <!-- column-name icon -->
       <column type="GdkPixbuf"/>
       <!-- column-name filename -->
-      <column type="gchar"/>
+      <column type="gchararray"/>
       <!-- column-name size -->
-      <column type="gchar"/>
+      <column type="gchararray"/>
       <!-- column-name download -->
       <column type="gboolean"/>
     </columns>
@@ -126,27 +126,52 @@
                     <property name="can_focus">False</property>
                     <property name="hexpand">True</property>
                     <property name="vexpand">True</property>
-                    <property name="model">file_list</property>
-                    <property name="ubuntu_almost_fixed_height_mode">True</property>
+                    <property name="model">file_tree</property>
                     <property name="enable_tree_lines">True</property>
                     <child>
-                      <object class="GtkTreeViewColumn" id="treeviewcolumn1">
+                      <object class="GtkTreeViewColumn" id="name_column">
                         <property name="resizable">True</property>
                         <property name="title" translatable="yes">Name</property>
+                        <child>
+                          <object class="GtkCellRendererPixbuf" id="cellrendererpixbuf1"/>
+                          <attributes>
+                            <attribute name="pixbuf">0</attribute>
+                          </attributes>
+                        </child>
+                        <child>
+                          <object class="GtkCellRendererText" id="cellrenderertext1">
+                            <property name="placeholder_text">root</property>
+                          </object>
+                          <attributes>
+                            <attribute name="text">1</attribute>
+                          </attributes>
+                        </child>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkTreeViewColumn" id="treeviewcolumn2">
+                      <object class="GtkTreeViewColumn" id="size_column">
                         <property name="resizable">True</property>
                         <property name="sizing">autosize</property>
                         <property name="title" translatable="yes">Size</property>
+                        <child>
+                          <object class="GtkCellRendererText" id="cellrenderertext2"/>
+                          <attributes>
+                            <attribute name="text">2</attribute>
+                          </attributes>
+                        </child>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkTreeViewColumn" id="treeviewcolumn3">
+                      <object class="GtkTreeViewColumn" id="dl_column">
                         <property name="resizable">True</property>
                         <property name="sizing">autosize</property>
                         <property name="title" translatable="yes">Download</property>
+                        <child>
+                          <object class="GtkCellRendererToggle" id="cellrenderertoggle1"/>
+                          <attributes>
+                            <attribute name="active">3</attribute>
+                          </attributes>
+                        </child>
                       </object>
                     </child>
                   </object>

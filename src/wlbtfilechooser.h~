@@ -28,8 +28,6 @@
 #define PACKAGE_DATA_DIR "./data"
 #endif
 
-#define UI_FILE PACKAGE_DATA_DIR "/torrent.glade"
-
 G_BEGIN_DECLS
 
 /* Macro for casting a pointer to a WlBtFileChooser or WlBtFileChooserClass pointer.
