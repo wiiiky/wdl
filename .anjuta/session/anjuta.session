@@ -3,14 +3,14 @@ Maximized=1
 Geometry=1301x744+65+24
 
 [File Loader]
-Files=../../src/wlbtfilechooser.h#1%%%../../src/wlbtfilechooser.c#53%%%../../src/wldownloadwindow.c#1
+Files=../../src/wlbtfilechooser.h#1%%%../../src/wlbtfilechooser.c#53%%%../../src/wldownloadwindow.c#19
 
 [Document Manager]
 bookmarks=<?xml version="1.0" encoding="UTF-8"?>\n<bookmarks/>\n
 
 [Project Manager]
 Shortcut=wdl//src//wdl
-Expand=wdl%%%wdl//src%%%wdl//src//wdl%%%wdl//wdldoc
+Expand=wdl%%%wdl//data%%%wdl//data//data%%%wdl//src%%%wdl//src//wdl%%%wdl//wdldoc
 
 [Execution]
 Program uri=../../Debug/src/wdl

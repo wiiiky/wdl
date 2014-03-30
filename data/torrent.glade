@@ -127,10 +127,10 @@
                     <property name="hexpand">True</property>
                     <property name="vexpand">True</property>
                     <property name="model">file_tree</property>
-                    <property name="enable_tree_lines">True</property>
                     <child>
                       <object class="GtkTreeViewColumn" id="name_column">
                         <property name="resizable">True</property>
+                        <property name="min_width">320</property>
                         <property name="title" translatable="yes">Name</property>
                         <child>
                           <object class="GtkCellRendererPixbuf" id="cellrendererpixbuf1"/>
@@ -140,6 +140,8 @@
                         </child>
                         <child>
                           <object class="GtkCellRendererText" id="cellrenderertext1">
+                            <property name="ellipsize">end</property>
+                            <property name="single_paragraph_mode">True</property>
                             <property name="placeholder_text">root</property>
                           </object>
                           <attributes>
@@ -154,7 +156,9 @@
                         <property name="sizing">autosize</property>
                         <property name="title" translatable="yes">Size</property>
                         <child>
-                          <object class="GtkCellRendererText" id="cellrenderertext2"/>
+                          <object class="GtkCellRendererText" id="cellrenderertext2">
+                            <property name="alignment">center</property>
+                          </object>
                           <attributes>
                             <attribute name="text">2</attribute>
                           </attributes>
@@ -167,7 +171,9 @@
                         <property name="sizing">autosize</property>
                         <property name="title" translatable="yes">Download</property>
                         <child>
-                          <object class="GtkCellRendererToggle" id="cellrenderertoggle1"/>
+                          <object class="GtkCellRendererToggle" id="cellrenderertoggle1">
+                            <signal name="toggled" handler="cellrenderertoggle_toggled_cb" object="file_tree" swapped="no"/>
+                          </object>
                           <attributes>
                             <attribute name="active">3</attribute>
                           </attributes>
