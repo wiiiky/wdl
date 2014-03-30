@@ -586,7 +586,8 @@ wdl-wldownloadwindow.o: \
  /usr/include/x86_64-linux-gnu/bits/wchar.h \
  /home/wiky/Documents/CODE/Bazaar/wdl/src/libtransmission/variant.h \
  /home/wiky/Documents/CODE/Bazaar/wdl/src/libtransmission/quark.h \
- /home/wiky/Documents/CODE/Bazaar/wdl/src/wlurldialog.h
+ /home/wiky/Documents/CODE/Bazaar/wdl/src/wlurldialog.h \
+ /home/wiky/Documents/CODE/Bazaar/wdl/src/wlbtfilechooser.h
 
 /usr/include/stdc-predef.h:
 
@@ -1873,3 +1874,5 @@ wdl-wldownloadwindow.o: \
 /home/wiky/Documents/CODE/Bazaar/wdl/src/libtransmission/quark.h:
 
 /home/wiky/Documents/CODE/Bazaar/wdl/src/wlurldialog.h:
+
+/home/wiky/Documents/CODE/Bazaar/wdl/src/wlbtfilechooser.h:

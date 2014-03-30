@@ -22,16 +22,16 @@
 #define __WL_BT_FILE_CHOOSER_H__
 
 #include<gtk/gtk.h>
+#include"libtransmission/transmission.h"
 
 
 #ifndef PACKAGE_DATA_DIR
 #define PACKAGE_DATA_DIR "./data"
 #endif
 
-#define UI_FILE PACKAGE_DATA_DIR "/torrent.glade"
+#define UI_FILE PACKAGE_DATA_DIR "/torrent.ui"
 
 G_BEGIN_DECLS
-
 /* Macro for casting a pointer to a WlBtFileChooser or WlBtFileChooserClass pointer.
  * Macros for testing whether `object' or `klass' are of type WL_TYPE_BT_FILE_CHOOSER.
  */
@@ -41,27 +41,26 @@ G_BEGIN_DECLS
 #define WL_IS_BT_FILE_CHOOSER(obj)	(G_TYPE_CHECK_INSTANCE_TYPE ((obj), WL_TYPE_BT_FILE_CHOOSER))
 #define WL_IS_BT_FILE_CHOOSER_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE ((klass), WL_TYPE_BT_FILE_CHOOSER))
 #define WL_BT_FILE_CHOOSER_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS ((obj), WL_TYPE_BT_FILE_CHOOSER, WlBtFileChooserClass))
-
-
-typedef struct _WlBtFileChooser	WlBtFileChooser;
-typedef struct _WlBtFileChooserClass	WlBtFileChooserClass;
+typedef struct _WlBtFileChooser WlBtFileChooser;
+typedef struct _WlBtFileChooserClass WlBtFileChooserClass;
 
 
 struct _WlBtFileChooser {
-	GtkDialog parent;
-	/*Private*/
+	GtkBuilder parent;
+	/*Private */
+	tr_torrent *torrent;
 };
 
 struct _WlBtFileChooserClass {
-	GtkDialogClass parent_klass;
-	/*Private*/
+	GtkBuilderClass parent_class;
+	/*Private */
 };
 
 GType wl_bt_file_chooser_get_type(void) G_GNUC_CONST;
 
 /* Public */
+WlBtFileChooser *wl_bt_file_chooser_new(tr_torrent * torrent);
 
 
 G_END_DECLS
-
 #endif

@@ -19,6 +19,7 @@
 
 #include "wldownloader.h"
 #include "wlurldialog.h"
+#include "wlbtfilechooser.h"
 
 G_BEGIN_DECLS
 #define WL_TYPE_DOWNLOAD_WINDOW	(wl_download_window_get_type())

@@ -560,7 +560,11 @@ wdl-wlbtfilechooser.o: \
  /usr/include/gtk-3.0/gtk/deprecated/gtkvpaned.h \
  /usr/include/gtk-3.0/gtk/deprecated/gtkvscale.h \
  /usr/include/gtk-3.0/gtk/deprecated/gtkvscrollbar.h \
- /usr/include/gtk-3.0/gtk/deprecated/gtkvseparator.h
+ /usr/include/gtk-3.0/gtk/deprecated/gtkvseparator.h \
+ /home/wiky/Documents/CODE/Bazaar/wdl/src/libtransmission/transmission.h \
+ /usr/include/inttypes.h \
+ /usr/lib/gcc/x86_64-linux-gnu/4.8/include/stdint.h /usr/include/stdint.h \
+ /usr/include/x86_64-linux-gnu/bits/wchar.h
 
 /usr/include/stdc-predef.h:
 
@@ -1783,3 +1787,13 @@ wdl-wlbtfilechooser.o: \
 /usr/include/gtk-3.0/gtk/deprecated/gtkvscrollbar.h:
 
 /usr/include/gtk-3.0/gtk/deprecated/gtkvseparator.h:
+
+/home/wiky/Documents/CODE/Bazaar/wdl/src/libtransmission/transmission.h:
+
+/usr/include/inttypes.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/4.8/include/stdint.h:
+
+/usr/include/stdint.h:
+
+/usr/include/x86_64-linux-gnu/bits/wchar.h:

@@ -286,7 +286,7 @@ target_alias =
 top_build_prefix = ../
 top_builddir = ..
 top_srcdir = /home/wiky/Documents/CODE/Bazaar/wdl
-data_DATA = torrent.glade
+data_DATA = torrent.ui
 all: all-am
 
 .SUFFIXES:

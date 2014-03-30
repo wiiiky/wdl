@@ -20,51 +20,90 @@
 
 #include "wlbtfilechooser.h"
 
-G_DEFINE_TYPE(WlBtFileChooser, wl_bt_file_chooser, GTK_TYPE_DIALOG);
+enum {
+	WL_BT_FILE_CHOOSER_PROPERTY_TORRENT = 1,
+};
 
-static void wl_bt_file_chooser_init(WlBtFileChooser *obj);
-static void wl_bt_file_chooser_finalize(GObject *obj);
-static void wl_bt_file_chooser_class_init(WlBtFileChooserClass *klass);
-static void wl_bt_file_chooser_getter(GObject *object,guint property_id,
-									GValue *value,GParamSpec *ps);
-static void wl_bt_file_chooser_setter(GObject *object,guint property_id,
-									const GValue *value,GParamSpec *ps);
+G_DEFINE_TYPE(WlBtFileChooser, wl_bt_file_chooser, GTK_TYPE_BUILDER);
 
-static void wl_bt_file_chooser_init(WlBtFileChooser *obj)
+static void wl_bt_file_chooser_init(WlBtFileChooser * obj);
+static void wl_bt_file_chooser_finalize(GObject * obj);
+static void wl_bt_file_chooser_class_init(WlBtFileChooserClass * klass);
+static void wl_bt_file_chooser_getter(GObject * object, guint property_id,
+									  GValue * value, GParamSpec * ps);
+static void wl_bt_file_chooser_setter(GObject * object, guint property_id,
+									  const GValue * value,
+									  GParamSpec * ps);
+
+static void wl_bt_file_chooser_init(WlBtFileChooser * chooser)
+{
+	if (!gtk_builder_add_from_file(GTK_BUILDER(chooser), UI_FILE, NULL)) {
+		/* 载入失败退出程序 */
+		g_error("Fail to load " UI_FILE);
+	}
+	chooser->torrent = NULL;
+}
+
+static void wl_bt_file_chooser_finalize(GObject * obj)
 {
 }
 
-static void wl_bt_file_chooser_finalize(GObject *obj)
+static void wl_bt_file_chooser_class_init(WlBtFileChooserClass * klass)
 {
-}
-
-static void wl_bt_file_chooser_class_init(WlBtFileChooserClass *klass)
-{
-	GObjectClass *obj_class=G_OBJECT_CLASS(klass);
-	obj_class->get_property=wl_bt_file_chooser_getter;
-	obj_class->set_property=wl_bt_file_chooser_setter;
-	obj_class->finalize=wl_bt_file_chooser_finalize;
+	GObjectClass *obj_class = G_OBJECT_CLASS(klass);
+	obj_class->get_property = wl_bt_file_chooser_getter;
+	obj_class->set_property = wl_bt_file_chooser_setter;
+	obj_class->finalize = wl_bt_file_chooser_finalize;
 
 	GParamSpec *ps;
 	/* properties */
+	ps = g_param_spec_pointer("torrent",
+							  "BT torrent",
+							  "BT Torrent",
+							  G_PARAM_READABLE | G_PARAM_WRITABLE |
+							  G_PARAM_CONSTRUCT_ONLY);
+	g_object_class_install_property(obj_class,
+									WL_BT_FILE_CHOOSER_PROPERTY_TORRENT,
+									ps);
 }
 
-static void wl_bt_file_chooser_getter(GObject *object,guint property_id,
-									GValue *value,GParamSpec *ps)
+static void wl_bt_file_chooser_getter(GObject * object, guint property_id,
+									  GValue * value, GParamSpec * ps)
 {
-	WlBtFileChooser *obj=WL_BT_FILE_CHOOSER(object);
-	switch(property_id){
-		default:
-			G_OBJECT_WARN_INVALID_PROPERTY_ID(object,property_id,ps);
+	WlBtFileChooser *obj = WL_BT_FILE_CHOOSER(object);
+	switch (property_id) {
+	case WL_BT_FILE_CHOOSER_PROPERTY_TORRENT:
+		g_value_set_pointer(value, obj->torrent);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, ps);
 	}
 }
 
-static void wl_bt_file_chooser_setter(GObject *object,guint property_id,
-								const GValue *value,GParamSpec *ps)
+static void wl_bt_file_chooser_setter(GObject * object, guint property_id,
+									  const GValue * value,
+									  GParamSpec * ps)
 {
-	WlBtFileChooser *obj=WL_BT_FILE_CHOOSER(object);
-	switch(property_id){
-		default:
-			G_OBJECT_WARN_INVALID_PROPERTY_ID(object,property_id,ps);
+	WlBtFileChooser *obj = WL_BT_FILE_CHOOSER(object);
+	switch (property_id) {
+	case WL_BT_FILE_CHOOSER_PROPERTY_TORRENT:
+		obj->torrent = g_value_get_pointer(value);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, ps);
 	}
+}
+
+
+/**********************************************************
+ * PUBLIC
+ **********************************************************/
+WlBtFileChooser *wl_bt_file_chooser_new(tr_torrent * torrent)
+{
+	g_return_val_if_fail(torrent != NULL, NULL);
+	WlBtFileChooser *chooser =
+		(WlBtFileChooser *) g_object_new(WL_TYPE_BT_FILE_CHOOSER,
+										 "torrent", torrent, NULL);
+
+	return chooser;
 }

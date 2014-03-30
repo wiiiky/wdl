@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
 	gtk_init(&argc, &argv);
 
 	GtkBuilder *ui = gtk_builder_new();
-	gtk_builder_add_from_file(ui, "./torrent.glade", NULL);
+	gtk_builder_add_from_file(ui, "./torrent.ui", NULL);
 	gtk_builder_connect_signals(ui,NULL);
 
 	/*GtkCellRendererToggle *toggle=(GtkCellRendererToggle*)gtk_builder_get_object(ui,"cellrenderertoggle1");*/
