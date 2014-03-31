@@ -26,6 +26,24 @@ enum {
 	WL_BT_FILE_CHOOSER_PROPERTY_PATH,
 };
 
+
+/* UI各部分的名字 */
+#define UI_WINDOW	"torrent_window"
+#define UI_TORRENT   "torrent_chooser"
+#define UI_FOLDER   "folder_chooser"
+#define UI_TREEVIEW "file_view"
+#define UI_SPACE	"space_label"
+#define UI_TREESTORE	"file_tree"
+#define UI_OPEN "open_button"
+#define UI_CANCEL   "cancel_button"
+
+/* 常用图标的名字 */
+#define ICON_FOLDER "folder"
+
+
+#define TREEVIEW_ICON_SIZE  16
+
+
 G_DEFINE_TYPE(WlBtFileChooser, wl_bt_file_chooser, GTK_TYPE_BUILDER);
 
 static void wl_bt_file_chooser_init(WlBtFileChooser * obj);
@@ -45,6 +63,11 @@ static void wl_bt_file_chooser_cancel(GtkWidget * button, gpointer data);
 /* 将字节大小转化为可读的字符串形式 */
 static const gchar *make_size_readable(guint64 size);
 
+/* 将图标转化为GdkPixbuf形式 */
+static GdkPixbuf *get_pixbuf_from_icon(GtkIconTheme * icon_theme,
+									   GThemedIcon * icon, gint size);
+static GdkPixbuf *get_pixbuf_from_icon_name(const gchar * name, gint size);
+
 static void wl_bt_file_chooser_init(WlBtFileChooser * chooser)
 {
 	if (!gtk_builder_add_from_file(GTK_BUILDER(chooser), UI_FILE, NULL)) {
@@ -54,7 +77,7 @@ static void wl_bt_file_chooser_init(WlBtFileChooser * chooser)
 
 	chooser->window =
 		(GtkWidget *) gtk_builder_get_object(GTK_BUILDER(chooser),
-											 "torrent_window");
+											 UI_WINDOW);
 
 	chooser->default_path =
 		g_strdup(g_get_user_special_dir(G_USER_DIRECTORY_DOWNLOAD));
@@ -143,6 +166,47 @@ static void wl_bt_file_chooser_setter(GObject * object, guint property_id,
 	}
 }
 
+static GdkPixbuf *get_pixbuf_from_icon(GtkIconTheme * icon_theme,
+									   GThemedIcon * icon, gint size)
+{
+	char **icon_names;
+	GtkIconInfo *icon_info;
+	GdkPixbuf *pixbuf;
+	GError *error = NULL;
+
+	g_object_get(icon, "names", &icon_names, NULL);
+
+	icon_info =
+		gtk_icon_theme_choose_icon(icon_theme, (const char **) icon_names,
+								   size, 0);
+	pixbuf = gtk_icon_info_load_icon(icon_info, &error);
+	if (pixbuf == NULL) {
+		g_warning("could not load icon pixbuf: %s\n", error->message);
+		g_clear_error(&error);
+	}
+
+	/*gtk_icon_info_free (icon_info); */
+	g_object_unref(icon_info);
+	g_strfreev(icon_names);
+
+	return pixbuf;
+}
+
+static GdkPixbuf *get_pixbuf_from_icon_name(const gchar * name, gint size)
+{
+	static GtkIconTheme *theme = NULL;
+	GIcon *icon = g_themed_icon_new(name);
+	if (icon == NULL)
+		return NULL;
+	if (theme == NULL) {
+		theme = gtk_icon_theme_get_default();
+	}
+	GdkPixbuf *pixbuf =
+		get_pixbuf_from_icon(theme, G_THEMED_ICON(icon), size);
+	g_object_unref(icon);
+	return pixbuf;
+}
+
 static gboolean wl_bt_file_chooser_close(GtkWidget * widget,
 										 GdkEvent * event, gpointer data)
 {
@@ -195,18 +259,19 @@ static const gchar *make_size_readable(guint64 size)
 static inline void wl_bt_file_chooser_update(WlBtFileChooser * chooser)
 {
 	tr_ctor *ctor = chooser->ctor;
-	chooser->torrent = tr_torrentNew(ctor, NULL, NULL);
-	if (chooser->torrent == NULL)
+	tr_torrent *torrent = tr_torrentNew(ctor, NULL, NULL);
+	chooser->torrent = torrent;
+	if (torrent == NULL)
 		return;
 	GtkBuilder *ui = GTK_BUILDER(chooser);
 	GtkFileChooserButton *fc_button =
 		(GtkFileChooserButton *) gtk_builder_get_object(ui,
-														"torrent_chooser");
+														UI_TORRENT);
 	GtkFileChooserButton *dc_button =
 		(GtkFileChooserButton *) gtk_builder_get_object(ui,
-														"folder_chooser");
+														UI_FOLDER);
 	GtkLabel *space_label =
-		(GtkLabel *) gtk_builder_get_object(ui, "space_label");
+		(GtkLabel *) gtk_builder_get_object(ui, UI_SPACE);
 
 	/* 种子文件和保存路径 */
 	gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(fc_button),
@@ -224,6 +289,29 @@ static inline void wl_bt_file_chooser_update(WlBtFileChooser * chooser)
 	gtk_label_set_text(space_label, make_size_readable(free_space));
 	g_object_unref(info);
 	g_object_unref(file);
+
+	/* 文件s */
+	GtkTreeStore *file_tree =
+		(GtkTreeStore *) gtk_builder_get_object(ui, UI_TREESTORE);
+	GtkTreeView *tree_view =
+		(GtkTreeView *) gtk_builder_get_object(ui, UI_TREEVIEW);
+	gtk_tree_store_clear(file_tree);
+	const tr_info *torrent_info = tr_torrentInfo(torrent);
+	GtkTreeIter root_iter;
+	gtk_tree_store_append(file_tree, &root_iter, NULL);
+	gtk_tree_store_set(file_tree, &root_iter,
+					   0, get_pixbuf_from_icon_name(ICON_FOLDER,
+													TREEVIEW_ICON_SIZE),
+					   1, torrent_info->originalName,
+					   2, make_size_readable(torrent_info->totalSize),
+					   3, TRUE, -1);
+	gint i;
+	g_message("originalName:%s", torrent_info->originalName);
+	g_message("name:%s", torrent_info->name);
+	for (i = 0; i < torrent_info->fileCount; i++) {
+		const tr_file *torrent_file = &torrent_info->files[i];
+		g_message("%s", torrent_file->name);
+	}
 }
 
 static inline void wl_bt_file_chooser_show_invalid(GtkWidget * window)
@@ -266,10 +354,10 @@ tr_torrent *wl_bt_file_chooser_run(WlBtFileChooser * chooser,
 	GtkWidget *window = chooser->window;
 	GtkWidget *open_button =
 		(GtkWidget *) gtk_builder_get_object(GTK_BUILDER(chooser),
-											 "open_button");
+											 UI_OPEN);
 	GtkWidget *cancel_button =
 		(GtkWidget *) gtk_builder_get_object(GTK_BUILDER(chooser),
-											 "cancel_button");
+											 UI_CANCEL);
 
 	if (tr_ctorSetMetainfoFromFile(chooser->ctor, path)) {	/* 无效的文件 */
 		wl_bt_file_chooser_show_invalid(window);

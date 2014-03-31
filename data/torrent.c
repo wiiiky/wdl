@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
 	GdkPixbuf *pixbuf = get_icon_pixbuf(gtk_icon_theme_get_default(),
 				(GThemedIcon *)
 				g_themed_icon_new
-				("gnome-terminal"),
+				("folder"),
 				16);
 	GtkTreeIter iter;
 	gtk_tree_store_append(GTK_TREE_STORE(model), &iter,NULL);
