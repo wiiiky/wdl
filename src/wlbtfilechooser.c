@@ -39,6 +39,8 @@ static void wl_bt_file_chooser_setter(GObject * object, guint property_id,
 static inline void wl_bt_file_chooser_update(WlBtFileChooser * chooser);
 static gboolean wl_bt_file_chooser_close(GtkWidget * widget,
 										 GdkEvent * event, gpointer data);
+static void wl_bt_file_chooser_open(GtkWidget * button, gpointer data);
+static void wl_bt_file_chooser_cancel(GtkWidget * button, gpointer data);
 
 /* 将字节大小转化为可读的字符串形式 */
 static const gchar *make_size_readable(guint64 size);
@@ -50,16 +52,15 @@ static void wl_bt_file_chooser_init(WlBtFileChooser * chooser)
 		g_error("Fail to load " UI_FILE);
 	}
 
-	GtkWidget *window =
+	chooser->window =
 		(GtkWidget *) gtk_builder_get_object(GTK_BUILDER(chooser),
 											 "torrent_window");
-	g_signal_connect(G_OBJECT(window), "delete-event",
-					 G_CALLBACK(wl_bt_file_chooser_close), NULL);
 
 	chooser->default_path =
 		g_strdup(g_get_user_special_dir(G_USER_DIRECTORY_DOWNLOAD));
 	chooser->torrent = NULL;
 	chooser->ctor = NULL;
+	chooser->loop = NULL;
 }
 
 static void wl_bt_file_chooser_finalize(GObject * obj)
@@ -146,7 +147,31 @@ static gboolean wl_bt_file_chooser_close(GtkWidget * widget,
 										 GdkEvent * event, gpointer data)
 {
 	gtk_widget_hide(widget);
+	GMainLoop *loop = data;
+	if (g_main_loop_is_running(loop))
+		g_main_loop_quit(loop);
 	return TRUE;
+}
+
+static void wl_bt_file_chooser_open(GtkWidget * button, gpointer data)
+{
+	WlBtFileChooser *chooser = data;
+	GMainLoop *loop = chooser->loop;
+	gtk_widget_hide(GTK_WIDGET(chooser->window));
+	if (g_main_loop_is_running(loop))
+		g_main_loop_quit(loop);
+}
+
+static void wl_bt_file_chooser_cancel(GtkWidget * button, gpointer data)
+{
+	WlBtFileChooser *chooser = data;
+	GMainLoop *loop = chooser->loop;
+	gtk_widget_hide(GTK_WIDGET(chooser->window));
+	if (chooser->torrent)
+		tr_torrentRemove(chooser->torrent, FALSE, 0);
+	chooser->torrent = NULL;
+	if (g_main_loop_is_running(loop))
+		g_main_loop_quit(loop);
 }
 
 /* 将字节大小转化为可读的字符串形式 */
@@ -191,10 +216,9 @@ static inline void wl_bt_file_chooser_update(WlBtFileChooser * chooser)
 
 	/* 磁盘空余 */
 	GFile *file = g_file_new_for_path(tr_ctorGetSourceFile(ctor));
-	GFileInfo *info =
-		g_file_query_filesystem_info(file,
-									 G_FILE_ATTRIBUTE_FILESYSTEM_FREE,
-									 NULL, NULL);
+	GFileInfo *info = g_file_query_filesystem_info(file,
+												   G_FILE_ATTRIBUTE_FILESYSTEM_FREE,
+												   NULL, NULL);
 	guint64 free_space = g_file_info_get_attribute_uint64(info,
 														  G_FILE_ATTRIBUTE_FILESYSTEM_FREE);
 	gtk_label_set_text(space_label, make_size_readable(free_space));
@@ -239,9 +263,13 @@ tr_torrent *wl_bt_file_chooser_run(WlBtFileChooser * chooser,
 {
 	g_return_val_if_fail(WL_IS_BT_FILE_CHOOSER(chooser)
 						 && path != NULL, FALSE);
-	GtkWidget *window =
+	GtkWidget *window = chooser->window;
+	GtkWidget *open_button =
 		(GtkWidget *) gtk_builder_get_object(GTK_BUILDER(chooser),
-											 "torrent_window");
+											 "open_button");
+	GtkWidget *cancel_button =
+		(GtkWidget *) gtk_builder_get_object(GTK_BUILDER(chooser),
+											 "cancel_button");
 
 	if (tr_ctorSetMetainfoFromFile(chooser->ctor, path)) {	/* 无效的文件 */
 		wl_bt_file_chooser_show_invalid(window);
@@ -250,5 +278,24 @@ tr_torrent *wl_bt_file_chooser_run(WlBtFileChooser * chooser,
 	wl_bt_file_chooser_update(chooser);
 
 	gtk_widget_show_all(window);
-	return NULL;
+
+	GMainLoop *loop = g_main_loop_new(NULL, FALSE);
+	chooser->loop = loop;
+	gulong delete_handler =
+		g_signal_connect(G_OBJECT(window), "delete-event",
+						 G_CALLBACK(wl_bt_file_chooser_close), loop);
+	gulong open_handler =
+		g_signal_connect(G_OBJECT(open_button), "clicked",
+						 G_CALLBACK(wl_bt_file_chooser_open), chooser);
+	gulong cancel_handler =
+		g_signal_connect(G_OBJECT(cancel_button), "clicked",
+						 G_CALLBACK(wl_bt_file_chooser_cancel), chooser);
+
+	g_main_loop_run(loop);
+	g_main_loop_unref(loop);
+	/* disconnect */
+	g_signal_handler_disconnect(window, delete_handler);
+	g_signal_handler_disconnect(open_button, open_handler);
+
+	return chooser->torrent;
 }

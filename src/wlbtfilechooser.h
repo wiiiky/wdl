@@ -49,9 +49,11 @@ typedef struct _WlBtFileChooserClass WlBtFileChooserClass;
 struct _WlBtFileChooser {
 	GtkBuilder parent;
 	/*Private */
+	GtkWidget *window;
 	tr_torrent *torrent;
 	tr_ctor *ctor;
 	gchar *default_path;		/* 默认的下载位置 */
+	GMainLoop *loop;
 };
 
 struct _WlBtFileChooserClass {

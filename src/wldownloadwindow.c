@@ -448,16 +448,19 @@ static void wl_dl_window_open_torrent(GtkMenuItem * item, gpointer data)
 
 	gint response;
 	response = gtk_dialog_run(GTK_DIALOG(dialog));
+	gchar *file = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+	gtk_widget_destroy(dialog);
 	if (response == GTK_RESPONSE_ACCEPT) {
-		gchar *file =
-			gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
 		tr_torrent *torrent =
 			wl_bt_file_chooser_run(window->bf_chooser, file);
-		g_free(file);
-		if (torrent)
+		if (torrent) {
+			g_message("torrent");
 			tr_torrentRemove(torrent, FALSE, NULL);
+		} else {
+			g_message("cancelled");
+		}
 	}
-	gtk_widget_destroy(dialog);
+	g_free(file);
 }
 
 static gboolean wl_dl_window_about_dialog_close(GtkWidget * widget,
