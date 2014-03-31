@@ -1,4 +1,5 @@
 ## Process this file with automake to produce Makefile.in
 
 
-data_DATA = torrent.ui
+nobase_dist_ui_DATA = torrent.ui
+uidir = $(pkgdatadir)

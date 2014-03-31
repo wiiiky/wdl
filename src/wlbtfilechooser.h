@@ -21,15 +21,16 @@
 #ifndef __WL_BT_FILE_CHOOSER_H__
 #define __WL_BT_FILE_CHOOSER_H__
 
-#include<gtk/gtk.h>
-#include"libtransmission/transmission.h"
+#include <gtk/gtk.h>
+#include "libtransmission/transmission.h"
 
 
 #ifndef PACKAGE_DATA_DIR
 #define PACKAGE_DATA_DIR "./data"
 #endif
 
-#define UI_FILE PACKAGE_DATA_DIR "/torrent.ui"
+//#define UI_FILE PACKAGE_DATA_DIR "/torrent.ui"
+#define UI_FILE "/home/wiky/Documents/CODE/Bazaar/wdl/data/torrent.ui"
 
 G_BEGIN_DECLS
 /* Macro for casting a pointer to a WlBtFileChooser or WlBtFileChooserClass pointer.
@@ -49,6 +50,8 @@ struct _WlBtFileChooser {
 	GtkBuilder parent;
 	/*Private */
 	tr_torrent *torrent;
+	tr_ctor *ctor;
+	gchar *default_path;		/* 默认的下载位置 */
 };
 
 struct _WlBtFileChooserClass {
@@ -59,7 +62,23 @@ struct _WlBtFileChooserClass {
 GType wl_bt_file_chooser_get_type(void) G_GNUC_CONST;
 
 /* Public */
-WlBtFileChooser *wl_bt_file_chooser_new(tr_torrent * torrent);
+/*
+ * @description 创建WlBtFileChooser对象
+ */
+WlBtFileChooser *wl_bt_file_chooser_new(tr_ctor * ctor);
+
+/*
+ * @description 设置默认的下载位置
+ */
+void wl_bt_file_chooser_set_download_path(WlBtFileChooser * chooser,
+										  const gchar * path);
+/*
+ * @description 显示选择文件对话框
+ * @param path 种子文件路径
+ * @return 返回有效的tr_torrent，取消返回NULL
+ */
+tr_torrent *wl_bt_file_chooser_run(WlBtFileChooser * chooser,
+								   const gchar * path);
 
 
 G_END_DECLS

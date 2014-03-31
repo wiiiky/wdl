@@ -44,6 +44,8 @@ struct _WlDownloadWindow {
 	GtkToolItem *remove;
 	WlDownloader *downloader;
 	WlUrlDialog *urlDialog;
+
+	WlBtFileChooser *bf_chooser;
 };
 
 struct _WlDownloadWindowClass {

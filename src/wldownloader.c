@@ -392,3 +392,10 @@ tr_torrent *wl_downloader_create_torrent(WlDownloader * dl,
 
 	return torrent;
 }
+
+tr_ctor *wl_downloader_create_ctor(WlDownloader * dl)
+{
+	g_return_val_if_fail(WL_IS_DOWNLOADER(dl), NULL);
+	tr_ctor *ctor = tr_ctorNew(dl->session);
+	return ctor;
+}

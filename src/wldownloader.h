@@ -163,6 +163,12 @@ void wl_downloader_set_httper_status_callback(WlDownloader * dl,
  */
 tr_torrent *wl_downloader_create_torrent(WlDownloader * dl,
 										 const gchar * path);
+/*
+ * @description 创建种子构造对象tr_ctor
+ * @param path种子文件路径
+ * @return tr_ctor
+ */
+tr_ctor *wl_downloader_create_ctor(WlDownloader * dl);
 
 
 G_END_DECLS

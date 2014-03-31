@@ -193,6 +193,8 @@ static void wl_download_window_init(WlDownloadWindow * window)
 	window->remove = rmButton;
 	window->downloader = downloader;
 	window->urlDialog = wl_url_dialog_new();
+	window->bf_chooser =
+		wl_bt_file_chooser_new(wl_downloader_create_ctor(downloader));
 
 	wl_dl_window_set_start_enabled(window, FALSE);
 	wl_dl_window_set_pause_enabled(window, FALSE);
@@ -203,6 +205,7 @@ static void wl_download_window_finalize(GObject * object)
 {
 	WlDownloadWindow *window = WL_DOWNLOAD_WINDOW(object);
 	gtk_widget_destroy(GTK_WIDGET(window->urlDialog));
+	g_object_unref(window->bf_chooser);
 }
 
 static void wl_download_window_class_init(WlDownloadWindowClass * klass)
@@ -434,29 +437,25 @@ static void wl_dl_window_open_torrent(GtkMenuItem * item, gpointer data)
 													NULL);
 	gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
 										g_get_home_dir());
+	GtkFileFilter *filter = gtk_file_filter_new();
+	gtk_file_filter_set_name(filter, "Torrent Files");
+	gtk_file_filter_add_pattern(filter, "*.torrent");
+	gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter);
+	filter = gtk_file_filter_new();
+	gtk_file_filter_set_name(filter, "All Files");
+	gtk_file_filter_add_pattern(filter, "*");
+	gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter);
 
 	gint response;
-  OPEN_TORRENT:
 	response = gtk_dialog_run(GTK_DIALOG(dialog));
 	if (response == GTK_RESPONSE_ACCEPT) {
 		gchar *file =
 			gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
 		tr_torrent *torrent =
-			wl_downloader_create_torrent(window->downloader, file);
+			wl_bt_file_chooser_run(window->bf_chooser, file);
 		g_free(file);
-		if (torrent == NULL) {
-			GtkWidget *info = gtk_message_dialog_new(GTK_WINDOW(window),
-													 GTK_DIALOG_MODAL |
-													 GTK_DIALOG_DESTROY_WITH_PARENT,
-													 GTK_MESSAGE_ERROR,
-													 GTK_BUTTONS_OK,
-													 "Invalid Torrent File!");
-			gtk_dialog_run(GTK_DIALOG(info));
-			gtk_widget_destroy(info);
-			goto OPEN_TORRENT;
-		}
-		tr_torrentRemove(torrent, FALSE, NULL);
-	} else {
+		if (torrent)
+			tr_torrentRemove(torrent, FALSE, NULL);
 	}
 	gtk_widget_destroy(dialog);
 }

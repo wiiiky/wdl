@@ -22,6 +22,8 @@
 
 enum {
 	WL_BT_FILE_CHOOSER_PROPERTY_TORRENT = 1,
+	WL_BT_FILE_CHOOSER_PROPERTY_CTOR,
+	WL_BT_FILE_CHOOSER_PROPERTY_PATH,
 };
 
 G_DEFINE_TYPE(WlBtFileChooser, wl_bt_file_chooser, GTK_TYPE_BUILDER);
@@ -34,6 +36,12 @@ static void wl_bt_file_chooser_getter(GObject * object, guint property_id,
 static void wl_bt_file_chooser_setter(GObject * object, guint property_id,
 									  const GValue * value,
 									  GParamSpec * ps);
+static inline void wl_bt_file_chooser_update(WlBtFileChooser * chooser);
+static gboolean wl_bt_file_chooser_close(GtkWidget * widget,
+										 GdkEvent * event, gpointer data);
+
+/* 将字节大小转化为可读的字符串形式 */
+static const gchar *make_size_readable(guint64 size);
 
 static void wl_bt_file_chooser_init(WlBtFileChooser * chooser)
 {
@@ -41,11 +49,23 @@ static void wl_bt_file_chooser_init(WlBtFileChooser * chooser)
 		/* 载入失败退出程序 */
 		g_error("Fail to load " UI_FILE);
 	}
+
+	GtkWidget *window =
+		(GtkWidget *) gtk_builder_get_object(GTK_BUILDER(chooser),
+											 "torrent_window");
+	g_signal_connect(G_OBJECT(window), "delete-event",
+					 G_CALLBACK(wl_bt_file_chooser_close), NULL);
+
+	chooser->default_path =
+		g_strdup(g_get_user_special_dir(G_USER_DIRECTORY_DOWNLOAD));
 	chooser->torrent = NULL;
+	chooser->ctor = NULL;
 }
 
 static void wl_bt_file_chooser_finalize(GObject * obj)
 {
+	WlBtFileChooser *chooser = WL_BT_FILE_CHOOSER(obj);
+	g_free(chooser->default_path);
 }
 
 static void wl_bt_file_chooser_class_init(WlBtFileChooserClass * klass)
@@ -60,11 +80,24 @@ static void wl_bt_file_chooser_class_init(WlBtFileChooserClass * klass)
 	ps = g_param_spec_pointer("torrent",
 							  "BT torrent",
 							  "BT Torrent",
-							  G_PARAM_READABLE | G_PARAM_WRITABLE |
-							  G_PARAM_CONSTRUCT_ONLY);
+							  G_PARAM_READABLE | G_PARAM_WRITABLE);
 	g_object_class_install_property(obj_class,
 									WL_BT_FILE_CHOOSER_PROPERTY_TORRENT,
 									ps);
+
+	ps = g_param_spec_pointer("ctor",
+							  "torrent constructor",
+							  "Torrent Constructor",
+							  G_PARAM_READABLE | G_PARAM_WRITABLE);
+	g_object_class_install_property(obj_class,
+									WL_BT_FILE_CHOOSER_PROPERTY_CTOR, ps);
+
+	ps = g_param_spec_string("path",
+							 "default download path",
+							 "Default Download Path",
+							 NULL, G_PARAM_READABLE | G_PARAM_WRITABLE);
+	g_object_class_install_property(obj_class,
+									WL_BT_FILE_CHOOSER_PROPERTY_PATH, ps);
 }
 
 static void wl_bt_file_chooser_getter(GObject * object, guint property_id,
@@ -74,6 +107,12 @@ static void wl_bt_file_chooser_getter(GObject * object, guint property_id,
 	switch (property_id) {
 	case WL_BT_FILE_CHOOSER_PROPERTY_TORRENT:
 		g_value_set_pointer(value, obj->torrent);
+		break;
+	case WL_BT_FILE_CHOOSER_PROPERTY_CTOR:
+		g_value_set_pointer(value, obj->ctor);
+		break;
+	case WL_BT_FILE_CHOOSER_PROPERTY_PATH:
+		g_value_set_string(value, obj->default_path);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, ps);
@@ -89,21 +128,127 @@ static void wl_bt_file_chooser_setter(GObject * object, guint property_id,
 	case WL_BT_FILE_CHOOSER_PROPERTY_TORRENT:
 		obj->torrent = g_value_get_pointer(value);
 		break;
+	case WL_BT_FILE_CHOOSER_PROPERTY_CTOR:
+		obj->ctor = g_value_get_pointer(value);
+		break;
+	case WL_BT_FILE_CHOOSER_PROPERTY_PATH:
+		if (!g_file_test(g_value_get_string(value), G_FILE_TEST_IS_DIR))	/* 目录不存在则不设置 */
+			break;
+		g_free(obj->default_path);
+		obj->default_path = g_strdup(g_value_get_string(value));
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, ps);
 	}
+}
+
+static gboolean wl_bt_file_chooser_close(GtkWidget * widget,
+										 GdkEvent * event, gpointer data)
+{
+	gtk_widget_hide(widget);
+	return TRUE;
+}
+
+/* 将字节大小转化为可读的字符串形式 */
+static const gchar *make_size_readable(guint64 size)
+{
+	static gchar string[20];
+	if (size >= 1000 * 1000 * 1000) {	/* GB */
+		g_snprintf(string, 20, "%.1f GB",
+				   (gdouble) size / (1000.0 * 1000.0 * 1000.0));
+	} else if (size >= 1000 * 1000) {
+		g_snprintf(string, 20, "%.1f MB",
+				   (gdouble) size / (1000.0 * 1000.0));
+	} else if (size >= 1000) {
+		g_snprintf(string, 20, "%.1f KB", (gdouble) size / (1000.0));
+	} else {
+		g_snprintf(string, 20, "%lu B", size);
+	}
+	return string;
+}
+
+static inline void wl_bt_file_chooser_update(WlBtFileChooser * chooser)
+{
+	tr_ctor *ctor = chooser->ctor;
+	chooser->torrent = tr_torrentNew(ctor, NULL, NULL);
+	if (chooser->torrent == NULL)
+		return;
+	GtkBuilder *ui = GTK_BUILDER(chooser);
+	GtkFileChooserButton *fc_button =
+		(GtkFileChooserButton *) gtk_builder_get_object(ui,
+														"torrent_chooser");
+	GtkFileChooserButton *dc_button =
+		(GtkFileChooserButton *) gtk_builder_get_object(ui,
+														"folder_chooser");
+	GtkLabel *space_label =
+		(GtkLabel *) gtk_builder_get_object(ui, "space_label");
+
+	/* 种子文件和保存路径 */
+	gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(fc_button),
+								  tr_ctorGetSourceFile(ctor));
+	gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(dc_button),
+								  chooser->default_path);
+
+	/* 磁盘空余 */
+	GFile *file = g_file_new_for_path(tr_ctorGetSourceFile(ctor));
+	GFileInfo *info =
+		g_file_query_filesystem_info(file,
+									 G_FILE_ATTRIBUTE_FILESYSTEM_FREE,
+									 NULL, NULL);
+	guint64 free_space = g_file_info_get_attribute_uint64(info,
+														  G_FILE_ATTRIBUTE_FILESYSTEM_FREE);
+	gtk_label_set_text(space_label, make_size_readable(free_space));
+	g_object_unref(info);
+	g_object_unref(file);
+}
+
+static inline void wl_bt_file_chooser_show_invalid(GtkWidget * window)
+{
+	GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(window),
+											   GTK_DIALOG_MODAL |
+											   GTK_DIALOG_DESTROY_WITH_PARENT,
+											   GTK_MESSAGE_ERROR,
+											   GTK_BUTTONS_OK,
+											   "Invalid Torrent File!");
+	gtk_dialog_run(GTK_DIALOG(dialog));
+	gtk_widget_destroy(dialog);
 }
 
 
 /**********************************************************
  * PUBLIC
  **********************************************************/
-WlBtFileChooser *wl_bt_file_chooser_new(tr_torrent * torrent)
+WlBtFileChooser *wl_bt_file_chooser_new(tr_ctor * ctor)
 {
-	g_return_val_if_fail(torrent != NULL, NULL);
 	WlBtFileChooser *chooser =
-		(WlBtFileChooser *) g_object_new(WL_TYPE_BT_FILE_CHOOSER,
-										 "torrent", torrent, NULL);
+		(WlBtFileChooser *) g_object_new(WL_TYPE_BT_FILE_CHOOSER, "ctor",
+										 ctor, NULL);
 
 	return chooser;
+}
+
+void wl_bt_file_chooser_set_download_path(WlBtFileChooser * chooser,
+										  const gchar * path)
+{
+	g_return_if_fail(WL_IS_BT_FILE_CHOOSER(chooser));
+	g_object_set(G_OBJECT(chooser), "path", path, NULL);
+}
+
+tr_torrent *wl_bt_file_chooser_run(WlBtFileChooser * chooser,
+								   const gchar * path)
+{
+	g_return_val_if_fail(WL_IS_BT_FILE_CHOOSER(chooser)
+						 && path != NULL, FALSE);
+	GtkWidget *window =
+		(GtkWidget *) gtk_builder_get_object(GTK_BUILDER(chooser),
+											 "torrent_window");
+
+	if (tr_ctorSetMetainfoFromFile(chooser->ctor, path)) {	/* 无效的文件 */
+		wl_bt_file_chooser_show_invalid(window);
+		return NULL;
+	}
+	wl_bt_file_chooser_update(chooser);
+
+	gtk_widget_show_all(window);
+	return NULL;
 }
