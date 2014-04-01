@@ -49,6 +49,7 @@ enum {
 #define TREE_STORE_COL_SIZE (2)
 #define TREE_STORE_COL_DL   (3)
 #define TREE_STORE_COL_INDEX	(4)
+#define TREE_STORE_COL_INC  (5)
 
 G_DEFINE_TYPE(WlBtFileChooser, wl_bt_file_chooser, GTK_TYPE_BUILDER);
 
@@ -66,6 +67,12 @@ static gboolean wl_bt_file_chooser_close(GtkWidget * widget,
 static void wl_bt_file_chooser_open(GtkWidget * button, gpointer data);
 static void wl_bt_file_chooser_cancel(GtkWidget * button, gpointer data);
 
+void cellrenderertoggle_toggled_cb(GtkCellRendererToggle * cell,
+								   gchar * path_str, gpointer data);
+/* 设置所有子文件的下载状态 */
+static void wdl_set_all_child_dl(GtkTreeModel * model, GtkTreeIter * iter,
+								 gboolean flag);
+
 /* 将字节大小转化为可读的字符串形式 */
 static const gchar *make_size_readable(guint64 size);
 
@@ -80,6 +87,7 @@ static void wl_bt_file_chooser_init(WlBtFileChooser * chooser)
 		/* 载入失败退出程序 */
 		g_error("Fail to load " UI_FILE);
 	}
+	gtk_builder_connect_signals(GTK_BUILDER(chooser), NULL);
 
 	chooser->window =
 		(GtkWidget *) gtk_builder_get_object(GTK_BUILDER(chooser),
@@ -259,6 +267,107 @@ static const gchar *make_size_readable(guint64 size)
 	return string;
 }
 
+static void wdl_set_all_child_dl(GtkTreeModel * model, GtkTreeIter * iter,
+								 gboolean flag)
+{
+	if (gtk_tree_model_iter_has_child(model, iter)) {
+		gint n = gtk_tree_model_iter_n_children(model, iter);
+		gint i;
+		for (i = 0; i < n; i++) {
+			GtkTreeIter child_iter;
+			gtk_tree_model_iter_nth_child(model, &child_iter, iter, i);
+			gtk_tree_store_set(GTK_TREE_STORE(model), &child_iter,
+							   TREE_STORE_COL_DL, flag, -1);
+			wdl_set_all_child_dl(model, &child_iter, TRUE);
+		}
+	}
+}
+
+/* 
+ * 如果所有子文件都被选中，则返回0
+ * 部分选中返回1
+ * 都没选中返回2
+ */
+static gint wdl_all_child_toggled(GtkTreeModel * model, GtkTreeIter * iter)
+{
+	gint n = gtk_tree_model_iter_n_children(model, iter);
+	gint s = n;
+	gint i;
+	for (i = 0; i < n; i++) {
+		GtkTreeIter child_iter;
+		gboolean toggled;
+		gtk_tree_model_iter_nth_child(model, &child_iter, iter, i);
+		gtk_tree_model_get(model, &child_iter, TREE_STORE_COL_DL, &toggled,
+						   -1);
+		if (!toggled)
+			s--;
+	}
+	if (s == 0)
+		gtk_tree_store_set(GTK_TREE_STORE(model), iter, TREE_STORE_COL_DL,
+						   FALSE, TREE_STORE_COL_INC, FALSE, -1);
+	else if (s == n)
+		gtk_tree_store_set(GTK_TREE_STORE(model), iter, TREE_STORE_COL_DL,
+						   TRUE, TREE_STORE_COL_INC, FALSE, -1);
+	else
+		gtk_tree_store_set(GTK_TREE_STORE(model), iter, TREE_STORE_COL_DL,
+						   FALSE, TREE_STORE_COL_INC, TRUE, -1);
+	return s;
+}
+
+/* 递归 */
+static void wdl_update_dl(GtkTreeModel * model, GtkTreeIter * iter)
+{
+	if (gtk_tree_model_iter_has_child(model, iter)) {
+		gint n = gtk_tree_model_iter_n_children(model, iter);
+		gint i;
+		for (i = 0; i < n; i++) {
+			GtkTreeIter child_iter;
+			gtk_tree_model_iter_nth_child(model, &child_iter, iter, i);
+			wdl_update_dl(model, &child_iter);
+		}
+		wdl_all_child_toggled(model, iter);
+	}
+}
+
+/* 自顶向下更新子文件下载状态 */
+static void wdl_update_all_dl(GtkTreeModel * model)
+{
+	GtkTreeIter iter;
+	if (!gtk_tree_model_get_iter_first(model, &iter))
+		return;
+	wdl_update_dl(model, &iter);
+}
+
+void cellrenderertoggle_toggled_cb(GtkCellRendererToggle * cell,
+								   gchar * path_str, gpointer data)
+{
+	GtkTreeModel *model = (GtkTreeModel *) data;
+	GtkTreePath *path = gtk_tree_path_new_from_string(path_str);
+	GtkTreeIter iter;
+	gboolean toggle_item;
+
+
+	/* get toggled iter */
+	gtk_tree_model_get_iter(model, &iter, path);
+	gtk_tree_model_get(model, &iter, TREE_STORE_COL_DL, &toggle_item, -1);
+
+	/* do something with the value */
+	toggle_item ^= 1;
+
+	/* set new value */
+	gtk_tree_store_set(GTK_TREE_STORE(model), &iter, TREE_STORE_COL_DL,
+					   toggle_item, TREE_STORE_COL_INC, FALSE, -1);
+
+	/* 选中获取取消所有子对象 */
+	wdl_set_all_child_dl(model, &iter, toggle_item);
+	/* 更新父节点状态 */
+	wdl_update_all_dl(model);
+
+
+	/* clean up */
+	gtk_tree_path_free(path);
+}
+
 #include "icons.h"
 
 static inline void wl_bt_file_chooser_update(WlBtFileChooser * chooser)
@@ -326,7 +435,6 @@ static inline void wl_bt_file_chooser_update(WlBtFileChooser * chooser)
 			gchar *name = NULL;
 			gtk_tree_model_get(GTK_TREE_MODEL(file_tree), &iter,
 							   TREE_STORE_COL_NAME, &name, -1);
-			g_message("%s\n%s", name, paths[j]);
 			if (g_strcmp0(name, paths[j]) == 0) {
 				/* 当前路径已经存在，查找或者创建子路径 */
 				gint n =
