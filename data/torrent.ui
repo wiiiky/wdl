@@ -11,6 +11,8 @@
       <column type="gchararray"/>
       <!-- column-name download -->
       <column type="gboolean"/>
+      <!-- column-name tr_file_index_t -->
+      <column type="guint"/>
     </columns>
   </object>
   <object class="GtkFileFilter" id="filefilter1">

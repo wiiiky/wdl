@@ -1,10 +1,7 @@
-wdl-wlbtfilechooser.o: \
- /home/wiky/Documents/CODE/Bazaar/wdl/src/wlbtfilechooser.c \
+wdl-icons.o: /home/wiky/Documents/CODE/Bazaar/wdl/src/icons.c \
  /usr/include/stdc-predef.h /usr/include/x86_64-linux-gnu/bits/predefs.h \
- /home/wiky/Documents/CODE/Bazaar/wdl/src/wlbtfilechooser.h \
- /usr/include/gtk-3.0/gtk/gtk.h /usr/include/gtk-3.0/gdk/gdk.h \
- /usr/include/gtk-3.0/gdk/gdkconfig.h /usr/include/glib-2.0/glib.h \
- /usr/include/glib-2.0/glib/galloca.h /usr/include/glib-2.0/glib/gtypes.h \
+ /usr/include/glib-2.0/glib.h /usr/include/glib-2.0/glib/galloca.h \
+ /usr/include/glib-2.0/glib/gtypes.h \
  /usr/lib/x86_64-linux-gnu/glib-2.0/include/glibconfig.h \
  /usr/include/glib-2.0/glib/gmacros.h \
  /usr/lib/gcc/x86_64-linux-gnu/4.8/include/stddef.h \
@@ -99,6 +96,8 @@ wdl-wlbtfilechooser.o: \
  /usr/include/x86_64-linux-gnu/bits/byteswap-16.h /usr/include/sched.h \
  /usr/include/x86_64-linux-gnu/bits/sched.h \
  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
+ /usr/include/gtk-3.0/gtk/gtk.h /usr/include/gtk-3.0/gdk/gdk.h \
+ /usr/include/gtk-3.0/gdk/gdkconfig.h \
  /usr/include/gtk-3.0/gdk/gdkversionmacros.h \
  /usr/include/gtk-3.0/gdk/gdkapplaunchcontext.h \
  /usr/include/glib-2.0/gio/gio.h /usr/include/glib-2.0/gio/giotypes.h \
@@ -561,23 +560,11 @@ wdl-wlbtfilechooser.o: \
  /usr/include/gtk-3.0/gtk/deprecated/gtkvscale.h \
  /usr/include/gtk-3.0/gtk/deprecated/gtkvscrollbar.h \
  /usr/include/gtk-3.0/gtk/deprecated/gtkvseparator.h \
- /home/wiky/Documents/CODE/Bazaar/wdl/src/libtransmission/transmission.h \
- /usr/include/inttypes.h \
- /usr/lib/gcc/x86_64-linux-gnu/4.8/include/stdint.h /usr/include/stdint.h \
- /usr/include/x86_64-linux-gnu/bits/wchar.h \
  /home/wiky/Documents/CODE/Bazaar/wdl/src/icons.h
 
 /usr/include/stdc-predef.h:
 
 /usr/include/x86_64-linux-gnu/bits/predefs.h:
-
-/home/wiky/Documents/CODE/Bazaar/wdl/src/wlbtfilechooser.h:
-
-/usr/include/gtk-3.0/gtk/gtk.h:
-
-/usr/include/gtk-3.0/gdk/gdk.h:
-
-/usr/include/gtk-3.0/gdk/gdkconfig.h:
 
 /usr/include/glib-2.0/glib.h:
 
@@ -810,6 +797,12 @@ wdl-wlbtfilechooser.o: \
 /usr/include/x86_64-linux-gnu/bits/sched.h:
 
 /usr/include/x86_64-linux-gnu/bits/setjmp.h:
+
+/usr/include/gtk-3.0/gtk/gtk.h:
+
+/usr/include/gtk-3.0/gdk/gdk.h:
+
+/usr/include/gtk-3.0/gdk/gdkconfig.h:
 
 /usr/include/gtk-3.0/gdk/gdkversionmacros.h:
 
@@ -1788,15 +1781,5 @@ wdl-wlbtfilechooser.o: \
 /usr/include/gtk-3.0/gtk/deprecated/gtkvscrollbar.h:
 
 /usr/include/gtk-3.0/gtk/deprecated/gtkvseparator.h:
-
-/home/wiky/Documents/CODE/Bazaar/wdl/src/libtransmission/transmission.h:
-
-/usr/include/inttypes.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/4.8/include/stdint.h:
-
-/usr/include/stdint.h:
-
-/usr/include/x86_64-linux-gnu/bits/wchar.h:
 
 /home/wiky/Documents/CODE/Bazaar/wdl/src/icons.h:

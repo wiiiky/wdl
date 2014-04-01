@@ -179,13 +179,10 @@ static GdkPixbuf *get_pixbuf_from_icon(GtkIconTheme * icon_theme,
 	icon_info =
 		gtk_icon_theme_choose_icon(icon_theme, (const char **) icon_names,
 								   size, 0);
+	if (icon_info == NULL)
+		return NULL;
 	pixbuf = gtk_icon_info_load_icon(icon_info, &error);
-	if (pixbuf == NULL) {
-		g_warning("could not load icon pixbuf: %s\n", error->message);
-		g_clear_error(&error);
-	}
 
-	/*gtk_icon_info_free (icon_info); */
 	g_object_unref(icon_info);
 	g_strfreev(icon_names);
 
@@ -256,6 +253,8 @@ static const gchar *make_size_readable(guint64 size)
 	return string;
 }
 
+#include "icons.h"
+
 static inline void wl_bt_file_chooser_update(WlBtFileChooser * chooser)
 {
 	tr_ctor *ctor = chooser->ctor;
@@ -297,6 +296,7 @@ static inline void wl_bt_file_chooser_update(WlBtFileChooser * chooser)
 		(GtkTreeView *) gtk_builder_get_object(ui, UI_TREEVIEW);
 	gtk_tree_store_clear(file_tree);
 	const tr_info *torrent_info = tr_torrentInfo(torrent);
+	/* 根目录 */
 	GtkTreeIter root_iter;
 	gtk_tree_store_append(file_tree, &root_iter, NULL);
 	gtk_tree_store_set(file_tree, &root_iter,
@@ -306,10 +306,17 @@ static inline void wl_bt_file_chooser_update(WlBtFileChooser * chooser)
 					   2, make_size_readable(torrent_info->totalSize),
 					   3, TRUE, -1);
 	gint i;
-	g_message("originalName:%s", torrent_info->originalName);
-	g_message("name:%s", torrent_info->name);
 	for (i = 0; i < torrent_info->fileCount; i++) {
 		const tr_file *torrent_file = &torrent_info->files[i];
+		GtkTreeIter iter1;
+		gtk_tree_store_append(file_tree, &iter1, &root_iter);
+		gtk_tree_store_set(file_tree, &iter1,
+						   0,
+						   wdl_get_pixbuf_from_filename(torrent_file->name,
+														GTK_ICON_SIZE_MENU),
+						   1, torrent_file->name, 2,
+						   make_size_readable(torrent_file->length), 3,
+						   TRUE, -1);
 		g_message("%s", torrent_file->name);
 	}
 }

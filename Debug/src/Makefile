@@ -96,7 +96,7 @@ am_wdl_OBJECTS = wdl-main.$(OBJEXT) wdl-wldownloader.$(OBJEXT) \
 	wdl-wldownloadwindow.$(OBJEXT) wdl-wlhttper.$(OBJEXT) \
 	wdl-wlhttpermenu.$(OBJEXT) wdl-wlhttperproperties.$(OBJEXT) \
 	wdl-wlurldialog.$(OBJEXT) wdl-wlbter.$(OBJEXT) \
-	wdl-wlbtfilechooser.$(OBJEXT)
+	wdl-wlbtfilechooser.$(OBJEXT) wdl-icons.$(OBJEXT)
 wdl_OBJECTS = $(am_wdl_OBJECTS)
 am__DEPENDENCIES_1 =
 wdl_DEPENDENCIES = $(srcdir)/libtransmission.a $(srcdir)/libdht.a \
@@ -389,7 +389,9 @@ wdl_SOURCES = \
 			   wlbter.c \
 			   wlbter.h \
 			   wlbtfilechooser.c \
-			   wlbtfilechooser.h
+			   wlbtfilechooser.h \
+			   icons.c \
+			   icons.h
 
 wdl_LDFLAGS = \
 			  -Wl,--export-dynamic 
@@ -502,6 +504,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+include ./$(DEPDIR)/wdl-icons.Po
 include ./$(DEPDIR)/wdl-main.Po
 include ./$(DEPDIR)/wdl-wlbter.Po
 include ./$(DEPDIR)/wdl-wlbtfilechooser.Po
@@ -658,6 +661,20 @@ wdl-wlbtfilechooser.obj: wlbtfilechooser.c
 #	$(AM_V_CC)source='wlbtfilechooser.c' object='wdl-wlbtfilechooser.obj' libtool=no \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
 #	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(wdl_CFLAGS) $(CFLAGS) -c -o wdl-wlbtfilechooser.obj `if test -f 'wlbtfilechooser.c'; then $(CYGPATH_W) 'wlbtfilechooser.c'; else $(CYGPATH_W) '$(srcdir)/wlbtfilechooser.c'; fi`
+
+wdl-icons.o: icons.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(wdl_CFLAGS) $(CFLAGS) -MT wdl-icons.o -MD -MP -MF $(DEPDIR)/wdl-icons.Tpo -c -o wdl-icons.o `test -f 'icons.c' || echo '$(srcdir)/'`icons.c
+	$(AM_V_at)$(am__mv) $(DEPDIR)/wdl-icons.Tpo $(DEPDIR)/wdl-icons.Po
+#	$(AM_V_CC)source='icons.c' object='wdl-icons.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(wdl_CFLAGS) $(CFLAGS) -c -o wdl-icons.o `test -f 'icons.c' || echo '$(srcdir)/'`icons.c
+
+wdl-icons.obj: icons.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(wdl_CFLAGS) $(CFLAGS) -MT wdl-icons.obj -MD -MP -MF $(DEPDIR)/wdl-icons.Tpo -c -o wdl-icons.obj `if test -f 'icons.c'; then $(CYGPATH_W) 'icons.c'; else $(CYGPATH_W) '$(srcdir)/icons.c'; fi`
+	$(AM_V_at)$(am__mv) $(DEPDIR)/wdl-icons.Tpo $(DEPDIR)/wdl-icons.Po
+#	$(AM_V_CC)source='icons.c' object='wdl-icons.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(wdl_CFLAGS) $(CFLAGS) -c -o wdl-icons.obj `if test -f 'icons.c'; then $(CYGPATH_W) 'icons.c'; else $(CYGPATH_W) '$(srcdir)/icons.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
