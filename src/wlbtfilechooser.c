@@ -19,6 +19,7 @@
  */
 
 #include "wlbtfilechooser.h"
+#include <string.h>
 
 enum {
 	WL_BT_FILE_CHOOSER_PROPERTY_TORRENT = 1,
@@ -43,6 +44,11 @@ enum {
 
 #define TREEVIEW_ICON_SIZE  16
 
+#define TREE_STORE_COL_ICON (0)
+#define TREE_STORE_COL_NAME (1)
+#define TREE_STORE_COL_SIZE (2)
+#define TREE_STORE_COL_DL   (3)
+#define TREE_STORE_COL_INDEX	(4)
 
 G_DEFINE_TYPE(WlBtFileChooser, wl_bt_file_chooser, GTK_TYPE_BUILDER);
 
@@ -300,25 +306,77 @@ static inline void wl_bt_file_chooser_update(WlBtFileChooser * chooser)
 	GtkTreeIter root_iter;
 	gtk_tree_store_append(file_tree, &root_iter, NULL);
 	gtk_tree_store_set(file_tree, &root_iter,
-					   0, get_pixbuf_from_icon_name(ICON_FOLDER,
-													TREEVIEW_ICON_SIZE),
-					   1, torrent_info->originalName,
-					   2, make_size_readable(torrent_info->totalSize),
-					   3, TRUE, -1);
+					   TREE_STORE_COL_ICON,
+					   get_pixbuf_from_icon_name(ICON_FOLDER,
+												 TREEVIEW_ICON_SIZE),
+					   TREE_STORE_COL_NAME, torrent_info->originalName,
+					   TREE_STORE_COL_SIZE,
+					   make_size_readable(torrent_info->totalSize),
+					   TREE_STORE_COL_DL, TRUE, -1);
 	gint i;
+	/* TODO show files in a tree view */
 	for (i = 0; i < torrent_info->fileCount; i++) {
 		const tr_file *torrent_file = &torrent_info->files[i];
-		GtkTreeIter iter1;
-		gtk_tree_store_append(file_tree, &iter1, &root_iter);
-		gtk_tree_store_set(file_tree, &iter1,
-						   0,
-						   wdl_get_pixbuf_from_filename(torrent_file->name,
+		gchar **paths = g_strsplit(torrent_file->name, "/", -1);
+		GtkTreeIter iter;
+		memcpy(&iter, &root_iter, sizeof(GtkTreeIter));
+		gint j;
+		/* 扫描目录 */
+		for (j = 0; paths[j + 1] != NULL; j++) {
+			gchar *name = NULL;
+			gtk_tree_model_get(GTK_TREE_MODEL(file_tree), &iter,
+							   TREE_STORE_COL_NAME, &name, -1);
+			g_message("%s\n%s", name, paths[j]);
+			if (g_strcmp0(name, paths[j]) == 0) {
+				/* 当前路径已经存在，查找或者创建子路径 */
+				gint n =
+					gtk_tree_model_iter_n_children(GTK_TREE_MODEL
+												   (file_tree), &iter);
+				gint k;
+				for (k = 0; k < n; k++) {
+					GtkTreeIter child_iter;
+					gtk_tree_model_iter_nth_child(GTK_TREE_MODEL
+												  (file_tree), &child_iter,
+												  &iter, k);
+					gchar *child_name = NULL;
+					gtk_tree_model_get(GTK_TREE_MODEL(file_tree),
+									   &child_iter, TREE_STORE_COL_NAME,
+									   &child_name, -1);
+					if (g_strcmp0(child_name, paths[j + 1]) == 0) {
+						memcpy(&iter, &child_iter, sizeof(GtkTreeIter));
+						g_free(child_name);
+						break;
+					}
+					g_free(child_name);
+				}
+				if (k == n) {	/* 未找到子路径 */
+					gtk_tree_store_append(file_tree, &iter, &iter);
+					gtk_tree_store_set(file_tree, &iter,
+									   TREE_STORE_COL_ICON,
+									   get_pixbuf_from_icon_name
+									   (ICON_FOLDER, TREEVIEW_ICON_SIZE),
+									   TREE_STORE_COL_NAME, paths[j + 1],
+									   TREE_STORE_COL_DL, TRUE, -1);
+				}
+			} else {
+				g_error("%s\n%s", name, paths[j]);
+			}
+			g_free(name);
+		}
+		gtk_tree_store_set(file_tree, &iter,
+						   TREE_STORE_COL_ICON,
+						   wdl_get_pixbuf_from_filename(paths[j],
 														GTK_ICON_SIZE_MENU),
-						   1, torrent_file->name, 2,
-						   make_size_readable(torrent_file->length), 3,
-						   TRUE, -1);
-		g_message("%s", torrent_file->name);
+						   TREE_STORE_COL_NAME, paths[j],
+						   TREE_STORE_COL_SIZE,
+						   make_size_readable(torrent_file->length),
+						   TREE_STORE_COL_DL, TRUE, -1);
+		//g_message("%s", torrent_file->name);
+		g_strfreev(paths);
 	}
+
+	/* expand all */
+	gtk_tree_view_expand_all(tree_view);
 }
 
 static inline void wl_bt_file_chooser_show_invalid(GtkWidget * window)

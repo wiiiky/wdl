@@ -564,7 +564,7 @@ wdl-wlbtfilechooser.o: \
  /home/wiky/Documents/CODE/Bazaar/wdl/src/libtransmission/transmission.h \
  /usr/include/inttypes.h \
  /usr/lib/gcc/x86_64-linux-gnu/4.8/include/stdint.h /usr/include/stdint.h \
- /usr/include/x86_64-linux-gnu/bits/wchar.h \
+ /usr/include/x86_64-linux-gnu/bits/wchar.h /usr/include/string.h \
  /home/wiky/Documents/CODE/Bazaar/wdl/src/icons.h
 
 /usr/include/stdc-predef.h:
@@ -1798,5 +1798,7 @@ wdl-wlbtfilechooser.o: \
 /usr/include/stdint.h:
 
 /usr/include/x86_64-linux-gnu/bits/wchar.h:
+
+/usr/include/string.h:
 
 /home/wiky/Documents/CODE/Bazaar/wdl/src/icons.h:
