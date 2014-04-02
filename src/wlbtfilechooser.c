@@ -68,6 +68,9 @@ static gboolean wl_bt_file_chooser_close(GtkWidget * widget,
 										 GdkEvent * event, gpointer data);
 static void wl_bt_file_chooser_open(GtkWidget * button, gpointer data);
 static void wl_bt_file_chooser_cancel(GtkWidget * button, gpointer data);
+/* 选择的种子文件改变 */
+static void wl_bt_file_chooser_set(GtkFileChooserButton * button,
+								   gpointer data);
 
 static inline void wl_bt_file_chooser_show_invalid(GtkWidget * window,
 												   const gchar * name);
@@ -509,7 +512,7 @@ static inline gboolean wl_bt_file_chooser_update(WlBtFileChooser * chooser)
 					   make_size_readable(torrent_info->totalSize),
 					   TREE_STORE_COL_DL, TRUE, -1);
 	gint i;
-	/* TODO show files in a tree view */
+	/* show files in a tree view */
 	for (i = 0; i < torrent_info->fileCount; i++) {
 		const tr_file *torrent_file = &torrent_info->files[i];
 		gchar **paths = g_strsplit(torrent_file->name, "/", -1);
@@ -610,6 +613,27 @@ static inline void wl_bt_file_chooser_show_duplicate(GtkWidget * window,
 	gtk_widget_destroy(dialog);
 }
 
+static void wl_bt_file_chooser_set(GtkFileChooserButton * button,
+								   gpointer data)
+{
+	WlBtFileChooser *chooser = data;
+	gchar *path = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(button));
+	tr_torrent *orig = chooser->torrent;
+	const gchar *orig_file = tr_ctorGetSourceFile(chooser->ctor);
+	if (g_strcmp0(orig_file, path) == 0) {	/* 没有改变 */
+		g_free(path);
+		return;
+	}
+	if (tr_ctorSetMetainfoFromFile(chooser->ctor, path)) {	/* 无效的文件 */
+		wl_bt_file_chooser_show_invalid(NULL, path);
+		gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(button), orig_file);
+	} else if (wl_bt_file_chooser_update(chooser) == FALSE) {
+		gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(button), orig_file);
+	}
+	tr_torrentRemove(orig, FALSE, NULL);
+	g_free(path);
+}
+
 
 /**********************************************************
  * PUBLIC
@@ -642,12 +666,14 @@ tr_torrent *wl_bt_file_chooser_run(WlBtFileChooser * chooser,
 	GtkWidget *cancel_button =
 		(GtkWidget *) gtk_builder_get_object(GTK_BUILDER(chooser),
 											 UI_CANCEL);
+	GtkWidget *file_chooser =
+		(GtkWidget *) gtk_builder_get_object(GTK_BUILDER(chooser),
+											 UI_TORRENT);
 
 	if (tr_ctorSetMetainfoFromFile(chooser->ctor, path)) {	/* 无效的文件 */
 		wl_bt_file_chooser_show_invalid(window, path);
 		return NULL;
-	}
-	if (wl_bt_file_chooser_update(chooser) == FALSE) {
+	} else if (wl_bt_file_chooser_update(chooser) == FALSE) {
 		return NULL;
 	}
 
@@ -665,11 +691,37 @@ tr_torrent *wl_bt_file_chooser_run(WlBtFileChooser * chooser,
 		g_signal_connect(G_OBJECT(cancel_button), "clicked",
 						 G_CALLBACK(wl_bt_file_chooser_cancel), chooser);
 
+	gulong file_set_handler =
+		g_signal_connect(G_OBJECT(file_chooser), "file-set",
+						 G_CALLBACK(wl_bt_file_chooser_set), chooser);
+
 	g_main_loop_run(loop);
 	g_main_loop_unref(loop);
 	/* disconnect */
 	g_signal_handler_disconnect(window, delete_handler);
 	g_signal_handler_disconnect(open_button, open_handler);
+	g_signal_handler_disconnect(cancel_button, cancel_handler);
+	g_signal_handler_disconnect(file_chooser, file_set_handler);
 
 	return chooser->torrent;
+}
+
+const gchar *wl_bt_file_chooser_get_path(WlBtFileChooser * chooser)
+{
+	g_return_val_if_fail(WL_IS_BT_FILE_CHOOSER(chooser), NULL);
+	GtkFileChooserButton *dc_button =
+		(GtkFileChooserButton *)
+		gtk_builder_get_object(GTK_BUILDER(chooser),
+							   UI_FOLDER);
+	return
+		gtk_file_chooser_get_current_folder(GTK_FILE_CHOOSER(dc_button));
+}
+
+/*
+ * @description 获取种子元数据文件的路径
+ */
+const gchar *wl_bt_file_chooser_get_torrent_file(WlBtFileChooser * chooser)
+{
+	g_return_val_if_fail(WL_IS_BT_FILE_CHOOSER(chooser), NULL);
+	return tr_ctorGetSourceFile(chooser->ctor);
 }

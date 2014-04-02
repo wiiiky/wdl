@@ -82,6 +82,17 @@ void wl_bt_file_chooser_set_download_path(WlBtFileChooser * chooser,
 tr_torrent *wl_bt_file_chooser_run(WlBtFileChooser * chooser,
 								   const gchar * path);
 
+/*
+ * @description 获取种子的保存路径
+ *				调用者应该自己清楚什么时候调用下面这些函数才是有效的
+ */
+const gchar *wl_bt_file_chooser_get_path(WlBtFileChooser * chooser);
+/*
+ * @description 获取种子元数据文件的路径
+ */
+const gchar *wl_bt_file_chooser_get_torrent_file(WlBtFileChooser *
+												 chooser);
+
 
 G_END_DECLS
 #endif
