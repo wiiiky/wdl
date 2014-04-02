@@ -3,7 +3,7 @@ Maximized=1
 Geometry=1301x744+65+24
 
 [File Loader]
-Files=../../src/wlbtfilechooser.h#52%%%../../src/wlbtfilechooser.c#372%%%../../src/wldownloadwindow.c#454%%%../../src/wldownloadwindow.h#39
+Files=../../src/wlbtfilechooser.h#52%%%../../src/wlbtfilechooser.c#396
 
 [Document Manager]
 bookmarks=<?xml version="1.0" encoding="UTF-8"?>\n<bookmarks/>\n

@@ -362,28 +362,39 @@ static void wdl_update_dl_r(GtkTreeModel * model, GtkTreeIter * iter)
 	if (gtk_tree_model_iter_has_child(model, iter)) {
 		gint n = gtk_tree_model_iter_n_children(model, iter);
 		gint i;
+		guint64 len = 0;
+		gboolean flag;
 		for (i = 0; i < n; i++) {
 			GtkTreeIter child_iter;
+			guint64 length;
 			gtk_tree_model_iter_nth_child(model, &child_iter, iter, i);
+			gtk_tree_model_get(model, &child_iter, TREE_STORE_COL_LENGTH,
+							   &length, TREE_STORE_COL_DL, &flag, -1);
+			if (flag)			/* 只计算选中文件的大小 */
+				len += length;
 			wdl_update_dl_r(model, &child_iter);
 		}
 		gint stat = wdl_all_child_toggled(model, iter);
-		if (stat == 2)
+		if (stat == 2)			/* 没有任何子节点选中 */
 			gtk_tree_store_set(GTK_TREE_STORE(model), iter,
 							   TREE_STORE_COL_DL, FALSE,
 							   TREE_STORE_COL_INC, FALSE, -1);
-		else if (stat == 0)
+		else if (stat == 0)		/* 所有子节点都选中 */
 			gtk_tree_store_set(GTK_TREE_STORE(model), iter,
 							   TREE_STORE_COL_DL, TRUE, TREE_STORE_COL_INC,
 							   FALSE, -1);
-		else
+		else					/* 部分字节点选中 */
 			gtk_tree_store_set(GTK_TREE_STORE(model), iter,
 							   TREE_STORE_COL_DL, FALSE,
 							   TREE_STORE_COL_INC, TRUE, -1);
+		gtk_tree_store_set(GTK_TREE_STORE(model), iter,
+						   TREE_STORE_COL_LENGTH, len,
+						   TREE_STORE_COL_SIZE, make_size_readable(len),
+						   -1);
 	}
 }
 
-/* 自顶向下更新子文件下载状态 */
+/* 自顶向下更新子文件下载状态，目录的选中和大小 */
 static void wdl_update_all_dl(GtkTreeModel * model)
 {
 	GtkTreeIter iter;
@@ -561,6 +572,8 @@ static inline gboolean wl_bt_file_chooser_update(WlBtFileChooser * chooser)
 						   -1);
 		g_strfreev(paths);
 	}
+	/* 第一次主要更新目录大小 */
+	wdl_update_all_dl(GTK_TREE_MODEL(file_tree));
 
 	/* expand all */
 	gtk_tree_view_expand_all(tree_view);
