@@ -15,6 +15,8 @@
       <column type="guint"/>
       <!-- column-name inconsistant -->
       <column type="gboolean"/>
+      <!-- column-name length -->
+      <column type="guint64"/>
     </columns>
   </object>
   <object class="GtkFileFilter" id="filefilter1">

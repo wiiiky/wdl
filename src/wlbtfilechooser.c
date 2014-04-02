@@ -50,6 +50,7 @@ enum {
 #define TREE_STORE_COL_DL   (3)
 #define TREE_STORE_COL_INDEX	(4)
 #define TREE_STORE_COL_INC  (5)
+#define TREE_STORE_COL_LENGTH   (6)
 
 G_DEFINE_TYPE(WlBtFileChooser, wl_bt_file_chooser, GTK_TYPE_BUILDER);
 
@@ -61,11 +62,17 @@ static void wl_bt_file_chooser_getter(GObject * object, guint property_id,
 static void wl_bt_file_chooser_setter(GObject * object, guint property_id,
 									  const GValue * value,
 									  GParamSpec * ps);
-static inline void wl_bt_file_chooser_update(WlBtFileChooser * chooser);
+static inline gboolean wl_bt_file_chooser_update(WlBtFileChooser *
+												 chooser);
 static gboolean wl_bt_file_chooser_close(GtkWidget * widget,
 										 GdkEvent * event, gpointer data);
 static void wl_bt_file_chooser_open(GtkWidget * button, gpointer data);
 static void wl_bt_file_chooser_cancel(GtkWidget * button, gpointer data);
+
+static inline void wl_bt_file_chooser_show_invalid(GtkWidget * window,
+												   const gchar * name);
+static inline void wl_bt_file_chooser_show_duplicate(GtkWidget * window,
+													 const gchar * name);
 
 void cellrenderertoggle_toggled_cb(GtkCellRendererToggle * cell,
 								   gchar * path_str, gpointer data);
@@ -221,11 +228,44 @@ static GdkPixbuf *get_pixbuf_from_icon_name(const gchar * name, gint size)
 static gboolean wl_bt_file_chooser_close(GtkWidget * widget,
 										 GdkEvent * event, gpointer data)
 {
-	gtk_widget_hide(widget);
-	GMainLoop *loop = data;
-	if (g_main_loop_is_running(loop))
-		g_main_loop_quit(loop);
+	/* 取消 */
+	wl_bt_file_chooser_cancel(widget, data);
+
 	return TRUE;
+}
+
+
+static wdl_set_file_dl_r(GtkTreeModel * model, tr_torrent * torrent,
+						 GtkTreeIter * iter)
+{
+	if (gtk_tree_model_iter_has_child(model, iter)) {
+		gint n = gtk_tree_model_iter_n_children(model, iter);
+		gint i;
+		for (i = 0; i < n; i++) {
+			GtkTreeIter child_iter;
+			gtk_tree_model_iter_nth_child(model, &child_iter, iter, i);
+			wdl_set_file_dl_r(model, torrent, &child_iter);
+		}
+	} else {
+		tr_file_index_t fi;
+		gboolean dl;
+		gchar *name = NULL;
+		gtk_tree_model_get(model, iter, TREE_STORE_COL_INDEX, &fi,
+						   TREE_STORE_COL_DL, &dl,
+						   TREE_STORE_COL_NAME, &name, -1);
+		tr_torrentSetFileDLs(torrent, &fi, 1, dl);
+		g_message("%s:%s", name, dl ? "true" : "false");
+		tr_file_stat *stat = tr_torrentFiles(torrent, &fi);
+		g_message("%lu, %f", stat->bytesCompleted, stat->progress);
+	}
+}
+
+static void wdl_set_all_file_dl(GtkTreeModel * model, tr_torrent * torrent)
+{
+	GtkTreeIter iter;
+	if (gtk_tree_model_get_iter_first(model, &iter) && torrent != NULL) {
+		wdl_set_file_dl_r(model, torrent, &iter);
+	}
 }
 
 static void wl_bt_file_chooser_open(GtkWidget * button, gpointer data)
@@ -235,6 +275,11 @@ static void wl_bt_file_chooser_open(GtkWidget * button, gpointer data)
 	gtk_widget_hide(GTK_WIDGET(chooser->window));
 	if (g_main_loop_is_running(loop))
 		g_main_loop_quit(loop);
+
+	GtkTreeModel *model =
+		(GtkTreeModel *) gtk_builder_get_object(GTK_BUILDER(chooser),
+												"file_tree");
+	wdl_set_all_file_dl(model, chooser->torrent);
 }
 
 static void wl_bt_file_chooser_cancel(GtkWidget * button, gpointer data)
@@ -267,6 +312,7 @@ static const gchar *make_size_readable(guint64 size)
 	return string;
 }
 
+/* 设置所有子节点的选中状态 */
 static void wdl_set_all_child_dl(GtkTreeModel * model, GtkTreeIter * iter,
 								 gboolean flag)
 {
@@ -302,20 +348,16 @@ static gint wdl_all_child_toggled(GtkTreeModel * model, GtkTreeIter * iter)
 		if (!toggled)
 			s--;
 	}
+
 	if (s == 0)
-		gtk_tree_store_set(GTK_TREE_STORE(model), iter, TREE_STORE_COL_DL,
-						   FALSE, TREE_STORE_COL_INC, FALSE, -1);
+		return 2;
 	else if (s == n)
-		gtk_tree_store_set(GTK_TREE_STORE(model), iter, TREE_STORE_COL_DL,
-						   TRUE, TREE_STORE_COL_INC, FALSE, -1);
-	else
-		gtk_tree_store_set(GTK_TREE_STORE(model), iter, TREE_STORE_COL_DL,
-						   FALSE, TREE_STORE_COL_INC, TRUE, -1);
-	return s;
+		return 0;
+	return 1;
 }
 
 /* 递归 */
-static void wdl_update_dl(GtkTreeModel * model, GtkTreeIter * iter)
+static void wdl_update_dl_r(GtkTreeModel * model, GtkTreeIter * iter)
 {
 	if (gtk_tree_model_iter_has_child(model, iter)) {
 		gint n = gtk_tree_model_iter_n_children(model, iter);
@@ -323,9 +365,21 @@ static void wdl_update_dl(GtkTreeModel * model, GtkTreeIter * iter)
 		for (i = 0; i < n; i++) {
 			GtkTreeIter child_iter;
 			gtk_tree_model_iter_nth_child(model, &child_iter, iter, i);
-			wdl_update_dl(model, &child_iter);
+			wdl_update_dl_r(model, &child_iter);
 		}
-		wdl_all_child_toggled(model, iter);
+		gint stat = wdl_all_child_toggled(model, iter);
+		if (stat == 2)
+			gtk_tree_store_set(GTK_TREE_STORE(model), iter,
+							   TREE_STORE_COL_DL, FALSE,
+							   TREE_STORE_COL_INC, FALSE, -1);
+		else if (stat == 0)
+			gtk_tree_store_set(GTK_TREE_STORE(model), iter,
+							   TREE_STORE_COL_DL, TRUE, TREE_STORE_COL_INC,
+							   FALSE, -1);
+		else
+			gtk_tree_store_set(GTK_TREE_STORE(model), iter,
+							   TREE_STORE_COL_DL, FALSE,
+							   TREE_STORE_COL_INC, TRUE, -1);
 	}
 }
 
@@ -335,7 +389,7 @@ static void wdl_update_all_dl(GtkTreeModel * model)
 	GtkTreeIter iter;
 	if (!gtk_tree_model_get_iter_first(model, &iter))
 		return;
-	wdl_update_dl(model, &iter);
+	wdl_update_dl_r(model, &iter);
 }
 
 void cellrenderertoggle_toggled_cb(GtkCellRendererToggle * cell,
@@ -370,14 +424,22 @@ void cellrenderertoggle_toggled_cb(GtkCellRendererToggle * cell,
 
 #include "icons.h"
 
-static inline void wl_bt_file_chooser_update(WlBtFileChooser * chooser)
+static inline gboolean wl_bt_file_chooser_update(WlBtFileChooser * chooser)
 {
 	tr_ctor *ctor = chooser->ctor;
-	tr_torrent *torrent = tr_torrentNew(ctor, NULL, NULL);
+	gint err;
+	gint duplicate;
+	tr_torrent *torrent = tr_torrentNew(ctor, &err, &duplicate);
 	chooser->torrent = torrent;
-	if (torrent == NULL)
-		return;
 	GtkBuilder *ui = GTK_BUILDER(chooser);
+
+	GtkTreeStore *file_tree =
+		(GtkTreeStore *) gtk_builder_get_object(ui, UI_TREESTORE);
+	GtkTreeView *tree_view =
+		(GtkTreeView *) gtk_builder_get_object(ui, UI_TREEVIEW);
+	/* 清空 */
+	gtk_tree_store_clear(file_tree);
+
 	GtkFileChooserButton *fc_button =
 		(GtkFileChooserButton *) gtk_builder_get_object(ui,
 														UI_TORRENT);
@@ -386,6 +448,24 @@ static inline void wl_bt_file_chooser_update(WlBtFileChooser * chooser)
 														UI_FOLDER);
 	GtkLabel *space_label =
 		(GtkLabel *) gtk_builder_get_object(ui, UI_SPACE);
+
+	GtkWidget *window =
+		(GtkWidget *) gtk_builder_get_object(ui, UI_WINDOW);
+
+	GtkWidget *cancel_button =
+		(GtkWidget *) gtk_builder_get_object(GTK_BUILDER(chooser),
+											 UI_CANCEL);
+
+	if (torrent == NULL) {
+		if (err == TR_PARSE_DUPLICATE) {
+			wl_bt_file_chooser_show_duplicate(window,
+											  tr_ctorGetSourceFile(ctor));
+		} else {
+			wl_bt_file_chooser_show_invalid(window,
+											tr_ctorGetSourceFile(ctor));
+		}
+		return FALSE;
+	}
 
 	/* 种子文件和保存路径 */
 	gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(fc_button),
@@ -405,11 +485,6 @@ static inline void wl_bt_file_chooser_update(WlBtFileChooser * chooser)
 	g_object_unref(file);
 
 	/* 文件s */
-	GtkTreeStore *file_tree =
-		(GtkTreeStore *) gtk_builder_get_object(ui, UI_TREESTORE);
-	GtkTreeView *tree_view =
-		(GtkTreeView *) gtk_builder_get_object(ui, UI_TREEVIEW);
-	gtk_tree_store_clear(file_tree);
 	const tr_info *torrent_info = tr_torrentInfo(torrent);
 	/* 根目录 */
 	GtkTreeIter root_iter;
@@ -464,7 +539,8 @@ static inline void wl_bt_file_chooser_update(WlBtFileChooser * chooser)
 									   get_pixbuf_from_icon_name
 									   (ICON_FOLDER, TREEVIEW_ICON_SIZE),
 									   TREE_STORE_COL_NAME, paths[j + 1],
-									   TREE_STORE_COL_DL, TRUE, -1);
+									   TREE_STORE_COL_DL, TRUE,
+									   TREE_STORE_COL_LENGTH, 0, -1);
 				}
 			} else {
 				g_error("%s\n%s", name, paths[j]);
@@ -478,23 +554,45 @@ static inline void wl_bt_file_chooser_update(WlBtFileChooser * chooser)
 						   TREE_STORE_COL_NAME, paths[j],
 						   TREE_STORE_COL_SIZE,
 						   make_size_readable(torrent_file->length),
-						   TREE_STORE_COL_DL, TRUE, -1);
-		//g_message("%s", torrent_file->name);
+						   TREE_STORE_COL_DL, TRUE,
+						   TREE_STORE_COL_INDEX,
+						   i,
+						   TREE_STORE_COL_LENGTH, torrent_file->length,
+						   -1);
 		g_strfreev(paths);
 	}
 
 	/* expand all */
 	gtk_tree_view_expand_all(tree_view);
+	return TRUE;
 }
 
-static inline void wl_bt_file_chooser_show_invalid(GtkWidget * window)
+static inline void wl_bt_file_chooser_show_invalid(GtkWidget * window,
+												   const gchar * name)
 {
 	GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(window),
 											   GTK_DIALOG_MODAL |
 											   GTK_DIALOG_DESTROY_WITH_PARENT,
 											   GTK_MESSAGE_ERROR,
 											   GTK_BUTTONS_OK,
-											   "Invalid Torrent File!");
+											   "Invalid torrent file!");
+	gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dialog),
+											 "%s", name);
+	gtk_dialog_run(GTK_DIALOG(dialog));
+	gtk_widget_destroy(dialog);
+}
+
+static inline void wl_bt_file_chooser_show_duplicate(GtkWidget * window,
+													 const gchar * name)
+{
+	GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(window),
+											   GTK_DIALOG_MODAL |
+											   GTK_DIALOG_DESTROY_WITH_PARENT,
+											   GTK_MESSAGE_WARNING,
+											   GTK_BUTTONS_OK,
+											   "Couldn't add duplicate torrent!");
+	gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dialog),
+											 "%s", name);
 	gtk_dialog_run(GTK_DIALOG(dialog));
 	gtk_widget_destroy(dialog);
 }
@@ -533,10 +631,12 @@ tr_torrent *wl_bt_file_chooser_run(WlBtFileChooser * chooser,
 											 UI_CANCEL);
 
 	if (tr_ctorSetMetainfoFromFile(chooser->ctor, path)) {	/* 无效的文件 */
-		wl_bt_file_chooser_show_invalid(window);
+		wl_bt_file_chooser_show_invalid(window, path);
 		return NULL;
 	}
-	wl_bt_file_chooser_update(chooser);
+	if (wl_bt_file_chooser_update(chooser) == FALSE) {
+		return NULL;
+	}
 
 	gtk_widget_show_all(window);
 
@@ -544,7 +644,7 @@ tr_torrent *wl_bt_file_chooser_run(WlBtFileChooser * chooser,
 	chooser->loop = loop;
 	gulong delete_handler =
 		g_signal_connect(G_OBJECT(window), "delete-event",
-						 G_CALLBACK(wl_bt_file_chooser_close), loop);
+						 G_CALLBACK(wl_bt_file_chooser_close), chooser);
 	gulong open_handler =
 		g_signal_connect(G_OBJECT(open_button), "clicked",
 						 G_CALLBACK(wl_bt_file_chooser_open), chooser);
