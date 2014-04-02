@@ -37,6 +37,8 @@ enum {
 #define UI_TREESTORE	"file_tree"
 #define UI_OPEN "open_button"
 #define UI_CANCEL   "cancel_button"
+#define UI_TRASH	"trash_button"
+#define UI_START	"start_button"
 
 /* 常用图标的名字 */
 #define ICON_FOLDER "folder"
@@ -64,6 +66,9 @@ static void wl_bt_file_chooser_setter(GObject * object, guint property_id,
 									  GParamSpec * ps);
 static inline gboolean wl_bt_file_chooser_update(WlBtFileChooser *
 												 chooser);
+/* 将torrent文件移动到回收站? */
+static inline gboolean wl_bt_file_chooser_torrent_trash(WlBtFileChooser *
+														chooser);
 static gboolean wl_bt_file_chooser_close(GtkWidget * widget,
 										 GdkEvent * event, gpointer data);
 static void wl_bt_file_chooser_open(GtkWidget * button, gpointer data);
@@ -90,6 +95,9 @@ static const gchar *make_size_readable(guint64 size);
 static GdkPixbuf *get_pixbuf_from_icon(GtkIconTheme * icon_theme,
 									   GThemedIcon * icon, gint size);
 static GdkPixbuf *get_pixbuf_from_icon_name(const gchar * name, gint size);
+
+/* 移动到回收站 */
+static void move_file_to_trash(const gchar * file);
 
 static void wl_bt_file_chooser_init(WlBtFileChooser * chooser)
 {
@@ -271,6 +279,14 @@ static void wdl_set_all_file_dl(GtkTreeModel * model, tr_torrent * torrent)
 	}
 }
 
+static inline void wl_bt_file_chooser_remove_torrent(WlBtFileChooser *
+													 chooser)
+{
+	if (wl_bt_file_chooser_torrent_trash(chooser)) {
+		move_file_to_trash(tr_ctorGetSourceFile(chooser->ctor));
+	}
+}
+
 static void wl_bt_file_chooser_open(GtkWidget * button, gpointer data)
 {
 	WlBtFileChooser *chooser = data;
@@ -282,6 +298,7 @@ static void wl_bt_file_chooser_open(GtkWidget * button, gpointer data)
 	GtkTreeModel *model =
 		(GtkTreeModel *) gtk_builder_get_object(GTK_BUILDER(chooser),
 												"file_tree");
+	wl_bt_file_chooser_remove_torrent(chooser);
 	wdl_set_all_file_dl(model, chooser->torrent);
 }
 
@@ -634,6 +651,21 @@ static void wl_bt_file_chooser_set(GtkFileChooserButton * button,
 	g_free(path);
 }
 
+static void move_file_to_trash(const gchar * path)
+{
+	GFile *file = g_file_new_for_path(path);
+	g_file_trash(file, NULL, NULL);
+	g_object_unref(file);
+}
+
+static inline gboolean wl_bt_file_chooser_torrent_trash(WlBtFileChooser *
+														chooser)
+{
+	GtkWidget *trash_button =
+		(GtkWidget *) gtk_builder_get_object(GTK_BUILDER(chooser),
+											 UI_TRASH);
+	return gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(trash_button));
+}
 
 /**********************************************************
  * PUBLIC
@@ -709,8 +741,7 @@ tr_torrent *wl_bt_file_chooser_run(WlBtFileChooser * chooser,
 const gchar *wl_bt_file_chooser_get_path(WlBtFileChooser * chooser)
 {
 	g_return_val_if_fail(WL_IS_BT_FILE_CHOOSER(chooser), NULL);
-	GtkFileChooserButton *dc_button =
-		(GtkFileChooserButton *)
+	GtkFileChooserButton *dc_button = (GtkFileChooserButton *)
 		gtk_builder_get_object(GTK_BUILDER(chooser),
 							   UI_FOLDER);
 	return
@@ -724,4 +755,13 @@ const gchar *wl_bt_file_chooser_get_torrent_file(WlBtFileChooser * chooser)
 {
 	g_return_val_if_fail(WL_IS_BT_FILE_CHOOSER(chooser), NULL);
 	return tr_ctorGetSourceFile(chooser->ctor);
+}
+
+gboolean wl_bt_file_chooser_auto_start(WlBtFileChooser * chooser)
+{
+	g_return_val_if_fail(WL_IS_BT_FILE_CHOOSER(chooser), FALSE);
+	GtkToggleButton *start_button =
+		(GtkToggleButton *) gtk_builder_get_object(GTK_BUILDER(chooser),
+												   UI_START);
+	return gtk_toggle_button_get_active(start_button);
 }

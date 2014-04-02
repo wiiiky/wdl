@@ -92,6 +92,10 @@ const gchar *wl_bt_file_chooser_get_path(WlBtFileChooser * chooser);
  */
 const gchar *wl_bt_file_chooser_get_torrent_file(WlBtFileChooser *
 												 chooser);
+/*
+ * @description 是否直接开始下载
+ */
+gboolean wl_bt_file_chooser_auto_start(WlBtFileChooser * chooser);
 
 
 G_END_DECLS
