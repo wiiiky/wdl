@@ -60,8 +60,8 @@ G_BEGIN_DECLS
 typedef struct _WlDownloader WlDownloader;
 typedef struct _WlDownloaderClass WlDownloaderClass;
 
-typedef void (*WlHttperSelectedCallback) (WlDownloader * dl,
-										  gpointer data);
+typedef void (*WlDownloaderSelectedCallback) (WlDownloader * dl,
+											  gpointer data);
 
 struct _WlDownloader {
 	GtkScrolledWindow parent;
@@ -72,8 +72,8 @@ struct _WlDownloader {
 	tr_session *session;
 
 	/* Callback */
-	WlHttperSelectedCallback httperSelected;
-	gpointer httperSelectedData;
+	WlDownloaderSelectedCallback selectedCB;
+	gpointer selectedCBData;
 	WlHttperStatusCallback httperStatus;
 	gpointer httperStatusData;
 };
@@ -146,8 +146,8 @@ void wl_downloader_remove_selected(WlDownloader * dl);
  * @param data
  */
 void wl_downloader_set_selected_callback(WlDownloader * dl,
-										 WlHttperSelectedCallback callback,
-										 gpointer data);
+										 WlDownloaderSelectedCallback
+										 callback, gpointer data);
 /*
  * @description
  * @param callback

@@ -29,12 +29,11 @@ static void wl_downloader_get_property(GObject * object, guint property_id,
 static void wl_downloader_set_property(GObject * object, guint property_id,
 									   const GValue * value,
 									   GParamSpec * ps);
-static gpointer wl_downloader_httper_pressed_callback(GtkWidget * widget,
-													  GdkEventButton *
-													  event,
-													  gpointer data);
-static inline void wl_downloader_set_httper_selected(WlDownloader * dl,
-													 WlHttper * httper);
+static gpointer wl_downloader_pressed_callback(GtkWidget * widget,
+											   GdkEventButton *
+											   event, gpointer data);
+static inline void wl_downloader_set_selected(WlDownloader * dl,
+											  gpointer obj);
 
 static void wl_downloader_init(WlDownloader * dl)
 {
@@ -61,8 +60,8 @@ static void wl_downloader_init(WlDownloader * dl)
 	dl->vBox = vBox;
 	dl->list = NULL;
 	dl->selected = NULL;
-	dl->httperSelected = NULL;
-	dl->httperSelectedData = NULL;
+	dl->selectedCB = NULL;
+	dl->selectedCBData = NULL;
 	dl->httperStatus = NULL;
 	dl->httperStatusData = NULL;
 }
@@ -121,32 +120,36 @@ static void wl_downloader_set_property(GObject * object, guint property_id,
 	}
 }
 
-static inline void wl_downloader_set_httper_selected(WlDownloader * dl,
-													 WlHttper * httper)
+static inline void wl_downloader_set_selected(WlDownloader * dl,
+											  gpointer obj)
 {
-	if (dl->selected == (gpointer) httper)
+	if (dl->selected == obj)
 		return;
 	if (dl->selected) {
 		if (WL_IS_HTTPER(dl->selected)) {
 			wl_httper_clear_highlight(WL_HTTPER(dl->selected));
 			wl_httper_set_status_callback(WL_HTTPER(dl->selected), NULL,
 										  NULL);
+		} else if (WL_IS_BTER(dl->selected)) {
+			wl_bter_clear_highlight(WL_BTER(dl->selected));
 		}
 	}
 	dl->selected = NULL;
-	if (httper == NULL) {
+	if (obj == NULL) {
 		goto CALLBACK;
-	} else if (WL_IS_HTTPER(httper)) {
-		wl_httper_highlight(httper);
-		wl_httper_set_status_callback(httper, dl->httperStatus,
+	} else if (WL_IS_HTTPER(obj)) {
+		wl_httper_highlight(WL_HTTPER(obj));
+		wl_httper_set_status_callback(WL_HTTPER(obj), dl->httperStatus,
 									  dl->httperStatusData);
+	} else if (WL_IS_BTER(obj)) {
+		wl_bter_highlight(WL_BTER(obj));
 	} else
 		return;					/* unknown type */
 
-	dl->selected = (gpointer) httper;
+	dl->selected = obj;
   CALLBACK:
-	if (dl->httperSelected)
-		dl->httperSelected(dl, dl->httperSelectedData);
+	if (dl->selectedCB)
+		dl->selectedCB(dl, dl->selectedCBData);
 }
 
 static void on_remove_httper_activate(GtkMenuItem * item, gpointer data)
@@ -199,25 +202,28 @@ static inline GtkWidget *wl_downloader_httper_popmenu(WlHttper * httper)
 	return menu;
 }
 
-static gpointer wl_downloader_httper_pressed_callback(GtkWidget * widget,
-													  GdkEventButton *
-													  event, gpointer data)
+static gpointer wl_downloader_pressed_callback(GtkWidget * widget,
+											   GdkEventButton *
+											   event, gpointer data)
 {
-	WlHttper *httper = WL_HTTPER(widget);
 	WlDownloader *dl = (WlDownloader *) data;
 	GtkWidget *popmenu;
 	if (event->type == GDK_BUTTON_PRESS) {
 		/* 单击 */
-		wl_downloader_set_httper_selected(dl, httper);
+		wl_downloader_set_selected(dl, widget);
 		if (event->button == 1) {
 			/* 左键 */
 			/*wl_downloader_set_httper_selected(dl, httper); */
 		} else if (event->button == 3) {
-			popmenu = wl_httper_get_popmenu(httper);
-			gtk_menu_popup(GTK_MENU(popmenu), NULL, NULL, NULL, NULL,
-						   event->button,
-						   gdk_event_get_time((GdkEvent *) event));
 			/* 右键 */
+			if (WL_IS_HTTPER(widget)) {
+				WlHttper *httper = WL_HTTPER(widget);
+				popmenu = wl_httper_get_popmenu(httper);
+				gtk_menu_popup(GTK_MENU(popmenu), NULL, NULL, NULL, NULL,
+							   event->button,
+							   gdk_event_get_time((GdkEvent *) event));
+			} else if (WL_IS_BTER(widget)) {
+			}
 		}
 	} else if (event->type == GDK_2BUTTON_PRESS) {
 		/* 双击 */
@@ -248,8 +254,7 @@ WlHttper *wl_downloader_append_httper(WlDownloader * dl, const gchar * url,
 	GtkWidget *menu = wl_downloader_httper_popmenu(httper);
 	wl_httper_set_user_data(httper, dl);
 	g_signal_connect(G_OBJECT(httper), "button-press-event",
-					 G_CALLBACK(wl_downloader_httper_pressed_callback),
-					 dl);
+					 G_CALLBACK(wl_downloader_pressed_callback), dl);
 
 	gtk_box_pack_start(GTK_BOX(dl->vBox), GTK_WIDGET(httper), FALSE, FALSE,
 					   0);
@@ -264,7 +269,7 @@ void wl_downloader_remove_httper(WlDownloader * dl, WlHttper * httper)
 	dl->list = g_list_remove(dl->list, httper);
 	wl_httper_abort(httper);
 	gtk_container_remove(GTK_CONTAINER(dl->vBox), GTK_WIDGET(httper));
-	wl_downloader_set_httper_selected(dl, NULL);
+	wl_downloader_set_selected(dl, NULL);
 }
 
 WlBter *wl_downloader_append_bter(WlDownloader * dl, tr_torrent * torrent)
@@ -274,6 +279,9 @@ WlBter *wl_downloader_append_bter(WlDownloader * dl, tr_torrent * torrent)
 
 	if (bter == NULL)
 		return NULL;
+
+	g_signal_connect(G_OBJECT(bter), "button-press-event",
+					 G_CALLBACK(wl_downloader_pressed_callback), dl);
 
 	gtk_box_pack_start(GTK_BOX(dl->vBox), GTK_WIDGET(bter), FALSE, FALSE,
 					   0);
@@ -290,6 +298,9 @@ WlBter *wl_downloader_append_bter_from_file(WlDownloader * dl,
 
 	if (bter == NULL)
 		return NULL;
+
+	g_signal_connect(G_OBJECT(bter), "button-press-event",
+					 G_CALLBACK(wl_downloader_pressed_callback), dl);
 
 	gtk_box_pack_start(GTK_BOX(dl->vBox), GTK_WIDGET(bter), FALSE, FALSE,
 					   0);
@@ -344,6 +355,8 @@ gint wl_downloader_get_selected_status(WlDownloader * dl)
 		return 0;
 	if (WL_IS_HTTPER(dl->selected))
 		return wl_httper_get_status(WL_HTTPER(dl->selected));
+	else if (WL_IS_BTER(dl->selected))
+		return wl_bter_get_status(WL_BTER(dl->selected));
 	return 0;
 }
 
@@ -364,12 +377,12 @@ void wl_downloader_remove_selected(WlDownloader * dl)
 }
 
 void wl_downloader_set_selected_callback(WlDownloader * dl,
-										 WlHttperSelectedCallback callback,
-										 gpointer data)
+										 WlDownloaderSelectedCallback
+										 callback, gpointer data)
 {
 	g_return_if_fail(WL_IS_DOWNLOADER(dl));
-	dl->httperSelected = callback;
-	dl->httperSelectedData = data;
+	dl->selectedCB = callback;
+	dl->selectedCBData = data;
 }
 
 void wl_downloader_set_httper_status_callback(WlDownloader * dl,

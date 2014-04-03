@@ -19,7 +19,7 @@
 
 GETTEXT_PACKAGE = wdl
 PACKAGE = wdl
-VERSION = 0.1
+VERSION = 0.2
 
 SHELL = /bin/bash
 

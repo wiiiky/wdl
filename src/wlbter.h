@@ -98,5 +98,11 @@ void wl_bter_pause(WlBter * bter);
  */
 gint wl_bter_get_status(WlBter * bter);
 
+/*
+ * @description 高亮\取消高亮下载任务
+ */
+void wl_bter_highlight(WlBter * bter);
+void wl_bter_clear_highlight(WlBter * bter);
+
 G_END_DECLS						/* __WL_BTER_H__ */
 #endif

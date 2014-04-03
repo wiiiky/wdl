@@ -713,6 +713,8 @@ tr_torrent *wl_bt_file_chooser_run(WlBtFileChooser * chooser,
 
 	GMainLoop *loop = g_main_loop_new(NULL, FALSE);
 	chooser->loop = loop;
+
+	/* connect signals */
 	gulong delete_handler =
 		g_signal_connect(G_OBJECT(window), "delete-event",
 						 G_CALLBACK(wl_bt_file_chooser_close), chooser);

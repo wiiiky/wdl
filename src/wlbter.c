@@ -381,3 +381,33 @@ gint wl_bter_get_status(WlBter * bter)
 	const tr_stat *stat = tr_torrentStat(bter->torrent);
 	return wl_bter_convert_status(stat->activity);
 }
+
+void wl_bter_highlight(WlBter * bter)
+{
+	g_return_if_fail(WL_IS_BTER(bter));
+	static GtkCssProvider *css = NULL;
+	if (css == NULL) {
+		gchar *str = "GtkEventBox{border-radius:0px;"
+			"background-color:rgba(130,160,220,200);}";
+		css = gtk_css_provider_new();
+		gtk_css_provider_load_from_data(css, str, -1, NULL);
+	}
+	gtk_style_context_add_provider(gtk_widget_get_style_context
+								   (GTK_WIDGET(bter)),
+								   GTK_STYLE_PROVIDER(css), G_MAXUINT);
+}
+
+void wl_bter_clear_highlight(WlBter * bter)
+{
+	g_return_if_fail(WL_IS_BTER(bter));
+	static GtkCssProvider *css = NULL;
+	if (css == NULL) {
+		gchar *str = "GtkEventBox{border-radius:0px;"
+			"background-color:rgba(255,255,255,0);}";
+		css = gtk_css_provider_new();
+		gtk_css_provider_load_from_data(css, str, -1, NULL);
+	}
+	gtk_style_context_add_provider(gtk_widget_get_style_context
+								   (GTK_WIDGET(bter)),
+								   GTK_STYLE_PROVIDER(css), G_MAXUINT);
+}
