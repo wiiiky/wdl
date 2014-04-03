@@ -46,6 +46,8 @@ static inline void wl_bter_set_title(WlBter * bter, const gchar * title);
 
 static inline void wl_bter_set_status(WlBter * bter, WlBterStatus status);
 static inline void wl_bter_set_complete_info(WlBter * bter);
+static inline void wl_bter_set_pause_info(WlBter * bter);
+static inline void wl_bter_set_start_info(WlBter * bter);
 /* 将libtransmission定义的状态转化为wdl定义的状态 */
 static inline gint wl_bter_convert_status(tr_torrent_activity activity);
 
@@ -218,6 +220,12 @@ static inline void wl_bter_set_title(WlBter * bter, const gchar * title)
 static inline void wl_bter_set_status(WlBter * bter, WlBterStatus status)
 {
 	bter->status = status;
+	if (status == WL_BTER_STATUS_COMPLETE)
+		wl_bter_set_complete_info(bter);
+	else if (status == WL_BTER_STATUS_PAUSE)
+		wl_bter_set_pause_info(bter);
+	else if (status == WL_BTER_STATUS_START)
+		wl_bter_set_start_info(bter);
 	if (bter->statusCB)
 		bter->statusCB(bter, bter->statusCBData);
 }
@@ -237,6 +245,31 @@ static inline void wl_bter_set_complete_info(WlBter * bter)
 	gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(bter->progressBar),
 								  1.0);
 	wl_bter_set_status(bter, WL_BTER_STATUS_COMPLETE);
+}
+
+static inline void wl_bter_set_start_info(WlBter * bter)
+{
+	static PangoAttrList *attrList = NULL;
+	if (attrList == NULL) {
+		attrList = pango_attr_list_new();
+		pango_attr_list_insert(attrList,
+							   pango_attr_foreground_new(0, 65535 / 2,
+														 65535 / 2));
+	}
+	gtk_label_set_attributes(GTK_LABEL(bter->speedLabel), attrList);
+}
+
+static inline void wl_bter_set_pause_info(WlBter * bter)
+{
+	gtk_label_set_text(GTK_LABEL(bter->speedLabel), "paused");
+	static PangoAttrList *attrList = NULL;
+	if (attrList == NULL) {
+		attrList = pango_attr_list_new();
+		pango_attr_list_insert(attrList,
+							   pango_attr_foreground_new(65535 / 2,
+														 65535 / 2, 0));
+	}
+	gtk_label_set_attributes(GTK_LABEL(bter->speedLabel), attrList);
 }
 
 /*
@@ -280,7 +313,8 @@ static gboolean wl_bter_timeout(gpointer data)
 	wl_bter_set_rtime(bter, stat->pieceDownloadSpeed_KBps,
 					  stat->leftUntilDone);
 	if (stat->percentDone == 1.0) {
-		wl_bter_set_complete_info(bter);
+		//wl_bter_set_complete_info(bter);
+		wl_bter_set_status(bter, WL_BTER_STATUS_COMPLETE);
 		return FALSE;
 	}
 	return TRUE;
