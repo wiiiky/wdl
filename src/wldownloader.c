@@ -29,6 +29,7 @@ static void wl_downloader_get_property(GObject * object, guint property_id,
 static void wl_downloader_set_property(GObject * object, guint property_id,
 									   const GValue * value,
 									   GParamSpec * ps);
+
 static gpointer wl_downloader_pressed_callback(GtkWidget * widget,
 											   GdkEventButton *
 											   event, gpointer data);

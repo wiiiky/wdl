@@ -266,8 +266,6 @@ static wdl_set_file_dl_r(GtkTreeModel * model, tr_torrent * torrent,
 						   TREE_STORE_COL_NAME, &name, -1);
 		tr_torrentSetFileDLs(torrent, &fi, 1, dl);
 		g_message("%s:%s:%d", name, dl ? "true" : "false", fi);
-		tr_file_stat *stat = tr_torrentFiles(torrent, &fi);
-		g_message("%lu, %f", stat->bytesCompleted, stat->progress);
 	}
 }
 
@@ -300,6 +298,8 @@ static void wl_bt_file_chooser_open(GtkWidget * button, gpointer data)
 												"file_tree");
 	wl_bt_file_chooser_remove_torrent(chooser);
 	wdl_set_all_file_dl(model, chooser->torrent);
+	tr_torrentSetDownloadDir(chooser->torrent,
+							 wl_bt_file_chooser_get_path(chooser));
 }
 
 static void wl_bt_file_chooser_cancel(GtkWidget * button, gpointer data)
