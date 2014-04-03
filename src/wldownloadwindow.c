@@ -61,6 +61,8 @@ static void wl_dl_window_downloader_selected_callback(WlDownloader * dl,
 													  gpointer data);
 static void wl_dl_window_httper_status_callback(WlHttper * httper,
 												gpointer data);
+static void wl_dl_window_bter_status_callback(WlBter * bter,
+											  gpointer data);
 
 static void wl_dl_window_destroy(GtkWidget * window, gpointer data);
 static GtkWidget *wl_dl_window_about_dialog(void);
@@ -148,6 +150,9 @@ static void wl_download_window_init(WlDownloadWindow * window)
 	wl_downloader_set_httper_status_callback(downloader,
 											 wl_dl_window_httper_status_callback,
 											 window);
+	wl_downloader_set_bter_status_callback(downloader,
+										   wl_dl_window_bter_status_callback,
+										   window);
 	gtk_box_pack_start(GTK_BOX(mainBox), GTK_WIDGET(downloader), TRUE,
 					   TRUE, 0);
 
@@ -311,6 +316,9 @@ static void wl_dl_window_downloader_selected_callback(WlDownloader * dl,
 			WlHttperStatus status =
 				wl_httper_get_status(WL_HTTPER(selected));
 			wl_dl_window_enable_button_by_httper_status(window, status);
+		} else if (WL_IS_BTER(selected)) {
+			WlBterStatus status = wl_bter_get_status(WL_BTER(selected));
+			wl_dl_window_enable_button_by_httper_status(window, status);
 		}
 	} else {
 		wl_dl_window_set_pause_enabled(window, FALSE);
@@ -324,6 +332,13 @@ static void wl_dl_window_httper_status_callback(WlHttper * httper,
 {
 	WlDownloadWindow *window = (WlDownloadWindow *) data;
 	WlHttperStatus status = wl_httper_get_status(httper);
+	wl_dl_window_enable_button_by_httper_status(window, status);
+}
+
+static void wl_dl_window_bter_status_callback(WlBter * bter, gpointer data)
+{
+	WlDownloadWindow *window = (WlDownloadWindow *) data;
+	WlBterStatus status = wl_bter_get_status(bter);
 	wl_dl_window_enable_button_by_httper_status(window, status);
 }
 
@@ -561,7 +576,7 @@ static void wl_dl_window_remove_download(GtkToolButton * button,
 	gint response = gtk_dialog_run(GTK_DIALOG(dialog));
 	gtk_widget_hide(dialog);
 	if (response == GTK_RESPONSE_OK)
-		wl_downloader_remove_selected(window->downloader);
+		wl_downloader_remove_selected(window->downloader, FALSE);
 }
 
 /******************************************************

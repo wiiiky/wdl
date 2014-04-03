@@ -265,7 +265,7 @@ static wdl_set_file_dl_r(GtkTreeModel * model, tr_torrent * torrent,
 						   TREE_STORE_COL_DL, &dl,
 						   TREE_STORE_COL_NAME, &name, -1);
 		tr_torrentSetFileDLs(torrent, &fi, 1, dl);
-		g_message("%s:%s", name, dl ? "true" : "false");
+		g_message("%s:%s:%d", name, dl ? "true" : "false", fi);
 		tr_file_stat *stat = tr_torrentFiles(torrent, &fi);
 		g_message("%lu, %f", stat->bytesCompleted, stat->progress);
 	}

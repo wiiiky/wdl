@@ -40,6 +40,8 @@ typedef struct _WlBter WlBter;
 typedef struct _WlBterClass WlBterClass;
 typedef enum _WlBterStatus WlBterStatus;
 
+typedef void (*WlBterStatusCallback) (WlBter * bter, gpointer data);
+
 enum _WlBterStatus {
 	WL_BTER_STATUS_START = 11111,
 	WL_BTER_STATUS_PAUSE = 22222,
@@ -51,6 +53,7 @@ enum _WlBterStatus {
 struct _WlBter {
 	GtkEventBox parent;
 	/* GUI */
+	GtkWidget *titleLabel;
 	GtkWidget *dlLabel;
 	GtkWidget *totalLabel;
 	GtkWidget *speedLabel;
@@ -67,6 +70,10 @@ struct _WlBter {
 	WlBterStatus status;
 	/* 定时器 */
 	guint timeout;
+
+	/* 状态改变回调函数 */
+	WlBterStatusCallback statusCB;
+	gpointer statusCBData;
 };
 
 struct _WlBterClass {
@@ -97,12 +104,23 @@ void wl_bter_pause(WlBter * bter);
  * @return WlBterStatus
  */
 gint wl_bter_get_status(WlBter * bter);
+/*
+ * @description 获取tr_torrent对象
+ */
+tr_torrent *wl_bter_get_torrent(WlBter * bter);
 
 /*
  * @description 高亮\取消高亮下载任务
  */
 void wl_bter_highlight(WlBter * bter);
 void wl_bter_clear_highlight(WlBter * bter);
+
+/*
+ * @description 设置状态改变回调函数
+ */
+void wl_bter_set_status_callback(WlBter * bter,
+								 WlBterStatusCallback callback,
+								 gpointer data);
 
 G_END_DECLS						/* __WL_BTER_H__ */
 #endif

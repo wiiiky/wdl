@@ -30,6 +30,7 @@ static void wl_bter_getter(GObject * object, guint property_id,
 						   GValue * value, GParamSpec * ps);
 static void wl_bter_setter(GObject * object, guint property_id,
 						   const GValue * value, GParamSpec * ps);
+static void wl_bter_finalize(GObject * object);
 
 static inline void wl_bter_add_timeout(WlBter * bter);
 static inline void wl_bter_remove_timeout(WlBter * bter);
@@ -41,6 +42,10 @@ static inline void wl_bter_set_total_size(WlBter * bter,
 static inline void wl_bter_set_dl_speed(WlBter * bter, gdouble Kbs);
 static inline void wl_bter_set_rtime(WlBter * bter, gdouble Kbs,
 									 guint64 left);
+static inline void wl_bter_set_title(WlBter * bter, const gchar * title);
+
+static inline void wl_bter_set_status(WlBter * bter, WlBterStatus status);
+static inline void wl_bter_set_complete_info(WlBter * bter);
 /* 将libtransmission定义的状态转化为wdl定义的状态 */
 static inline gint wl_bter_convert_status(tr_torrent_activity activity);
 
@@ -99,6 +104,7 @@ static void wl_bter_init(WlBter * bter)
 
 	/* TODO */
 
+	bter->titleLabel = titleLabel;
 	bter->dlLabel = dlLabel;
 	bter->totalLabel = totalLabel;
 	bter->speedLabel = speedLabel;
@@ -109,6 +115,9 @@ static void wl_bter_init(WlBter * bter)
 	bter->session = NULL;
 	bter->torrent = NULL;
 	bter->timeout = -1;
+	bter->statusCB = NULL;
+	bter->statusCBData = NULL;
+	bter->status = WL_BTER_STATUS_NOT_START;
 }
 
 static void wl_bter_class_init(WlBterClass * klass)
@@ -116,6 +125,7 @@ static void wl_bter_class_init(WlBterClass * klass)
 	GObjectClass *objClass = G_OBJECT_CLASS(klass);
 	objClass->get_property = wl_bter_getter;
 	objClass->set_property = wl_bter_setter;
+	objClass->finalize = wl_bter_finalize;
 
 	GParamSpec *ps;
 	ps = g_param_spec_pointer("session",
@@ -133,6 +143,12 @@ static void wl_bter_class_init(WlBterClass * klass)
 							  G_PARAM_CONSTRUCT_ONLY);
 	g_object_class_install_property(objClass, WL_BTER_PROPERTY_TORRENT,
 									ps);
+}
+
+static void wl_bter_finalize(GObject * object)
+{
+	WlBter *bter = (WlBter *) object;
+	g_source_remove(bter->timeout);
 }
 
 static void wl_bter_getter(GObject * object, guint property_id,
@@ -162,6 +178,8 @@ static void wl_bter_setter(GObject * object, guint property_id,
 		break;
 	case WL_BTER_PROPERTY_TORRENT:
 		bter->torrent = g_value_get_pointer(value);
+		const tr_info *info = tr_torrentInfo(bter->torrent);
+		wl_bter_set_title(bter, info->originalName);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, ps);
@@ -179,11 +197,46 @@ static inline gint wl_bter_convert_status(tr_torrent_activity activity)
 	case TR_STATUS_SEED_WAIT:
 		return WL_BTER_STATUS_COMPLETE;
 		break;
+	case TR_STATUS_CHECK:
+	case TR_STATUS_CHECK_WAIT:
+	case TR_STATUS_DOWNLOAD:
+	case TR_STATUS_DOWNLOAD_WAIT:
+		return WL_BTER_STATUS_START;
+		break;
 	default:
 		return WL_BTER_STATUS_NOT_START;
 		break;
 	}
 	return 0;
+}
+
+static inline void wl_bter_set_title(WlBter * bter, const gchar * title)
+{
+	gtk_label_set_text(GTK_LABEL(bter->titleLabel), title);
+}
+
+static inline void wl_bter_set_status(WlBter * bter, WlBterStatus status)
+{
+	bter->status = status;
+	if (bter->statusCB)
+		bter->statusCB(bter, bter->statusCBData);
+}
+
+static inline void wl_bter_set_complete_info(WlBter * bter)
+{
+	gtk_label_set_text(GTK_LABEL(bter->speedLabel), "complete");
+	static PangoAttrList *attrList = NULL;
+	if (attrList == NULL) {
+		attrList = pango_attr_list_new();
+		pango_attr_list_insert(attrList,
+							   pango_attr_foreground_new(0, 65535 / 3,
+														 65535 / 2));
+	}
+	gtk_label_set_attributes(GTK_LABEL(bter->speedLabel), attrList);
+	gtk_label_set_text(GTK_LABEL(bter->timeLabel), "");
+	gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(bter->progressBar),
+								  1.0);
+	wl_bter_set_status(bter, WL_BTER_STATUS_COMPLETE);
 }
 
 /*
@@ -214,6 +267,7 @@ static gboolean wl_bter_timeout(gpointer data)
 	WlBter *bter = WL_BTER(data);
 	tr_torrent *torrent = bter->torrent;
 	const tr_stat *stat = tr_torrentStatCached(torrent);
+
 	/* 下载百分比 */
 	gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(bter->progressBar),
 								  stat->percentDone);
@@ -225,6 +279,11 @@ static gboolean wl_bter_timeout(gpointer data)
 	/* 剩余时间 */
 	wl_bter_set_rtime(bter, stat->pieceDownloadSpeed_KBps,
 					  stat->leftUntilDone);
+	if (stat->percentDone == 1.0) {
+		wl_bter_set_complete_info(bter);
+		return FALSE;
+	}
+	return TRUE;
 }
 
 static inline void wl_bter_set_dl_size(WlBter * bter, guint64 dlSize)
@@ -364,6 +423,7 @@ WlBter *wl_bter_new_from_magnetlink(tr_session * session,
 void wl_bter_start(WlBter * bter)
 {
 	g_return_if_fail(WL_IS_BTER(bter) && bter->torrent != NULL);
+	wl_bter_set_status(bter, WL_BTER_STATUS_START);
 	tr_torrentStart(bter->torrent);
 	wl_bter_add_timeout(bter);
 }
@@ -372,14 +432,22 @@ void wl_bter_pause(WlBter * bter)
 {
 	g_return_if_fail(WL_IS_BTER(bter) && bter->torrent != NULL);
 	tr_torrentStop(bter->torrent);
+	wl_bter_set_status(bter, WL_BTER_STATUS_PAUSE);
 	wl_bter_remove_timeout(bter);
 }
 
 gint wl_bter_get_status(WlBter * bter)
 {
 	g_return_val_if_fail(WL_IS_BTER(bter), 0);
-	const tr_stat *stat = tr_torrentStat(bter->torrent);
-	return wl_bter_convert_status(stat->activity);
+	//const tr_stat *stat = tr_torrentStat(bter->torrent);
+	//return wl_bter_convert_status(stat->activity);
+	return bter->status;
+}
+
+tr_torrent *wl_bter_get_torrent(WlBter * bter)
+{
+	g_return_val_if_fail(WL_IS_BTER(bter), NULL);
+	return bter->torrent;
 }
 
 void wl_bter_highlight(WlBter * bter)
@@ -410,4 +478,13 @@ void wl_bter_clear_highlight(WlBter * bter)
 	gtk_style_context_add_provider(gtk_widget_get_style_context
 								   (GTK_WIDGET(bter)),
 								   GTK_STYLE_PROVIDER(css), G_MAXUINT);
+}
+
+void wl_bter_set_status_callback(WlBter * bter,
+								 WlBterStatusCallback callback,
+								 gpointer data)
+{
+	g_return_if_fail(WL_IS_BTER(bter));
+	bter->statusCB = callback;
+	bter->statusCBData = data;
 }

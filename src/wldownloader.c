@@ -64,6 +64,8 @@ static void wl_downloader_init(WlDownloader * dl)
 	dl->selectedCBData = NULL;
 	dl->httperStatus = NULL;
 	dl->httperStatusData = NULL;
+	dl->bterStatus = NULL;
+	dl->bterStatusData = NULL;
 }
 
 static void wl_downloader_finalize(GObject * object)
@@ -132,6 +134,7 @@ static inline void wl_downloader_set_selected(WlDownloader * dl,
 										  NULL);
 		} else if (WL_IS_BTER(dl->selected)) {
 			wl_bter_clear_highlight(WL_BTER(dl->selected));
+			wl_bter_set_status_callback(WL_BTER(dl->selected), NULL, NULL);
 		}
 	}
 	dl->selected = NULL;
@@ -143,6 +146,8 @@ static inline void wl_downloader_set_selected(WlDownloader * dl,
 									  dl->httperStatusData);
 	} else if (WL_IS_BTER(obj)) {
 		wl_bter_highlight(WL_BTER(obj));
+		wl_bter_set_status_callback(WL_BTER(obj), dl->bterStatus,
+									dl->bterStatusData);
 	} else
 		return;					/* unknown type */
 
@@ -269,7 +274,15 @@ void wl_downloader_remove_httper(WlDownloader * dl, WlHttper * httper)
 	dl->list = g_list_remove(dl->list, httper);
 	wl_httper_abort(httper);
 	gtk_container_remove(GTK_CONTAINER(dl->vBox), GTK_WIDGET(httper));
-	wl_downloader_set_selected(dl, NULL);
+}
+
+void wl_downloader_remove_bter(WlDownloader * dl, WlBter * bter,
+							   gboolean local)
+{
+	g_return_if_fail(WL_IS_DOWNLOADER(dl) && WL_IS_BTER(bter));
+	dl->list = g_list_remove(dl->list, bter);
+	tr_torrentRemove(wl_bter_get_torrent(bter), local, NULL);
+	gtk_container_remove(GTK_CONTAINER(dl->vBox), GTK_WIDGET(bter));
 }
 
 WlBter *wl_downloader_append_bter(WlDownloader * dl, tr_torrent * torrent)
@@ -366,14 +379,17 @@ gpointer wl_downloader_get_selected(WlDownloader * dl)
 	return dl->selected;
 }
 
-void wl_downloader_remove_selected(WlDownloader * dl)
+void wl_downloader_remove_selected(WlDownloader * dl, gboolean local)
 {
 	g_return_if_fail(WL_IS_DOWNLOADER(dl));
 	if (dl->selected == NULL)
 		return;
 	if (WL_IS_HTTPER(dl->selected)) {
 		wl_downloader_remove_httper(dl, WL_HTTPER(dl->selected));
+	} else if (WL_IS_BTER(dl->selected)) {
+		wl_downloader_remove_bter(dl, WL_BTER(dl->selected), local);
 	}
+	wl_downloader_set_selected(dl, NULL);
 }
 
 void wl_downloader_set_selected_callback(WlDownloader * dl,
@@ -392,6 +408,15 @@ void wl_downloader_set_httper_status_callback(WlDownloader * dl,
 	g_return_if_fail(WL_IS_DOWNLOADER(dl));
 	dl->httperStatus = callback;
 	dl->httperStatusData = data;
+}
+
+void wl_downloader_set_bter_status_callback(WlDownloader * dl,
+											WlBterStatusCallback callback,
+											gpointer data)
+{
+	g_return_if_fail(WL_IS_DOWNLOADER(dl));
+	dl->bterStatus = callback;
+	dl->bterStatusData = data;
 }
 
 tr_torrent *wl_downloader_create_torrent(WlDownloader * dl,

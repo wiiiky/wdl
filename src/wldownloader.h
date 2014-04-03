@@ -76,6 +76,8 @@ struct _WlDownloader {
 	gpointer selectedCBData;
 	WlHttperStatusCallback httperStatus;
 	gpointer httperStatusData;
+	WlBterStatusCallback bterStatus;
+	gpointer bterStatusData;
 };
 
 struct _WlDownloaderClass {
@@ -96,10 +98,15 @@ WlDownloader *wl_downloader_new(void);
 WlHttper *wl_downloader_append_httper(WlDownloader * dl, const gchar * url,
 									  const gchar * path);
 /*
- * @description 移除一个HTTP下载任务
+ * @description 移除一个下载任务
  * @param httper 移除的目标
  */
 void wl_downloader_remove_httper(WlDownloader * dl, WlHttper * httper);
+/*
+ * @param local是否移除下载文件
+ */
+void wl_downloader_remove_bter(WlDownloader * dl, WlBter * bter,
+							   gboolean local);
 /*
  * @description 添加一个BT下载任务
  * @param torrent 一个tr_torrent指针
@@ -138,7 +145,7 @@ gpointer wl_downloader_get_selected(WlDownloader * dl);
 /*
  * @description 删除选中的任务
  */
-void wl_downloader_remove_selected(WlDownloader * dl);
+void wl_downloader_remove_selected(WlDownloader * dl, gboolean local);
 
 /*
  * @description 设置选中的HTTPER改变时的回调函数
@@ -156,6 +163,9 @@ void wl_downloader_set_selected_callback(WlDownloader * dl,
 void wl_downloader_set_httper_status_callback(WlDownloader * dl,
 											  WlHttperStatusCallback
 											  callback, gpointer data);
+void wl_downloader_set_bter_status_callback(WlDownloader * dl,
+											WlBterStatusCallback callback,
+											gpointer data);
 /*
  * @description 创建种子tr_torrent*对象，但不添加Wlbter
  * @param path 种子文件路径
