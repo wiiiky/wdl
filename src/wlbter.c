@@ -112,6 +112,7 @@ static void wl_bter_init(WlBter * bter)
 	bter->speedLabel = speedLabel;
 	bter->timeLabel = timeLabel;
 	bter->progressBar = progressBar;
+	bter->popMenu = NULL;
 	bter->totalLast = -1;
 
 	bter->session = NULL;
@@ -151,6 +152,8 @@ static void wl_bter_finalize(GObject * object)
 {
 	WlBter *bter = (WlBter *) object;
 	g_source_remove(bter->timeout);
+	if (bter->popMenu)
+		gtk_widget_destroy(bter->popMenu);
 }
 
 static void wl_bter_getter(GObject * object, guint property_id,
@@ -313,7 +316,7 @@ static gboolean wl_bter_timeout(gpointer data)
 	wl_bter_set_rtime(bter, stat->pieceDownloadSpeed_KBps,
 					  stat->leftUntilDone);
 	if (stat->percentDone == 1.0) {
-		//wl_bter_set_complete_info(bter);
+		g_message("complete");
 		wl_bter_set_status(bter, WL_BTER_STATUS_COMPLETE);
 		return FALSE;
 	}
@@ -521,4 +524,16 @@ void wl_bter_set_status_callback(WlBter * bter,
 	g_return_if_fail(WL_IS_BTER(bter));
 	bter->statusCB = callback;
 	bter->statusCBData = data;
+}
+
+void wl_bter_set_popmenu(WlBter * bter, GtkWidget * menu)
+{
+	g_return_if_fail(WL_IS_BTER(bter));
+	bter->popMenu = menu;
+}
+
+GtkWidget *wl_bter_get_popmenu(WlBter * bter)
+{
+	g_return_val_if_fail(WL_IS_BTER(bter), NULL);
+	return bter->popMenu;
 }

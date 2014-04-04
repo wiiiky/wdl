@@ -171,6 +171,21 @@ static void on_delete_files_activate(GtkMenuItem * item, gpointer data)
 	WlDownloader *dl = wl_httper_get_user_data(httper);
 
 	const gchar *path = wl_httper_get_path(httper);
+
+	GtkWidget *dialog =
+		gtk_message_dialog_new(NULL,
+							   GTK_DIALOG_MODAL |
+							   GTK_DIALOG_DESTROY_WITH_PARENT,
+							   GTK_MESSAGE_INFO, GTK_BUTTONS_OK_CANCEL,
+							   "Delete files!");
+	gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dialog),
+											 "This operation will delete files from file system");
+	gint res = gtk_dialog_run(GTK_DIALOG(dialog));
+	gtk_widget_destroy(dialog);
+	if (res != GTK_RESPONSE_OK)
+		return;
+	/* 先暂停 */
+	wl_httper_pause(httper);
 	if (path) {
 		GFile *file = g_file_new_for_path(path);
 		/* 将文件放入回收站或者彻底删除 */
@@ -229,6 +244,11 @@ static gpointer wl_downloader_pressed_callback(GtkWidget * widget,
 							   event->button,
 							   gdk_event_get_time((GdkEvent *) event));
 			} else if (WL_IS_BTER(widget)) {
+				WlBter *bter = WL_BTER(widget);
+				popmenu = wl_bter_get_popmenu(bter);
+				gtk_menu_popup(GTK_MENU(popmenu), NULL, NULL, NULL, NULL,
+							   event->button,
+							   gdk_event_get_time((GdkEvent *) event));
 			}
 		}
 	} else if (event->type == GDK_2BUTTON_PRESS) {
@@ -293,6 +313,8 @@ WlBter *wl_downloader_append_bter(WlDownloader * dl, tr_torrent * torrent)
 
 	if (bter == NULL)
 		return NULL;
+
+	wl_bter_menu_new(bter);
 
 	g_signal_connect(G_OBJECT(bter), "button-press-event",
 					 G_CALLBACK(wl_downloader_pressed_callback), dl);

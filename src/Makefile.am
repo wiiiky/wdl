@@ -37,7 +37,9 @@ wdl_SOURCES =  \
 			   wlbtfilechooser.c \
 			   wlbtfilechooser.h \
 			   icons.c \
-			   icons.h
+			   icons.h \
+			   wlbtermenu.c \
+			   wlbtermenu.h
 
 wdl_LDFLAGS = \
 			  -Wl,--export-dynamic 

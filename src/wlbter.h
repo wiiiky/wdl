@@ -59,6 +59,8 @@ struct _WlBter {
 	GtkWidget *speedLabel;
 	GtkWidget *timeLabel;
 	GtkWidget *progressBar;
+	/* Menu */
+	GtkWidget *popMenu;
 
 	guint64 totalLast;
 
@@ -121,6 +123,12 @@ void wl_bter_clear_highlight(WlBter * bter);
 void wl_bter_set_status_callback(WlBter * bter,
 								 WlBterStatusCallback callback,
 								 gpointer data);
+
+/*
+ * @description 设置右键菜单
+ */
+void wl_bter_set_popmenu(WlBter * bter, GtkWidget * menu);
+GtkWidget *wl_bter_get_popmenu(WlBter * bter);
 
 G_END_DECLS						/* __WL_BTER_H__ */
 #endif

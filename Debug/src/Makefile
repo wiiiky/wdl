@@ -96,7 +96,8 @@ am_wdl_OBJECTS = wdl-main.$(OBJEXT) wdl-wldownloader.$(OBJEXT) \
 	wdl-wldownloadwindow.$(OBJEXT) wdl-wlhttper.$(OBJEXT) \
 	wdl-wlhttpermenu.$(OBJEXT) wdl-wlhttperproperties.$(OBJEXT) \
 	wdl-wlurldialog.$(OBJEXT) wdl-wlbter.$(OBJEXT) \
-	wdl-wlbtfilechooser.$(OBJEXT) wdl-icons.$(OBJEXT)
+	wdl-wlbtfilechooser.$(OBJEXT) wdl-icons.$(OBJEXT) \
+	wdl-wlbtermenu.$(OBJEXT)
 wdl_OBJECTS = $(am_wdl_OBJECTS)
 am__DEPENDENCIES_1 =
 wdl_DEPENDENCIES = $(srcdir)/libtransmission.a $(srcdir)/libdht.a \
@@ -391,7 +392,9 @@ wdl_SOURCES = \
 			   wlbtfilechooser.c \
 			   wlbtfilechooser.h \
 			   icons.c \
-			   icons.h
+			   icons.h \
+			   wlbtermenu.c \
+			   wlbtermenu.h
 
 wdl_LDFLAGS = \
 			  -Wl,--export-dynamic 
@@ -507,6 +510,7 @@ distclean-compile:
 include ./$(DEPDIR)/wdl-icons.Po
 include ./$(DEPDIR)/wdl-main.Po
 include ./$(DEPDIR)/wdl-wlbter.Po
+include ./$(DEPDIR)/wdl-wlbtermenu.Po
 include ./$(DEPDIR)/wdl-wlbtfilechooser.Po
 include ./$(DEPDIR)/wdl-wldownloader.Po
 include ./$(DEPDIR)/wdl-wldownloadwindow.Po
@@ -675,6 +679,20 @@ wdl-icons.obj: icons.c
 #	$(AM_V_CC)source='icons.c' object='wdl-icons.obj' libtool=no \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
 #	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(wdl_CFLAGS) $(CFLAGS) -c -o wdl-icons.obj `if test -f 'icons.c'; then $(CYGPATH_W) 'icons.c'; else $(CYGPATH_W) '$(srcdir)/icons.c'; fi`
+
+wdl-wlbtermenu.o: wlbtermenu.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(wdl_CFLAGS) $(CFLAGS) -MT wdl-wlbtermenu.o -MD -MP -MF $(DEPDIR)/wdl-wlbtermenu.Tpo -c -o wdl-wlbtermenu.o `test -f 'wlbtermenu.c' || echo '$(srcdir)/'`wlbtermenu.c
+	$(AM_V_at)$(am__mv) $(DEPDIR)/wdl-wlbtermenu.Tpo $(DEPDIR)/wdl-wlbtermenu.Po
+#	$(AM_V_CC)source='wlbtermenu.c' object='wdl-wlbtermenu.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(wdl_CFLAGS) $(CFLAGS) -c -o wdl-wlbtermenu.o `test -f 'wlbtermenu.c' || echo '$(srcdir)/'`wlbtermenu.c
+
+wdl-wlbtermenu.obj: wlbtermenu.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(wdl_CFLAGS) $(CFLAGS) -MT wdl-wlbtermenu.obj -MD -MP -MF $(DEPDIR)/wdl-wlbtermenu.Tpo -c -o wdl-wlbtermenu.obj `if test -f 'wlbtermenu.c'; then $(CYGPATH_W) 'wlbtermenu.c'; else $(CYGPATH_W) '$(srcdir)/wlbtermenu.c'; fi`
+	$(AM_V_at)$(am__mv) $(DEPDIR)/wdl-wlbtermenu.Tpo $(DEPDIR)/wdl-wlbtermenu.Po
+#	$(AM_V_CC)source='wlbtermenu.c' object='wdl-wlbtermenu.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(wdl_CFLAGS) $(CFLAGS) -c -o wdl-wlbtermenu.obj `if test -f 'wlbtermenu.c'; then $(CYGPATH_W) 'wlbtermenu.c'; else $(CYGPATH_W) '$(srcdir)/wlbtermenu.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo

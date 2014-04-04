@@ -256,7 +256,8 @@ static inline void wl_httper_set_status(WlHttper * httper,
 										WlHttperStatus status)
 {
 	httper->status = status;
-	wl_httper_menu_set_sensitive(WL_HTTPER_MENU(httper->popMenu));
+	if (httper->popMenu)
+		wl_httper_menu_set_sensitive(WL_HTTPER_MENU(httper->popMenu));
 	if (httper->statusCallback)
 		httper->statusCallback(httper, httper->statusData);
 }
@@ -515,10 +516,11 @@ static gboolean wl_httper_download_timeout(gpointer data)
 
 	if (httper->percentDone == 0)
 		gtk_progress_bar_pulse(GTK_PROGRESS_BAR(httper->progressBar));
-	else
+	else {
 		gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR
 									  (httper->progressBar),
 									  httper->percentDone);
+	}
 
 	wl_httper_set_dl_speed(httper, httper->speed);
 	wl_httper_set_dl_size(httper, httper->dlNow);

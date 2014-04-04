@@ -96,7 +96,8 @@ am_wdl_OBJECTS = wdl-main.$(OBJEXT) wdl-wldownloader.$(OBJEXT) \
 	wdl-wldownloadwindow.$(OBJEXT) wdl-wlhttper.$(OBJEXT) \
 	wdl-wlhttpermenu.$(OBJEXT) wdl-wlhttperproperties.$(OBJEXT) \
 	wdl-wlurldialog.$(OBJEXT) wdl-wlbter.$(OBJEXT) \
-	wdl-wlbtfilechooser.$(OBJEXT) wdl-icons.$(OBJEXT)
+	wdl-wlbtfilechooser.$(OBJEXT) wdl-icons.$(OBJEXT) \
+	wdl-wlbtermenu.$(OBJEXT)
 wdl_OBJECTS = $(am_wdl_OBJECTS)
 am__DEPENDENCIES_1 =
 wdl_DEPENDENCIES = $(srcdir)/libtransmission.a $(srcdir)/libdht.a \
@@ -391,7 +392,9 @@ wdl_SOURCES = \
 			   wlbtfilechooser.c \
 			   wlbtfilechooser.h \
 			   icons.c \
-			   icons.h
+			   icons.h \
+			   wlbtermenu.c \
+			   wlbtermenu.h
 
 wdl_LDFLAGS = \
 			  -Wl,--export-dynamic 
@@ -507,6 +510,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wdl-icons.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wdl-main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wdl-wlbter.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wdl-wlbtermenu.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wdl-wlbtfilechooser.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wdl-wldownloader.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wdl-wldownloadwindow.Po@am__quote@
@@ -675,6 +679,20 @@ wdl-icons.obj: icons.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='icons.c' object='wdl-icons.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(wdl_CFLAGS) $(CFLAGS) -c -o wdl-icons.obj `if test -f 'icons.c'; then $(CYGPATH_W) 'icons.c'; else $(CYGPATH_W) '$(srcdir)/icons.c'; fi`
+
+wdl-wlbtermenu.o: wlbtermenu.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(wdl_CFLAGS) $(CFLAGS) -MT wdl-wlbtermenu.o -MD -MP -MF $(DEPDIR)/wdl-wlbtermenu.Tpo -c -o wdl-wlbtermenu.o `test -f 'wlbtermenu.c' || echo '$(srcdir)/'`wlbtermenu.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/wdl-wlbtermenu.Tpo $(DEPDIR)/wdl-wlbtermenu.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wlbtermenu.c' object='wdl-wlbtermenu.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(wdl_CFLAGS) $(CFLAGS) -c -o wdl-wlbtermenu.o `test -f 'wlbtermenu.c' || echo '$(srcdir)/'`wlbtermenu.c
+
+wdl-wlbtermenu.obj: wlbtermenu.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(wdl_CFLAGS) $(CFLAGS) -MT wdl-wlbtermenu.obj -MD -MP -MF $(DEPDIR)/wdl-wlbtermenu.Tpo -c -o wdl-wlbtermenu.obj `if test -f 'wlbtermenu.c'; then $(CYGPATH_W) 'wlbtermenu.c'; else $(CYGPATH_W) '$(srcdir)/wlbtermenu.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/wdl-wlbtermenu.Tpo $(DEPDIR)/wdl-wlbtermenu.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wlbtermenu.c' object='wdl-wlbtermenu.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(wdl_CFLAGS) $(CFLAGS) -c -o wdl-wlbtermenu.obj `if test -f 'wlbtermenu.c'; then $(CYGPATH_W) 'wlbtermenu.c'; else $(CYGPATH_W) '$(srcdir)/wlbtermenu.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
