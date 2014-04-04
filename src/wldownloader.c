@@ -172,12 +172,12 @@ static void on_delete_files_activate(GtkMenuItem * item, gpointer data)
 
 	const gchar *path = wl_httper_get_path(httper);
 
-	GtkWidget *dialog =
-		gtk_message_dialog_new(NULL,
-							   GTK_DIALOG_MODAL |
-							   GTK_DIALOG_DESTROY_WITH_PARENT,
-							   GTK_MESSAGE_INFO, GTK_BUTTONS_OK_CANCEL,
-							   "Delete files!");
+	GtkWidget *dialog = gtk_message_dialog_new(NULL,
+											   GTK_DIALOG_MODAL |
+											   GTK_DIALOG_DESTROY_WITH_PARENT,
+											   GTK_MESSAGE_INFO,
+											   GTK_BUTTONS_OK_CANCEL,
+											   "Delete files!");
 	gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dialog),
 											 "This operation will delete files from file system");
 	gint res = gtk_dialog_run(GTK_DIALOG(dialog));

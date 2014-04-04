@@ -35,13 +35,69 @@ static void wl_bter_menu_getter(GObject * object, guint property_id,
 static void wl_bter_menu_setter(GObject * object, guint property_id,
 								const GValue * value, GParamSpec * ps);
 
+/* callbacks */
+static void onPropertiesActivate(GtkMenuItem * item, gpointer data);
+static void onOpenFolderActivate(GtkMenuItem * item, gpointer data);
+static void onStartDlActivate(GtkMenuItem * item, gpointer data);
+static void onPauseDlActivate(GtkMenuItem * item, gpointer data);
+static void onCopyMagnetActivate(GtkMenuItem * item, gpointer data);
+
 static void wl_bter_menu_init(WlBterMenu * obj)
 {
 	GtkMenu *menu = GTK_MENU(obj);
 	GtkWidget *properties =
 		gtk_image_menu_item_new_from_stock(GTK_STOCK_PROPERTIES, NULL);
-	gtk_widget_show(properties);
+	gtk_image_menu_item_set_always_show_image(GTK_IMAGE_MENU_ITEM
+											  (properties), TRUE);
 	gtk_menu_shell_append(GTK_MENU_SHELL(menu), properties);
+
+	GtkWidget *openFolder =
+		gtk_image_menu_item_new_from_stock(GTK_STOCK_OPEN, NULL);
+	gtk_image_menu_item_set_always_show_image(GTK_IMAGE_MENU_ITEM
+											  (openFolder), TRUE);
+	gtk_menu_item_set_label(GTK_MENU_ITEM(openFolder), "Open Folder");
+	gtk_menu_shell_append(GTK_MENU_SHELL(menu), openFolder);
+
+	gtk_menu_shell_append(GTK_MENU_SHELL(menu),
+						  gtk_separator_menu_item_new());
+
+	GtkWidget *startDl =
+		gtk_image_menu_item_new_from_stock(GTK_STOCK_MEDIA_PLAY, NULL);
+	gtk_image_menu_item_set_always_show_image(GTK_IMAGE_MENU_ITEM(startDl),
+											  TRUE);
+	gtk_menu_item_set_label(GTK_MENU_ITEM(startDl), "Start");
+	gtk_menu_shell_append(GTK_MENU_SHELL(menu), startDl);
+
+	GtkWidget *pauseDl =
+		gtk_image_menu_item_new_from_stock(GTK_STOCK_MEDIA_PAUSE, NULL);
+	gtk_image_menu_item_set_always_show_image(GTK_IMAGE_MENU_ITEM(pauseDl),
+											  TRUE);
+	gtk_menu_item_set_label(GTK_MENU_ITEM(pauseDl), "Pause");
+	gtk_menu_shell_append(GTK_MENU_SHELL(menu), pauseDl);
+
+	gtk_menu_shell_append(GTK_MENU_SHELL(menu),
+						  gtk_separator_menu_item_new());
+
+	GtkWidget *copyMagnet =
+		gtk_image_menu_item_new_from_stock(GTK_STOCK_COPY, NULL);
+	gtk_image_menu_item_set_always_show_image(GTK_IMAGE_MENU_ITEM
+											  (copyMagnet), TRUE);
+	gtk_menu_item_set_label(GTK_MENU_ITEM(copyMagnet),
+							"Copy Magnet Link to Clipboard");
+	gtk_menu_shell_append(GTK_MENU_SHELL(menu), copyMagnet);
+
+	gtk_widget_show_all(GTK_WIDGET(menu));
+
+	g_signal_connect(G_OBJECT(properties), "activate",
+					 G_CALLBACK(onPropertiesActivate), obj);
+	g_signal_connect(G_OBJECT(openFolder), "activate",
+					 G_CALLBACK(onOpenFolderActivate), obj);
+	g_signal_connect(G_OBJECT(startDl), "activate",
+					 G_CALLBACK(onStartDlActivate), obj);
+	g_signal_connect(G_OBJECT(pauseDl), "activate",
+					 G_CALLBACK(onPauseDlActivate), obj);
+	g_signal_connect(G_OBJECT(copyMagnet), "activate",
+					 G_CALLBACK(onCopyMagnetActivate), obj);
 
 	obj->bter = NULL;
 }
@@ -93,6 +149,66 @@ static void wl_bter_menu_setter(GObject * object, guint property_id,
 	}
 }
 
+static void onPropertiesActivate(GtkMenuItem * item, gpointer data)
+{
+	WlBterMenu *menu = WL_BTER_MENU(data);
+	g_message("properties");
+}
+
+static void onOpenFolderActivate(GtkMenuItem * item, gpointer data)
+{
+	WlBterMenu *menu = WL_BTER_MENU(data);
+	WlBter *bter = wl_bter_menu_get_bter(menu);
+	const gchar *path = wl_bter_get_path(bter);
+
+	if (path == NULL) {
+		return;
+	}
+
+	gboolean ret = FALSE;
+
+	GFile *file = g_file_new_for_path(path);
+	GFile *parent = g_file_get_parent(file);
+	if (parent) {
+		GAppInfo *info = g_file_query_default_handler(parent, NULL, NULL);
+		if (info == NULL)
+			goto OUT;
+		GList *list = g_list_append(NULL, file);
+		GAppLaunchContext *context = g_app_launch_context_new();
+		if (g_strcmp0("nautilus", g_app_info_get_executable(info)) == 0) {
+			/* 如果打开目录的方式是nautilus，则添加-s参数 */
+			g_app_launch_context_setenv(context, "-s", NULL);
+		}
+		ret = g_app_info_launch(info, list, context, NULL);
+		g_object_unref(info);
+		g_object_unref(context);
+		g_list_free(list);
+	  OUT:
+		g_object_unref(parent);
+	}
+	g_object_unref(file);
+}
+
+static void onStartDlActivate(GtkMenuItem * item, gpointer data)
+{
+	WlBterMenu *menu = WL_BTER_MENU(data);
+}
+
+static void onPauseDlActivate(GtkMenuItem * item, gpointer data)
+{
+	WlBterMenu *menu = WL_BTER_MENU(data);
+}
+
+static void onCopyMagnetActivate(GtkMenuItem * item, gpointer data)
+{
+	WlBterMenu *menu = WL_BTER_MENU(data);
+	GtkClipboard *cb = gtk_widget_get_clipboard(GTK_WIDGET(menu),
+												GDK_SELECTION_CLIPBOARD);
+	if (cb) {
+		gtk_clipboard_set_text(cb, wl_bter_get_magnet(menu->bter), -1);
+	}
+}
+
 /**************************************************
  * PUBILC
  **************************************************/
@@ -103,4 +219,15 @@ WlBterMenu *wl_bter_menu_new(WlBter * bter)
 		(WlBterMenu *) g_object_new(WL_TYPE_BTER_MENU, "bter", bter, NULL);
 	wl_bter_set_popmenu(bter, GTK_WIDGET(menu));
 	return menu;
+}
+
+void wl_bter_set_sensitive(WlBterMenu * menu, WlBter * bter)
+{
+	g_return_if_fail(WL_IS_BTER_MENU(menu) && WL_IS_BTER(bter));
+}
+
+WlBter *wl_bter_menu_get_bter(WlBterMenu * menu)
+{
+	g_return_val_if_fail(WL_IS_BTER_MENU(menu), NULL);
+	return menu->bter;
 }

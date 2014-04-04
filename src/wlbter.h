@@ -110,7 +110,14 @@ gint wl_bter_get_status(WlBter * bter);
  * @description 获取tr_torrent对象
  */
 tr_torrent *wl_bter_get_torrent(WlBter * bter);
-
+/*
+ * @description 获取下载目录
+ */
+const gchar *wl_bter_get_path(WlBter * bter);
+/*
+ * @description 获取magnet link
+ */
+const gchar *wl_bter_get_magnet(WlBter * bter);
 /*
  * @description 高亮\取消高亮下载任务
  */

@@ -55,5 +55,15 @@ GType wl_bter_menu_get_type(void) G_GNUC_CONST;
 
 WlBterMenu *wl_bter_menu_new(WlBter * bter);
 
+/*
+ * @descrition 根据WlBter设置菜单是否可用
+ */
+void wl_bter_set_sensitive(WlBterMenu * menu, WlBter * bter);
+
+/*
+ * @descrition 获取相关的WlBter
+ */
+WlBter *wl_bter_menu_get_bter(WlBterMenu * menu);
+
 G_END_DECLS
 #endif

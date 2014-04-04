@@ -487,6 +487,18 @@ tr_torrent *wl_bter_get_torrent(WlBter * bter)
 	return bter->torrent;
 }
 
+const gchar *wl_bter_get_path(WlBter * bter)
+{
+	g_return_val_if_fail(WL_IS_BTER(bter) && bter->torrent != NULL, NULL);
+	return tr_torrentGetDownloadDir(bter->torrent);
+}
+
+const gchar *wl_bter_get_magnet(WlBter * bter)
+{
+	g_return_val_if_fail(WL_IS_BTER(bter) && bter->torrent != NULL, NULL);
+	return tr_torrentGetMagnetLink(bter->torrent);
+}
+
 void wl_bter_highlight(WlBter * bter)
 {
 	g_return_if_fail(WL_IS_BTER(bter));
