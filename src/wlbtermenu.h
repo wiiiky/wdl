@@ -42,6 +42,9 @@ struct _WlBterMenu {
 	GtkMenu parent;
 	/*Private */
 	WlBter *bter;
+
+	GtkWidget *startDl;
+	GtkWidget *pauseDl;
 };
 
 struct _WlBterMenuClass {
@@ -58,7 +61,7 @@ WlBterMenu *wl_bter_menu_new(WlBter * bter);
 /*
  * @descrition 根据WlBter设置菜单是否可用
  */
-void wl_bter_set_sensitive(WlBterMenu * menu, WlBter * bter);
+void wl_bter_menu_set_sensitive(WlBterMenu * menu, WlBter * bter);
 
 /*
  * @descrition 获取相关的WlBter

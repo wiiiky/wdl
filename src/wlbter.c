@@ -16,6 +16,7 @@
  */
 
 #include "wlbter.h"
+#include "wlbtermenu.h"
 
 enum {
 	WL_BTER_PROPERTY_SESSION = 1,
@@ -231,6 +232,8 @@ static inline void wl_bter_set_status(WlBter * bter, WlBterStatus status)
 		wl_bter_set_start_info(bter);
 	if (bter->statusCB)
 		bter->statusCB(bter, bter->statusCBData);
+	if (bter->popMenu)
+		wl_bter_menu_set_sensitive(WL_BTER_MENU(bter->popMenu), bter);
 }
 
 static inline void wl_bter_set_complete_info(WlBter * bter)

@@ -100,6 +100,8 @@ static void wl_bter_menu_init(WlBterMenu * obj)
 					 G_CALLBACK(onCopyMagnetActivate), obj);
 
 	obj->bter = NULL;
+	obj->startDl = startDl;
+	obj->pauseDl = pauseDl;
 }
 
 static void wl_bter_menu_finalize(GObject * obj)
@@ -192,11 +194,13 @@ static void onOpenFolderActivate(GtkMenuItem * item, gpointer data)
 static void onStartDlActivate(GtkMenuItem * item, gpointer data)
 {
 	WlBterMenu *menu = WL_BTER_MENU(data);
+	wl_bter_start(menu->bter);
 }
 
 static void onPauseDlActivate(GtkMenuItem * item, gpointer data)
 {
 	WlBterMenu *menu = WL_BTER_MENU(data);
+	wl_bter_pause(menu->bter);
 }
 
 static void onCopyMagnetActivate(GtkMenuItem * item, gpointer data)
@@ -221,9 +225,29 @@ WlBterMenu *wl_bter_menu_new(WlBter * bter)
 	return menu;
 }
 
-void wl_bter_set_sensitive(WlBterMenu * menu, WlBter * bter)
+void wl_bter_menu_set_sensitive(WlBterMenu * menu, WlBter * bter)
 {
 	g_return_if_fail(WL_IS_BTER_MENU(menu) && WL_IS_BTER(bter));
+
+	WlBterStatus status = wl_bter_get_status(bter);
+	switch (status) {
+	case WL_BTER_STATUS_NOT_START:
+	case WL_BTER_STATUS_ABORT:
+	case WL_BTER_STATUS_PAUSE:
+		gtk_widget_set_sensitive(menu->startDl, TRUE);
+		gtk_widget_set_sensitive(menu->pauseDl, FALSE);
+		break;
+	case WL_BTER_STATUS_START:
+		gtk_widget_set_sensitive(menu->startDl, FALSE);
+		gtk_widget_set_sensitive(menu->pauseDl, TRUE);
+		break;
+	case WL_BTER_STATUS_COMPLETE:
+		gtk_widget_set_sensitive(menu->startDl, FALSE);
+		gtk_widget_set_sensitive(menu->pauseDl, FALSE);
+		break;
+	default:
+		break;
+	}
 }
 
 WlBter *wl_bter_menu_get_bter(WlBterMenu * menu)
