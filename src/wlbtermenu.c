@@ -255,3 +255,16 @@ WlBter *wl_bter_menu_get_bter(WlBterMenu * menu)
 	g_return_val_if_fail(WL_IS_BTER_MENU(menu), NULL);
 	return menu->bter;
 }
+
+void wl_bter_menu_append_separator(WlBterMenu * menu)
+{
+	g_return_if_fail(WL_IS_BTER_MENU(menu));
+	gtk_menu_shell_append(GTK_MENU_SHELL(menu),
+						  gtk_separator_menu_item_new());
+}
+
+void wl_bter_menu_append(WlBterMenu * menu, GtkWidget * item)
+{
+	g_return_if_fail(WL_IS_BTER_MENU(menu));
+	gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+}

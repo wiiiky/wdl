@@ -122,6 +122,7 @@ static void wl_bter_init(WlBter * bter)
 	bter->statusCB = NULL;
 	bter->statusCBData = NULL;
 	bter->status = WL_BTER_STATUS_NOT_START;
+	bter->userData = NULL;
 }
 
 static void wl_bter_class_init(WlBterClass * klass)
@@ -551,4 +552,16 @@ GtkWidget *wl_bter_get_popmenu(WlBter * bter)
 {
 	g_return_val_if_fail(WL_IS_BTER(bter), NULL);
 	return bter->popMenu;
+}
+
+void wl_bter_set_user_data(WlBter * bter, gpointer data)
+{
+	g_return_if_fail(WL_IS_BTER(bter));
+	bter->userData = data;
+}
+
+gpointer wl_bter_get_user_data(WlBter * bter)
+{
+	g_return_val_if_fail(WL_IS_BTER(bter), NULL);
+	return bter->userData;
 }

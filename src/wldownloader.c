@@ -17,6 +17,7 @@
 #include "wldownloader.h"
 #include "libtransmission/transmission.h"
 #include "libtransmission/variant.h"
+#include "wlbtermenu.h"
 
 enum {
 	WL_DOWNLOADER_PROPERTY_SPACING = 1,
@@ -223,6 +224,62 @@ static inline GtkWidget *wl_downloader_httper_popmenu(WlHttper * httper)
 	return menu;
 }
 
+static void on_remove_bter_activate(GtkMenuItem * item, gpointer data)
+{
+	WlBter *bter = (WlBter *) data;
+	WlDownloader *dl = wl_bter_get_user_data(bter);
+	wl_downloader_remove_bter(dl, bter, FALSE);
+}
+
+static void on_delete_bter_activate(GtkMenuItem * item, gpointer data)
+{
+	WlBter *bter = (WlBter *) data;
+	WlDownloader *dl = wl_bter_get_user_data(bter);
+	GtkWidget *dialog = gtk_message_dialog_new(NULL,
+											   GTK_DIALOG_MODAL |
+											   GTK_DIALOG_DESTROY_WITH_PARENT,
+											   GTK_MESSAGE_INFO,
+											   GTK_BUTTONS_OK_CANCEL,
+											   "Delete files!");
+	gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dialog),
+											 "This operation will delete files from file system");
+	gint res = gtk_dialog_run(GTK_DIALOG(dialog));
+	gtk_widget_destroy(dialog);
+	if (res != GTK_RESPONSE_OK)
+		return;
+	/* FIXME */
+	wl_downloader_remove_bter(dl, bter, FALSE);
+}
+
+static inline GtkWidget *wl_downloader_bter_popmenu(WlBter * bter)
+{
+	WlBterMenu *menu = wl_bter_menu_new(bter);
+	wl_bter_menu_append_separator(menu);
+
+	GtkWidget *rmHttper =
+		gtk_image_menu_item_new_from_stock(GTK_STOCK_REMOVE, NULL);
+	gtk_menu_item_set_label(GTK_MENU_ITEM(rmHttper), "Remove");
+	gtk_image_menu_item_set_always_show_image(GTK_IMAGE_MENU_ITEM
+											  (rmHttper), TRUE);
+	g_signal_connect(G_OBJECT(rmHttper), "activate",
+					 G_CALLBACK(on_remove_bter_activate), bter);
+	wl_bter_menu_append(menu, rmHttper);
+
+	GtkWidget *dFile =
+		gtk_image_menu_item_new_from_stock(GTK_STOCK_DELETE, NULL);
+	gtk_menu_item_set_label(GTK_MENU_ITEM(dFile),
+							"Remove and Delete Files");
+	gtk_image_menu_item_set_always_show_image(GTK_IMAGE_MENU_ITEM
+											  (dFile), TRUE);
+	g_signal_connect(G_OBJECT(dFile), "activate",
+					 G_CALLBACK(on_delete_bter_activate), bter);
+	wl_bter_menu_append(menu, dFile);
+
+	gtk_widget_show_all(GTK_WIDGET(menu));
+
+	return GTK_WIDGET(menu);
+}
+
 static gpointer wl_downloader_pressed_callback(GtkWidget * widget,
 											   GdkEventButton *
 											   event, gpointer data)
@@ -293,6 +350,7 @@ void wl_downloader_remove_httper(WlDownloader * dl, WlHttper * httper)
 {
 	g_return_if_fail(WL_IS_DOWNLOADER(dl) && WL_IS_HTTPER(httper));
 	dl->list = g_list_remove(dl->list, httper);
+	wl_downloader_set_selected(dl, NULL);
 	wl_httper_abort(httper);
 	gtk_container_remove(GTK_CONTAINER(dl->vBox), GTK_WIDGET(httper));
 }
@@ -302,6 +360,7 @@ void wl_downloader_remove_bter(WlDownloader * dl, WlBter * bter,
 {
 	g_return_if_fail(WL_IS_DOWNLOADER(dl) && WL_IS_BTER(bter));
 	dl->list = g_list_remove(dl->list, bter);
+	wl_downloader_set_selected(dl, NULL);
 	tr_torrentRemove(wl_bter_get_torrent(bter), local, NULL);
 	gtk_container_remove(GTK_CONTAINER(dl->vBox), GTK_WIDGET(bter));
 }
@@ -314,7 +373,9 @@ WlBter *wl_downloader_append_bter(WlDownloader * dl, tr_torrent * torrent)
 	if (bter == NULL)
 		return NULL;
 
-	wl_bter_menu_new(bter);
+	//wl_bter_menu_new(bter);
+	wl_downloader_bter_popmenu(bter);
+	wl_bter_set_user_data(bter, dl);
 
 	g_signal_connect(G_OBJECT(bter), "button-press-event",
 					 G_CALLBACK(wl_downloader_pressed_callback), dl);

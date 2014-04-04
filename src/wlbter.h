@@ -76,6 +76,9 @@ struct _WlBter {
 	/* 状态改变回调函数 */
 	WlBterStatusCallback statusCB;
 	gpointer statusCBData;
+
+	/* */
+	gpointer userData;
 };
 
 struct _WlBterClass {
@@ -136,6 +139,12 @@ void wl_bter_set_status_callback(WlBter * bter,
  */
 void wl_bter_set_popmenu(WlBter * bter, GtkWidget * menu);
 GtkWidget *wl_bter_get_popmenu(WlBter * bter);
+
+/*
+ * @description 设置用户数据
+ */
+void wl_bter_set_user_data(WlBter * bter, gpointer data);
+gpointer wl_bter_get_user_data(WlBter * bter);
 
 G_END_DECLS						/* __WL_BTER_H__ */
 #endif

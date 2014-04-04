@@ -584,7 +584,8 @@ wdl-wldownloader.o: \
  /usr/lib/gcc/x86_64-linux-gnu/4.8/include/stdint.h /usr/include/stdint.h \
  /usr/include/x86_64-linux-gnu/bits/wchar.h \
  /home/wiky/Documents/CODE/Bazaar/wdl/src/libtransmission/variant.h \
- /home/wiky/Documents/CODE/Bazaar/wdl/src/libtransmission/quark.h
+ /home/wiky/Documents/CODE/Bazaar/wdl/src/libtransmission/quark.h \
+ /home/wiky/Documents/CODE/Bazaar/wdl/src/wlbtermenu.h
 
 /usr/include/stdc-predef.h:
 
@@ -1867,3 +1868,5 @@ wdl-wldownloader.o: \
 /home/wiky/Documents/CODE/Bazaar/wdl/src/libtransmission/variant.h:
 
 /home/wiky/Documents/CODE/Bazaar/wdl/src/libtransmission/quark.h:
+
+/home/wiky/Documents/CODE/Bazaar/wdl/src/wlbtermenu.h:

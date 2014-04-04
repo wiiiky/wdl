@@ -97,5 +97,7 @@ void wl_httper_menu_set_properties(WlHttperMenu * menu,
 
 void wl_httper_menu_set_sensitive(WlHttperMenu * menu);
 
+
+
 G_END_DECLS
 #endif	/*__WL_HTTPER_MENU_H__ */
