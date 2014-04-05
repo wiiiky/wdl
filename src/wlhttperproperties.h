@@ -35,13 +35,13 @@ typedef struct _WlHttperProperties WlHttperProperties;
 typedef struct _WlHttperPropertiesClass WlHttperPropertiesClass;
 
 struct _WlHttperProperties {
-	GtkDialog parent;
-	GtkWidget *urlLabel;
-	GtkWidget *locationLabel;
+    GtkDialog parent;
+    GtkWidget *urlLabel;
+    GtkWidget *locationLabel;
 };
 
 struct _WlHttperPropertiesClass {
-	GtkDialogClass parentClass;
+    GtkDialogClass parentClass;
 };
 
 GType wl_httper_properties_get_type(void) G_GNUC_CONST;
@@ -58,11 +58,11 @@ void wl_httper_properties_show(WlHttperProperties * dialog);
  * @description 设置URL和文件保存路径
  */
 void wl_httper_properties_set_url(WlHttperProperties * dialog,
-								  const gchar * url);
+                                  const gchar * url);
 void wl_httper_properties_set_location(WlHttperProperties * dialog,
-									   const gchar * path);
+                                       const gchar * path);
 void wl_httper_properties_set_title(WlHttperProperties * dialog,
-									const gchar * title);
+                                    const gchar * title);
 
 G_END_DECLS						/* __WL_HTTPER_PROPERTIES_H__ */
 #endif

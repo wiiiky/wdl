@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2014-2014 Wiky L(wiiiky@yeah.net)
  *
  * This program is free software; you can redistribute it and/or
@@ -20,303 +20,303 @@
 #include "wlbtermenu.h"
 
 enum {
-	WL_DOWNLOADER_PROPERTY_SPACING = 1,
+    WL_DOWNLOADER_PROPERTY_SPACING = 1,
 };
 
 G_DEFINE_TYPE(WlDownloader, wl_downloader, GTK_TYPE_SCROLLED_WINDOW);
 
 static void wl_downloader_get_property(GObject * object, guint property_id,
-									   GValue * value, GParamSpec * ps);
+                                       GValue * value, GParamSpec * ps);
 static void wl_downloader_set_property(GObject * object, guint property_id,
-									   const GValue * value,
-									   GParamSpec * ps);
+                                       const GValue * value,
+                                       GParamSpec * ps);
 
 static gpointer wl_downloader_pressed_callback(GtkWidget * widget,
-											   GdkEventButton *
-											   event, gpointer data);
+        GdkEventButton *
+        event, gpointer data);
 static inline void wl_downloader_set_selected(WlDownloader * dl,
-											  gpointer obj);
+        gpointer obj);
 
 static void wl_downloader_init(WlDownloader * dl)
 {
-	g_object_set(G_OBJECT(dl), "hadjustment", NULL,
-				 "vadjustment", NULL, NULL);
+    g_object_set(G_OBJECT(dl), "hadjustment", NULL,
+                 "vadjustment", NULL, NULL);
 
-	GtkWidget *vBox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-	gtk_container_add(GTK_CONTAINER(dl), vBox);
+    GtkWidget *vBox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    gtk_container_add(GTK_CONTAINER(dl), vBox);
 
-	tr_session *session;
-	tr_variant settings;
-	const char *configDir = tr_getDefaultConfigDir("wdl");
-	tr_variantInitDict(&settings, 0);
-	if (!tr_sessionLoadSettings(&settings, configDir, "wdl"))
-		tr_sessionGetDefaultSettings(&settings);
-	session = tr_sessionInit("gtk", configDir, true, &settings);
-	tr_variantFree(&settings);
+    tr_session *session;
+    tr_variant settings;
+    const char *configDir = tr_getDefaultConfigDir("wdl");
+    tr_variantInitDict(&settings, 0);
+    if (!tr_sessionLoadSettings(&settings, configDir, "wdl"))
+        tr_sessionGetDefaultSettings(&settings);
+    session = tr_sessionInit("gtk", configDir, true, &settings);
+    tr_variantFree(&settings);
 
-	tr_formatter_speed_init(SPEED_K, SPEED_K_STR, SPEED_M_STR, SPEED_G_STR,
-							SPEED_T_STR);
+    tr_formatter_speed_init(SPEED_K, SPEED_K_STR, SPEED_M_STR, SPEED_G_STR,
+                            SPEED_T_STR);
 
-	dl->session = session;
+    dl->session = session;
 
-	dl->vBox = vBox;
-	dl->list = NULL;
-	dl->selected = NULL;
-	dl->selectedCB = NULL;
-	dl->selectedCBData = NULL;
-	dl->httperStatus = NULL;
-	dl->httperStatusData = NULL;
-	dl->bterStatus = NULL;
-	dl->bterStatusData = NULL;
+    dl->vBox = vBox;
+    dl->list = NULL;
+    dl->selected = NULL;
+    dl->selectedCB = NULL;
+    dl->selectedCBData = NULL;
+    dl->httperStatus = NULL;
+    dl->httperStatusData = NULL;
+    dl->bterStatus = NULL;
+    dl->bterStatusData = NULL;
 }
 
 static void wl_downloader_finalize(GObject * object)
 {
-	WlDownloader *dl = WL_DOWNLOADER(object);
-	if (dl->list)
-		g_list_free(dl->list);
-	tr_sessionClose(dl->session);
+    WlDownloader *dl = WL_DOWNLOADER(object);
+    if (dl->list)
+        g_list_free(dl->list);
+    tr_sessionClose(dl->session);
 }
 
 static void wl_downloader_class_init(WlDownloaderClass * klass)
 {
-	GObjectClass *objClass = G_OBJECT_CLASS(klass);
-	objClass->get_property = wl_downloader_get_property;
-	objClass->set_property = wl_downloader_set_property;
-	objClass->finalize = wl_downloader_finalize;
+    GObjectClass *objClass = G_OBJECT_CLASS(klass);
+    objClass->get_property = wl_downloader_get_property;
+    objClass->set_property = wl_downloader_set_property;
+    objClass->finalize = wl_downloader_finalize;
 
-	GParamSpec *ps;
-	ps = g_param_spec_uint("spacing",
-						   "box spacing",
-						   "Box Spacing",
-						   0, G_MAXUINT,
-						   0, G_PARAM_READABLE | G_PARAM_WRITABLE);
-	g_object_class_install_property(objClass,
-									WL_DOWNLOADER_PROPERTY_SPACING, ps);
+    GParamSpec *ps;
+    ps = g_param_spec_uint("spacing",
+                           "box spacing",
+                           "Box Spacing",
+                           0, G_MAXUINT,
+                           0, G_PARAM_READABLE | G_PARAM_WRITABLE);
+    g_object_class_install_property(objClass,
+                                    WL_DOWNLOADER_PROPERTY_SPACING, ps);
 }
 
 static void wl_downloader_get_property(GObject * object, guint property_id,
-									   GValue * value, GParamSpec * ps)
+                                       GValue * value, GParamSpec * ps)
 {
-	WlDownloader *dl = WL_DOWNLOADER(object);
-	switch (property_id) {
-	case WL_DOWNLOADER_PROPERTY_SPACING:
-		g_value_set_uint(value, gtk_box_get_spacing(GTK_BOX(dl->vBox)));
-		break;
-	default:
-		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, ps);
-		break;
-	}
+    WlDownloader *dl = WL_DOWNLOADER(object);
+    switch (property_id) {
+    case WL_DOWNLOADER_PROPERTY_SPACING:
+        g_value_set_uint(value, gtk_box_get_spacing(GTK_BOX(dl->vBox)));
+        break;
+    default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, ps);
+        break;
+    }
 }
 
 static void wl_downloader_set_property(GObject * object, guint property_id,
-									   const GValue * value,
-									   GParamSpec * ps)
+                                       const GValue * value,
+                                       GParamSpec * ps)
 {
-	WlDownloader *dl = WL_DOWNLOADER(object);
-	switch (property_id) {
-	case WL_DOWNLOADER_PROPERTY_SPACING:
-		gtk_box_set_spacing(GTK_BOX(dl->vBox), g_value_get_uint(value));
-		break;
-	default:
-		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, ps);
-		break;
-	}
+    WlDownloader *dl = WL_DOWNLOADER(object);
+    switch (property_id) {
+    case WL_DOWNLOADER_PROPERTY_SPACING:
+        gtk_box_set_spacing(GTK_BOX(dl->vBox), g_value_get_uint(value));
+        break;
+    default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, ps);
+        break;
+    }
 }
 
 static inline void wl_downloader_set_selected(WlDownloader * dl,
-											  gpointer obj)
+        gpointer obj)
 {
-	if (dl->selected == obj)
-		return;
-	if (dl->selected) {
-		if (WL_IS_HTTPER(dl->selected)) {
-			wl_httper_clear_highlight(WL_HTTPER(dl->selected));
-			wl_httper_set_status_callback(WL_HTTPER(dl->selected), NULL,
-										  NULL);
-		} else if (WL_IS_BTER(dl->selected)) {
-			wl_bter_clear_highlight(WL_BTER(dl->selected));
-			wl_bter_set_status_callback(WL_BTER(dl->selected), NULL, NULL);
-		}
-	}
-	dl->selected = NULL;
-	if (obj == NULL) {
-		goto CALLBACK;
-	} else if (WL_IS_HTTPER(obj)) {
-		wl_httper_highlight(WL_HTTPER(obj));
-		wl_httper_set_status_callback(WL_HTTPER(obj), dl->httperStatus,
-									  dl->httperStatusData);
-	} else if (WL_IS_BTER(obj)) {
-		wl_bter_highlight(WL_BTER(obj));
-		wl_bter_set_status_callback(WL_BTER(obj), dl->bterStatus,
-									dl->bterStatusData);
-	} else
-		return;					/* unknown type */
+    if (dl->selected == obj)
+        return;
+    if (dl->selected) {
+        if (WL_IS_HTTPER(dl->selected)) {
+            wl_httper_clear_highlight(WL_HTTPER(dl->selected));
+            wl_httper_set_status_callback(WL_HTTPER(dl->selected), NULL,
+                                          NULL);
+        } else if (WL_IS_BTER(dl->selected)) {
+            wl_bter_clear_highlight(WL_BTER(dl->selected));
+            wl_bter_set_status_callback(WL_BTER(dl->selected), NULL, NULL);
+        }
+    }
+    dl->selected = NULL;
+    if (obj == NULL) {
+        goto CALLBACK;
+    } else if (WL_IS_HTTPER(obj)) {
+        wl_httper_highlight(WL_HTTPER(obj));
+        wl_httper_set_status_callback(WL_HTTPER(obj), dl->httperStatus,
+                                      dl->httperStatusData);
+    } else if (WL_IS_BTER(obj)) {
+        wl_bter_highlight(WL_BTER(obj));
+        wl_bter_set_status_callback(WL_BTER(obj), dl->bterStatus,
+                                    dl->bterStatusData);
+    } else
+        return;					/* unknown type */
 
-	dl->selected = obj;
-  CALLBACK:
-	if (dl->selectedCB)
-		dl->selectedCB(dl, dl->selectedCBData);
+    dl->selected = obj;
+CALLBACK:
+    if (dl->selectedCB)
+        dl->selectedCB(dl, dl->selectedCBData);
 }
 
 static void on_remove_httper_activate(GtkMenuItem * item, gpointer data)
 {
-	WlHttper *httper = (WlHttper *) data;
-	WlDownloader *dl = wl_httper_get_user_data(httper);
-	wl_downloader_remove_httper(dl, httper);
+    WlHttper *httper = (WlHttper *) data;
+    WlDownloader *dl = wl_httper_get_user_data(httper);
+    wl_downloader_remove_httper(dl, httper);
 }
 
 static void on_delete_files_activate(GtkMenuItem * item, gpointer data)
 {
-	WlHttper *httper = (WlHttper *) data;
-	WlDownloader *dl = wl_httper_get_user_data(httper);
+    WlHttper *httper = (WlHttper *) data;
+    WlDownloader *dl = wl_httper_get_user_data(httper);
 
-	const gchar *path = wl_httper_get_path(httper);
+    const gchar *path = wl_httper_get_path(httper);
 
-	GtkWidget *dialog = gtk_message_dialog_new(NULL,
-											   GTK_DIALOG_MODAL |
-											   GTK_DIALOG_DESTROY_WITH_PARENT,
-											   GTK_MESSAGE_INFO,
-											   GTK_BUTTONS_OK_CANCEL,
-											   "Delete files!");
-	gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dialog),
-											 "This operation will delete files from file system");
-	gint res = gtk_dialog_run(GTK_DIALOG(dialog));
-	gtk_widget_destroy(dialog);
-	if (res != GTK_RESPONSE_OK)
-		return;
-	/* 先暂停 */
-	wl_httper_pause(httper);
-	if (path) {
-		GFile *file = g_file_new_for_path(path);
-		/* 将文件放入回收站或者彻底删除 */
-		if (g_file_trash(file, NULL, NULL) == FALSE) {
-			g_file_delete(file, NULL, NULL);
-		}
-		g_object_unref(file);
-	}
-	wl_downloader_remove_httper(dl, httper);
+    GtkWidget *dialog = gtk_message_dialog_new(NULL,
+                        GTK_DIALOG_MODAL |
+                        GTK_DIALOG_DESTROY_WITH_PARENT,
+                        GTK_MESSAGE_INFO,
+                        GTK_BUTTONS_OK_CANCEL,
+                        "Delete files!");
+    gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dialog),
+            "This operation will delete files from file system");
+    gint res = gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
+    if (res != GTK_RESPONSE_OK)
+        return;
+    /* 先暂停 */
+    wl_httper_pause(httper);
+    if (path) {
+        GFile *file = g_file_new_for_path(path);
+        /* 将文件放入回收站或者彻底删除 */
+        if (g_file_trash(file, NULL, NULL) == FALSE) {
+            g_file_delete(file, NULL, NULL);
+        }
+        g_object_unref(file);
+    }
+    wl_downloader_remove_httper(dl, httper);
 }
 
 static inline GtkWidget *wl_downloader_httper_popmenu(WlHttper * httper)
 {
-	GtkWidget *menu = wl_httper_menu_new(httper);
-	wl_httper_menu_append_separator(WL_HTTPER_MENU(menu));
+    GtkWidget *menu = wl_httper_menu_new(httper);
+    wl_httper_menu_append_separator(WL_HTTPER_MENU(menu));
 
-	GtkWidget *rmHttper =
-		gtk_image_menu_item_new_from_stock(GTK_STOCK_REMOVE, NULL);
-	gtk_menu_item_set_label(GTK_MENU_ITEM(rmHttper), "Remove");
-	gtk_image_menu_item_set_always_show_image(GTK_IMAGE_MENU_ITEM
-											  (rmHttper), TRUE);
-	g_signal_connect(G_OBJECT(rmHttper), "activate",
-					 G_CALLBACK(on_remove_httper_activate), httper);
-	wl_httper_menu_append(WL_HTTPER_MENU(menu), rmHttper);
+    GtkWidget *rmHttper =
+        gtk_image_menu_item_new_from_stock(GTK_STOCK_REMOVE, NULL);
+    gtk_menu_item_set_label(GTK_MENU_ITEM(rmHttper), "Remove");
+    gtk_image_menu_item_set_always_show_image(GTK_IMAGE_MENU_ITEM
+            (rmHttper), TRUE);
+    g_signal_connect(G_OBJECT(rmHttper), "activate",
+                     G_CALLBACK(on_remove_httper_activate), httper);
+    wl_httper_menu_append(WL_HTTPER_MENU(menu), rmHttper);
 
-	GtkWidget *dFile =
-		gtk_image_menu_item_new_from_stock(GTK_STOCK_DELETE, NULL);
-	gtk_menu_item_set_label(GTK_MENU_ITEM(dFile),
-							"Remove and Delete Files");
-	gtk_image_menu_item_set_always_show_image(GTK_IMAGE_MENU_ITEM
-											  (dFile), TRUE);
-	g_signal_connect(G_OBJECT(dFile), "activate",
-					 G_CALLBACK(on_delete_files_activate), httper);
-	wl_httper_menu_append(WL_HTTPER_MENU(menu), dFile);
-	return menu;
+    GtkWidget *dFile =
+        gtk_image_menu_item_new_from_stock(GTK_STOCK_DELETE, NULL);
+    gtk_menu_item_set_label(GTK_MENU_ITEM(dFile),
+                            "Remove and Delete Files");
+    gtk_image_menu_item_set_always_show_image(GTK_IMAGE_MENU_ITEM
+            (dFile), TRUE);
+    g_signal_connect(G_OBJECT(dFile), "activate",
+                     G_CALLBACK(on_delete_files_activate), httper);
+    wl_httper_menu_append(WL_HTTPER_MENU(menu), dFile);
+    return menu;
 }
 
 static void on_remove_bter_activate(GtkMenuItem * item, gpointer data)
 {
-	WlBter *bter = (WlBter *) data;
-	WlDownloader *dl = wl_bter_get_user_data(bter);
-	wl_downloader_remove_bter(dl, bter, FALSE);
+    WlBter *bter = (WlBter *) data;
+    WlDownloader *dl = wl_bter_get_user_data(bter);
+    wl_downloader_remove_bter(dl, bter, FALSE);
 }
 
 static void on_delete_bter_activate(GtkMenuItem * item, gpointer data)
 {
-	WlBter *bter = (WlBter *) data;
-	WlDownloader *dl = wl_bter_get_user_data(bter);
-	GtkWidget *dialog = gtk_message_dialog_new(NULL,
-											   GTK_DIALOG_MODAL |
-											   GTK_DIALOG_DESTROY_WITH_PARENT,
-											   GTK_MESSAGE_INFO,
-											   GTK_BUTTONS_OK_CANCEL,
-											   "Delete files!");
-	gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dialog),
-											 "This operation will delete files from file system");
-	gint res = gtk_dialog_run(GTK_DIALOG(dialog));
-	gtk_widget_destroy(dialog);
-	if (res != GTK_RESPONSE_OK)
-		return;
-	/* FIXME */
-	wl_downloader_remove_bter(dl, bter, FALSE);
+    WlBter *bter = (WlBter *) data;
+    WlDownloader *dl = wl_bter_get_user_data(bter);
+    GtkWidget *dialog = gtk_message_dialog_new(NULL,
+                        GTK_DIALOG_MODAL |
+                        GTK_DIALOG_DESTROY_WITH_PARENT,
+                        GTK_MESSAGE_INFO,
+                        GTK_BUTTONS_OK_CANCEL,
+                        "Delete files!");
+    gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dialog),
+            "This operation will delete files from file system");
+    gint res = gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
+    if (res != GTK_RESPONSE_OK)
+        return;
+
+    wl_downloader_remove_bter(dl, bter,TRUE);
 }
 
 static inline GtkWidget *wl_downloader_bter_popmenu(WlBter * bter)
 {
-	WlBterMenu *menu = wl_bter_menu_new(bter);
-	wl_bter_menu_append_separator(menu);
+    WlBterMenu *menu = wl_bter_menu_new(bter);
+    wl_bter_menu_append_separator(menu);
 
-	GtkWidget *rmHttper =
-		gtk_image_menu_item_new_from_stock(GTK_STOCK_REMOVE, NULL);
-	gtk_menu_item_set_label(GTK_MENU_ITEM(rmHttper), "Remove");
-	gtk_image_menu_item_set_always_show_image(GTK_IMAGE_MENU_ITEM
-											  (rmHttper), TRUE);
-	g_signal_connect(G_OBJECT(rmHttper), "activate",
-					 G_CALLBACK(on_remove_bter_activate), bter);
-	wl_bter_menu_append(menu, rmHttper);
+    GtkWidget *rmHttper =
+        gtk_image_menu_item_new_from_stock(GTK_STOCK_REMOVE, NULL);
+    gtk_menu_item_set_label(GTK_MENU_ITEM(rmHttper), "Remove");
+    gtk_image_menu_item_set_always_show_image(GTK_IMAGE_MENU_ITEM
+            (rmHttper), TRUE);
+    g_signal_connect(G_OBJECT(rmHttper), "activate",
+                     G_CALLBACK(on_remove_bter_activate), bter);
+    wl_bter_menu_append(menu, rmHttper);
 
-	GtkWidget *dFile =
-		gtk_image_menu_item_new_from_stock(GTK_STOCK_DELETE, NULL);
-	gtk_menu_item_set_label(GTK_MENU_ITEM(dFile),
-							"Remove and Delete Files");
-	gtk_image_menu_item_set_always_show_image(GTK_IMAGE_MENU_ITEM
-											  (dFile), TRUE);
-	g_signal_connect(G_OBJECT(dFile), "activate",
-					 G_CALLBACK(on_delete_bter_activate), bter);
-	wl_bter_menu_append(menu, dFile);
+    GtkWidget *dFile =
+        gtk_image_menu_item_new_from_stock(GTK_STOCK_DELETE, NULL);
+    gtk_menu_item_set_label(GTK_MENU_ITEM(dFile),
+                            "Remove and Delete Files");
+    gtk_image_menu_item_set_always_show_image(GTK_IMAGE_MENU_ITEM
+            (dFile), TRUE);
+    g_signal_connect(G_OBJECT(dFile), "activate",
+                     G_CALLBACK(on_delete_bter_activate), bter);
+    wl_bter_menu_append(menu, dFile);
 
-	gtk_widget_show_all(GTK_WIDGET(menu));
+    gtk_widget_show_all(GTK_WIDGET(menu));
 
-	return GTK_WIDGET(menu);
+    return GTK_WIDGET(menu);
 }
 
 static gpointer wl_downloader_pressed_callback(GtkWidget * widget,
-											   GdkEventButton *
-											   event, gpointer data)
+        GdkEventButton *
+        event, gpointer data)
 {
-	WlDownloader *dl = (WlDownloader *) data;
-	GtkWidget *popmenu;
-	if (event->type == GDK_BUTTON_PRESS) {
-		/* 单击 */
-		wl_downloader_set_selected(dl, widget);
-		if (event->button == 1) {
-			/* 左键 */
-			/*wl_downloader_set_httper_selected(dl, httper); */
-		} else if (event->button == 3) {
-			/* 右键 */
-			if (WL_IS_HTTPER(widget)) {
-				WlHttper *httper = WL_HTTPER(widget);
-				popmenu = wl_httper_get_popmenu(httper);
-				gtk_menu_popup(GTK_MENU(popmenu), NULL, NULL, NULL, NULL,
-							   event->button,
-							   gdk_event_get_time((GdkEvent *) event));
-			} else if (WL_IS_BTER(widget)) {
-				WlBter *bter = WL_BTER(widget);
-				popmenu = wl_bter_get_popmenu(bter);
-				gtk_menu_popup(GTK_MENU(popmenu), NULL, NULL, NULL, NULL,
-							   event->button,
-							   gdk_event_get_time((GdkEvent *) event));
-			}
-		}
-	} else if (event->type == GDK_2BUTTON_PRESS) {
-		/* 双击 */
-		if (event->button == 1) {
-			/* 左键 */
-		} else if (event->button == 3) {
-			/* 右键 */
-		}
-	}
-	return FALSE;
+    WlDownloader *dl = (WlDownloader *) data;
+    GtkWidget *popmenu;
+    if (event->type == GDK_BUTTON_PRESS) {
+        /* 单击 */
+        wl_downloader_set_selected(dl, widget);
+        if (event->button == 1) {
+            /* 左键 */
+            /*wl_downloader_set_httper_selected(dl, httper); */
+        } else if (event->button == 3) {
+            /* 右键 */
+            if (WL_IS_HTTPER(widget)) {
+                WlHttper *httper = WL_HTTPER(widget);
+                popmenu = wl_httper_get_popmenu(httper);
+                gtk_menu_popup(GTK_MENU(popmenu), NULL, NULL, NULL, NULL,
+                               event->button,
+                               gdk_event_get_time((GdkEvent *) event));
+            } else if (WL_IS_BTER(widget)) {
+                WlBter *bter = WL_BTER(widget);
+                popmenu = wl_bter_get_popmenu(bter);
+                gtk_menu_popup(GTK_MENU(popmenu), NULL, NULL, NULL, NULL,
+                               event->button,
+                               gdk_event_get_time((GdkEvent *) event));
+            }
+        }
+    } else if (event->type == GDK_2BUTTON_PRESS) {
+        /* 双击 */
+        if (event->button == 1) {
+            /* 左键 */
+        } else if (event->button == 3) {
+            /* 右键 */
+        }
+    }
+    return FALSE;
 }
 
 /**************************************************
@@ -324,200 +324,200 @@ static gpointer wl_downloader_pressed_callback(GtkWidget * widget,
  ***************************************************/
 WlDownloader *wl_downloader_new(void)
 {
-	WlDownloader *dl =
-		(WlDownloader *) g_object_new(WL_TYPE_DOWNLOADER, NULL);
-	return dl;
+    WlDownloader *dl =
+        (WlDownloader *) g_object_new(WL_TYPE_DOWNLOADER, NULL);
+    return dl;
 }
 
 WlHttper *wl_downloader_append_httper(WlDownloader * dl, const gchar * url,
-									  const gchar * path)
+                                      const gchar * path)
 {
-	g_return_if_fail(WL_IS_DOWNLOADER(dl));
-	WlHttper *httper = wl_httper_new(url, path);
-	GtkWidget *menu = wl_downloader_httper_popmenu(httper);
-	wl_httper_set_user_data(httper, dl);
-	g_signal_connect(G_OBJECT(httper), "button-press-event",
-					 G_CALLBACK(wl_downloader_pressed_callback), dl);
+    g_return_if_fail(WL_IS_DOWNLOADER(dl));
+    WlHttper *httper = wl_httper_new(url, path);
+    GtkWidget *menu = wl_downloader_httper_popmenu(httper);
+    wl_httper_set_user_data(httper, dl);
+    g_signal_connect(G_OBJECT(httper), "button-press-event",
+                     G_CALLBACK(wl_downloader_pressed_callback), dl);
 
-	gtk_box_pack_start(GTK_BOX(dl->vBox), GTK_WIDGET(httper), FALSE, FALSE,
-					   0);
-	dl->list = g_list_append(dl->list, httper);
-	gtk_widget_show_all(GTK_WIDGET(httper));
-	return httper;
+    gtk_box_pack_start(GTK_BOX(dl->vBox), GTK_WIDGET(httper), FALSE, FALSE,
+                       0);
+    dl->list = g_list_append(dl->list, httper);
+    gtk_widget_show_all(GTK_WIDGET(httper));
+    return httper;
 }
 
 void wl_downloader_remove_httper(WlDownloader * dl, WlHttper * httper)
 {
-	g_return_if_fail(WL_IS_DOWNLOADER(dl) && WL_IS_HTTPER(httper));
-	dl->list = g_list_remove(dl->list, httper);
-	wl_downloader_set_selected(dl, NULL);
-	wl_httper_abort(httper);
-	gtk_container_remove(GTK_CONTAINER(dl->vBox), GTK_WIDGET(httper));
+    g_return_if_fail(WL_IS_DOWNLOADER(dl) && WL_IS_HTTPER(httper));
+    dl->list = g_list_remove(dl->list, httper);
+    wl_downloader_set_selected(dl, NULL);
+    wl_httper_abort(httper);
+    gtk_container_remove(GTK_CONTAINER(dl->vBox), GTK_WIDGET(httper));
 }
 
 void wl_downloader_remove_bter(WlDownloader * dl, WlBter * bter,
-							   gboolean local)
+                               gboolean local)
 {
-	g_return_if_fail(WL_IS_DOWNLOADER(dl) && WL_IS_BTER(bter));
-	dl->list = g_list_remove(dl->list, bter);
-	wl_downloader_set_selected(dl, NULL);
-	tr_torrentRemove(wl_bter_get_torrent(bter), local, NULL);
-	gtk_container_remove(GTK_CONTAINER(dl->vBox), GTK_WIDGET(bter));
+    g_return_if_fail(WL_IS_DOWNLOADER(dl) && WL_IS_BTER(bter));
+    dl->list = g_list_remove(dl->list, bter);
+    wl_downloader_set_selected(dl, NULL);
+    tr_torrentRemove(wl_bter_get_torrent(bter), local, NULL);
+    gtk_container_remove(GTK_CONTAINER(dl->vBox), GTK_WIDGET(bter));
 }
 
 WlBter *wl_downloader_append_bter(WlDownloader * dl, tr_torrent * torrent)
 {
-	g_return_val_if_fail(WL_IS_DOWNLOADER(dl), NULL);
-	WlBter *bter = wl_bter_new(dl->session, torrent);
+    g_return_val_if_fail(WL_IS_DOWNLOADER(dl), NULL);
+    WlBter *bter = wl_bter_new(dl->session, torrent);
 
-	if (bter == NULL)
-		return NULL;
+    if (bter == NULL)
+        return NULL;
 
-	//wl_bter_menu_new(bter);
-	wl_downloader_bter_popmenu(bter);
-	wl_bter_set_user_data(bter, dl);
+    //wl_bter_menu_new(bter);
+    wl_downloader_bter_popmenu(bter);
+    wl_bter_set_user_data(bter, dl);
 
-	g_signal_connect(G_OBJECT(bter), "button-press-event",
-					 G_CALLBACK(wl_downloader_pressed_callback), dl);
+    g_signal_connect(G_OBJECT(bter), "button-press-event",
+                     G_CALLBACK(wl_downloader_pressed_callback), dl);
 
-	gtk_box_pack_start(GTK_BOX(dl->vBox), GTK_WIDGET(bter), FALSE, FALSE,
-					   0);
-	dl->list = g_list_append(dl->list, bter);
-	gtk_widget_show_all(GTK_WIDGET(bter));
-	return bter;
+    gtk_box_pack_start(GTK_BOX(dl->vBox), GTK_WIDGET(bter), FALSE, FALSE,
+                       0);
+    dl->list = g_list_append(dl->list, bter);
+    gtk_widget_show_all(GTK_WIDGET(bter));
+    return bter;
 }
 
 WlBter *wl_downloader_append_bter_from_file(WlDownloader * dl,
-											const gchar * path)
+        const gchar * path)
 {
-	g_return_val_if_fail(WL_IS_DOWNLOADER(dl), NULL);
-	WlBter *bter = wl_bter_new_from_file(dl->session, path);
+    g_return_val_if_fail(WL_IS_DOWNLOADER(dl), NULL);
+    WlBter *bter = wl_bter_new_from_file(dl->session, path);
 
-	if (bter == NULL)
-		return NULL;
+    if (bter == NULL)
+        return NULL;
 
-	g_signal_connect(G_OBJECT(bter), "button-press-event",
-					 G_CALLBACK(wl_downloader_pressed_callback), dl);
+    g_signal_connect(G_OBJECT(bter), "button-press-event",
+                     G_CALLBACK(wl_downloader_pressed_callback), dl);
 
-	gtk_box_pack_start(GTK_BOX(dl->vBox), GTK_WIDGET(bter), FALSE, FALSE,
-					   0);
-	dl->list = g_list_append(dl->list, bter);
-	gtk_widget_show_all(GTK_WIDGET(bter));
-	return bter;
+    gtk_box_pack_start(GTK_BOX(dl->vBox), GTK_WIDGET(bter), FALSE, FALSE,
+                       0);
+    dl->list = g_list_append(dl->list, bter);
+    gtk_widget_show_all(GTK_WIDGET(bter));
+    return bter;
 }
 
 void wl_downloader_start_selected(WlDownloader * dl)
 {
-	g_return_if_fail(WL_IS_DOWNLOADER(dl));
-	if (dl->selected == NULL)
-		return;
-	if (WL_IS_HTTPER(dl->selected)) {
-		WlHttper *httper = WL_HTTPER(dl->selected);
-		wl_httper_start(httper);
-	} else if (WL_IS_BTER(dl->selected)) {
-		wl_bter_start(WL_BTER(dl->selected));
-	}
+    g_return_if_fail(WL_IS_DOWNLOADER(dl));
+    if (dl->selected == NULL)
+        return;
+    if (WL_IS_HTTPER(dl->selected)) {
+        WlHttper *httper = WL_HTTPER(dl->selected);
+        wl_httper_start(httper);
+    } else if (WL_IS_BTER(dl->selected)) {
+        wl_bter_start(WL_BTER(dl->selected));
+    }
 }
 
 void wl_downloader_pause_selected(WlDownloader * dl)
 {
-	g_return_if_fail(WL_IS_DOWNLOADER(dl));
-	if (dl->selected == NULL)
-		return;
-	if (WL_IS_HTTPER(dl->selected)) {
-		WlHttper *httper = WL_HTTPER(dl->selected);
-		wl_httper_pause(httper);
-	} else if (WL_IS_BTER(dl->selected)) {
-		wl_bter_pause(WL_BTER(dl->selected));
-	}
+    g_return_if_fail(WL_IS_DOWNLOADER(dl));
+    if (dl->selected == NULL)
+        return;
+    if (WL_IS_HTTPER(dl->selected)) {
+        WlHttper *httper = WL_HTTPER(dl->selected);
+        wl_httper_pause(httper);
+    } else if (WL_IS_BTER(dl->selected)) {
+        wl_bter_pause(WL_BTER(dl->selected));
+    }
 }
 
 void wl_downloader_continue_selected(WlDownloader * dl)
 {
-	g_return_if_fail(WL_IS_DOWNLOADER(dl));
-	if (dl->selected == NULL)
-		return;
-	if (WL_IS_HTTPER(dl->selected)) {
-		WlHttper *httper = WL_HTTPER(dl->selected);
-		wl_httper_continue(httper);
-	} else if (WL_IS_BTER(dl->selected)) {
-		wl_bter_continue(WL_BTER(dl->selected));
-	}
+    g_return_if_fail(WL_IS_DOWNLOADER(dl));
+    if (dl->selected == NULL)
+        return;
+    if (WL_IS_HTTPER(dl->selected)) {
+        WlHttper *httper = WL_HTTPER(dl->selected);
+        wl_httper_continue(httper);
+    } else if (WL_IS_BTER(dl->selected)) {
+        wl_bter_continue(WL_BTER(dl->selected));
+    }
 }
 
 gint wl_downloader_get_selected_status(WlDownloader * dl)
 {
-	g_return_val_if_fail(WL_IS_DOWNLOADER(dl), 0);
-	if (dl->selected == NULL)
-		return 0;
-	if (WL_IS_HTTPER(dl->selected))
-		return wl_httper_get_status(WL_HTTPER(dl->selected));
-	else if (WL_IS_BTER(dl->selected))
-		return wl_bter_get_status(WL_BTER(dl->selected));
-	return 0;
+    g_return_val_if_fail(WL_IS_DOWNLOADER(dl), 0);
+    if (dl->selected == NULL)
+        return 0;
+    if (WL_IS_HTTPER(dl->selected))
+        return wl_httper_get_status(WL_HTTPER(dl->selected));
+    else if (WL_IS_BTER(dl->selected))
+        return wl_bter_get_status(WL_BTER(dl->selected));
+    return 0;
 }
 
 gpointer wl_downloader_get_selected(WlDownloader * dl)
 {
-	g_return_val_if_fail(WL_IS_DOWNLOADER(dl), NULL);
-	return dl->selected;
+    g_return_val_if_fail(WL_IS_DOWNLOADER(dl), NULL);
+    return dl->selected;
 }
 
 void wl_downloader_remove_selected(WlDownloader * dl, gboolean local)
 {
-	g_return_if_fail(WL_IS_DOWNLOADER(dl));
-	if (dl->selected == NULL)
-		return;
-	if (WL_IS_HTTPER(dl->selected)) {
-		wl_downloader_remove_httper(dl, WL_HTTPER(dl->selected));
-	} else if (WL_IS_BTER(dl->selected)) {
-		wl_downloader_remove_bter(dl, WL_BTER(dl->selected), local);
-	}
-	wl_downloader_set_selected(dl, NULL);
+    g_return_if_fail(WL_IS_DOWNLOADER(dl));
+    if (dl->selected == NULL)
+        return;
+    if (WL_IS_HTTPER(dl->selected)) {
+        wl_downloader_remove_httper(dl, WL_HTTPER(dl->selected));
+    } else if (WL_IS_BTER(dl->selected)) {
+        wl_downloader_remove_bter(dl, WL_BTER(dl->selected), local);
+    }
+    wl_downloader_set_selected(dl, NULL);
 }
 
 void wl_downloader_set_selected_callback(WlDownloader * dl,
-										 WlDownloaderSelectedCallback
-										 callback, gpointer data)
+        WlDownloaderSelectedCallback
+        callback, gpointer data)
 {
-	g_return_if_fail(WL_IS_DOWNLOADER(dl));
-	dl->selectedCB = callback;
-	dl->selectedCBData = data;
+    g_return_if_fail(WL_IS_DOWNLOADER(dl));
+    dl->selectedCB = callback;
+    dl->selectedCBData = data;
 }
 
 void wl_downloader_set_httper_status_callback(WlDownloader * dl,
-											  WlHttperStatusCallback
-											  callback, gpointer data)
+        WlHttperStatusCallback
+        callback, gpointer data)
 {
-	g_return_if_fail(WL_IS_DOWNLOADER(dl));
-	dl->httperStatus = callback;
-	dl->httperStatusData = data;
+    g_return_if_fail(WL_IS_DOWNLOADER(dl));
+    dl->httperStatus = callback;
+    dl->httperStatusData = data;
 }
 
 void wl_downloader_set_bter_status_callback(WlDownloader * dl,
-											WlBterStatusCallback callback,
-											gpointer data)
+        WlBterStatusCallback callback,
+        gpointer data)
 {
-	g_return_if_fail(WL_IS_DOWNLOADER(dl));
-	dl->bterStatus = callback;
-	dl->bterStatusData = data;
+    g_return_if_fail(WL_IS_DOWNLOADER(dl));
+    dl->bterStatus = callback;
+    dl->bterStatusData = data;
 }
 
 tr_torrent *wl_downloader_create_torrent(WlDownloader * dl,
-										 const gchar * path)
+        const gchar * path)
 {
-	g_return_val_if_fail(WL_IS_DOWNLOADER(dl), NULL);
-	tr_ctor *ctor = tr_ctorNew(dl->session);
-	tr_ctorSetMetainfoFromFile(ctor, path);
-	tr_torrent *torrent = tr_torrentNew(ctor, NULL, NULL);
-	tr_ctorFree(ctor);
+    g_return_val_if_fail(WL_IS_DOWNLOADER(dl), NULL);
+    tr_ctor *ctor = tr_ctorNew(dl->session);
+    tr_ctorSetMetainfoFromFile(ctor, path);
+    tr_torrent *torrent = tr_torrentNew(ctor, NULL, NULL);
+    tr_ctorFree(ctor);
 
-	return torrent;
+    return torrent;
 }
 
 tr_ctor *wl_downloader_create_ctor(WlDownloader * dl)
 {
-	g_return_val_if_fail(WL_IS_DOWNLOADER(dl), NULL);
-	tr_ctor *ctor = tr_ctorNew(dl->session);
-	return ctor;
+    g_return_val_if_fail(WL_IS_DOWNLOADER(dl), NULL);
+    tr_ctor *ctor = tr_ctorNew(dl->session);
+    return ctor;
 }

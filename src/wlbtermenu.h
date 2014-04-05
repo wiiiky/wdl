@@ -39,17 +39,17 @@ typedef struct _WlBterMenuClass WlBterMenuClass;
 
 
 struct _WlBterMenu {
-	GtkMenu parent;
-	/*Private */
-	WlBter *bter;
+    GtkMenu parent;
+    /*Private */
+    WlBter *bter;
 
-	GtkWidget *startDl;
-	GtkWidget *pauseDl;
+    GtkWidget *startDl;
+    GtkWidget *pauseDl;
 };
 
 struct _WlBterMenuClass {
-	GtkMenuClass parent_klass;
-	/*Private */
+    GtkMenuClass parent_klass;
+    /*Private */
 };
 
 GType wl_bter_menu_get_type(void) G_GNUC_CONST;
@@ -67,7 +67,7 @@ void wl_bter_menu_set_sensitive(WlBterMenu * menu, WlBter * bter);
  * @descrition 获取相关的WlBter
  */
 WlBter *wl_bter_menu_get_bter(WlBterMenu * menu);
-/* 
+/*
  * @description 添加菜单项
  */
 void wl_bter_menu_append_separator(WlBterMenu * menu);

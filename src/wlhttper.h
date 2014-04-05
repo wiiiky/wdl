@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2014-2014 Wiky L(wiiiky@yeah.net)
  *
  * This program is free software; you can redistribute it and/or
@@ -35,7 +35,7 @@ G_BEGIN_DECLS
 				WL_TYPE_HTTPER))
 #define WL_HTTPER_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_TYPE((obj),\
 				WL_TYPE_HTTPER,WlHttperClass))
- /**/ typedef struct _WlHttper WlHttper;
+/**/ typedef struct _WlHttper WlHttper;
 typedef struct _WlHttperClass WlHttperClass;
 typedef enum _WlHttperStatus WlHttperStatus;
 typedef void (*WlHttperCallback) (gint code, gpointer data);
@@ -43,68 +43,68 @@ typedef void (*WlHttperStatusCallback) (WlHttper * httper, gpointer data);
 
 
 struct _WlHttper {
-	GtkEventBox parent;
-	GtkWidget *iconImage;
-	GtkWidget *titleLabel;
-	GtkWidget *progressBar;
-	GtkWidget *dlLabel;
-	GtkWidget *totalLabel;
-	GtkWidget *speedLabel;
-	GtkWidget *timeLabel;
+    GtkEventBox parent;
+    GtkWidget *iconImage;
+    GtkWidget *titleLabel;
+    GtkWidget *progressBar;
+    GtkWidget *dlLabel;
+    GtkWidget *totalLabel;
+    GtkWidget *speedLabel;
+    GtkWidget *timeLabel;
 
-	GtkIconSize iconSize;
-	gchar *url;
-	/* 保存路径和文件流 */
-	gchar *savePath;
-	GFileOutputStream *fOutput;
-	GThread *thread;
-	CURL *easyCURL;
-	/* 下载速度 */
-	gdouble speed;
-	/* 下载完成百分比 */
-	gdouble percentDone;
-	/* 
-	 * 这两个字段用来计算下载速度
-	 * dlData表示在dlTime时间内下载的字节数
-	 */
-	guint64 dlData;
-	guint64 dlTime;
-	/* */
-	guint timeout;
-	/* 已下载的数据和总数据 */
-	guint64 dlNow;
-	guint64 dlTotal;
-	guint64 totalLast;
-	/* 当前的状态 */
-	gint status;
-	/* 完成后返回结果 */
-	GAsyncQueue *rqueue;
-	/* 发送取消命令 */
-	GAsyncQueue *cqueue;
-	/* 创建时间，不可设置，初始化自动填写 */
-	GDateTime *cdt;
-	/* 右键菜单 */
-	GtkWidget *popMenu;
-	/* 用户自定义数据 */
-	gpointer userData;
-	/* 完成下载后的回调函数,第一个参数是下载结果 */
-	WlHttperCallback finishCallback;
-	gpointer cbData;
-	/* 状态改变的回调函数 */
-	WlHttperStatusCallback statusCallback;
-	gpointer statusData;
+    GtkIconSize iconSize;
+    gchar *url;
+    /* 保存路径和文件流 */
+    gchar *savePath;
+    GFileOutputStream *fOutput;
+    GThread *thread;
+    CURL *easyCURL;
+    /* 下载速度 */
+    gdouble speed;
+    /* 下载完成百分比 */
+    gdouble percentDone;
+    /*
+     * 这两个字段用来计算下载速度
+     * dlData表示在dlTime时间内下载的字节数
+     */
+    guint64 dlData;
+    guint64 dlTime;
+    /* */
+    guint timeout;
+    /* 已下载的数据和总数据 */
+    guint64 dlNow;
+    guint64 dlTotal;
+    guint64 totalLast;
+    /* 当前的状态 */
+    gint status;
+    /* 完成后返回结果 */
+    GAsyncQueue *rqueue;
+    /* 发送取消命令 */
+    GAsyncQueue *cqueue;
+    /* 创建时间，不可设置，初始化自动填写 */
+    GDateTime *cdt;
+    /* 右键菜单 */
+    GtkWidget *popMenu;
+    /* 用户自定义数据 */
+    gpointer userData;
+    /* 完成下载后的回调函数,第一个参数是下载结果 */
+    WlHttperCallback finishCallback;
+    gpointer cbData;
+    /* 状态改变的回调函数 */
+    WlHttperStatusCallback statusCallback;
+    gpointer statusData;
 };
 
 struct _WlHttperClass {
-	GtkEventBoxClass parent_class;
+    GtkEventBoxClass parent_class;
 };
 
 enum _WlHttperStatus {
-	WL_HTTPER_STATUS_START = 11111,
-	WL_HTTPER_STATUS_PAUSE = 22222,
-	WL_HTTPER_STATUS_COMPLETE = 33333,
-	WL_HTTPER_STATUS_NOT_START = 44444,
-	WL_HTTPER_STATUS_ABORT = 55555,
+    WL_HTTPER_STATUS_START = 11111,
+    WL_HTTPER_STATUS_PAUSE = 22222,
+    WL_HTTPER_STATUS_COMPLETE = 33333,
+    WL_HTTPER_STATUS_NOT_START = 44444,
+    WL_HTTPER_STATUS_ABORT = 55555,
 };
 
 GType wl_httper_get_type() G_GNUC_CONST;
@@ -124,12 +124,12 @@ WlHttper *wl_httper_new(const gchar * url, const gchar * savePath);
  */
 inline void wl_httper_set_title(WlHttper * httper, const gchar * title);
 inline void wl_httper_set_title_from_path(WlHttper * httper,
-										  const gchar * path);
+        const gchar * path);
 inline void wl_httper_set_icon(WlHttper * httper, GIcon * icon);
 inline void wl_httper_set_icon_from_name(WlHttper * httper,
-										 const gchar * name);
+        const gchar * name);
 inline void wl_httper_set_icon_from_file(WlHttper * httper,
-										 const gchar * path);
+        const gchar * path);
 /*
  * @descriptioin 获取和设置用户自定义数据
  */
@@ -139,14 +139,14 @@ inline void wl_httper_set_user_data(WlHttper * httper, gpointer data);
  * @description 设置完成下载后的回调函数
  */
 inline void wl_httper_set_callback(WlHttper * httper,
-								   WlHttperCallback callback,
-								   gpointer data);
+                                   WlHttperCallback callback,
+                                   gpointer data);
 /*
  * @description 设置和获取右键菜单
  */
 inline void wl_httper_set_popmenu(WlHttper * httper, GtkWidget * menu);
 inline GtkWidget *wl_httper_get_popmenu(WlHttper * httper);
-/* 
+/*
  * @description 返回保存路径
  */
 inline const gchar *wl_httper_get_path(WlHttper * httper);
@@ -205,8 +205,8 @@ inline const gchar *wl_httper_get_title(WlHttper * httper);
  * @descriptio 设置状态改变回调函数
  */
 void wl_httper_set_status_callback(WlHttper * httper,
-								   WlHttperStatusCallback callback,
-								   gpointer data);
+                                   WlHttperStatusCallback callback,
+                                   gpointer data);
 
 G_END_DECLS
 #endif							/* __WL_HTTPER_H__ */

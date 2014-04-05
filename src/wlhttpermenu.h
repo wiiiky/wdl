@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2014-2014 Wiky L(wiiiky@yeah.net)
  *
  * This program is free software; you can redistribute it and/or
@@ -37,21 +37,21 @@ typedef struct _WlHttperMenuClass WlHttperMenuClass;
 
 
 struct _WlHttperMenu {
-	GtkMenu parent;
-	GtkWidget *properties;
-	GtkWidget *openDir;
-	GtkWidget *copyURL;
-	GtkWidget *startAction;
-	GtkWidget *pauseAction;
-	GtkWidget *abortAction;
-	GtkWidget *redlAction;
-	WlHttper *httper;
-	/*GtkWidget *propertiesDialog; */
-	WlHttperProperties *propertiesDialog;
+    GtkMenu parent;
+    GtkWidget *properties;
+    GtkWidget *openDir;
+    GtkWidget *copyURL;
+    GtkWidget *startAction;
+    GtkWidget *pauseAction;
+    GtkWidget *abortAction;
+    GtkWidget *redlAction;
+    WlHttper *httper;
+    /*GtkWidget *propertiesDialog; */
+    WlHttperProperties *propertiesDialog;
 };
 
 struct _WlHttperMenuClass {
-	GtkMenuClass parentClass;
+    GtkMenuClass parentClass;
 };
 
 GType wl_httper_menu_get_type(void) G_GNUC_CONST;
@@ -60,7 +60,7 @@ GType wl_httper_menu_get_type(void) G_GNUC_CONST;
  * PUBLIC
  **************************************************/
 GtkWidget *wl_httper_menu_new(WlHttper * httper);
-/* 
+/*
  * @description 添加一个item
  * @param item 要添加的GtkMenuItem
  */
@@ -71,7 +71,7 @@ void wl_httper_menu_append(WlHttperMenu * menu, GtkWidget * item);
  * @param pos 插入的位置，0到n-1
  */
 void wl_httper_menu_insert(WlHttperMenu * menu, GtkWidget * item,
-						   gint pos);
+                           gint pos);
 /*
  * @description 添加一个分隔符
  */
@@ -93,7 +93,7 @@ WlHttperProperties *wl_httper_menu_get_properties(WlHttperMenu * menu);
  * @description 设置WlHttper的详细信息窗口
  */
 void wl_httper_menu_set_properties(WlHttperMenu * menu,
-								   WlHttperProperties * dialog);
+                                   WlHttperProperties * dialog);
 
 void wl_httper_menu_set_sensitive(WlHttperMenu * menu);
 

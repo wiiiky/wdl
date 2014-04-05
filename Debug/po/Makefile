@@ -21,12 +21,12 @@ GETTEXT_PACKAGE = wdl
 PACKAGE = wdl
 VERSION = 0.2
 
-SHELL = /bin/bash
+SHELL = /bin/sh
 
-srcdir = /home/wiky/Documents/CODE/Bazaar/wdl/po
-top_srcdir = /home/wiky/Documents/CODE/Bazaar/wdl
+srcdir = /home/wiky/Documents/CODE/wdl/po
+top_srcdir = /home/wiky/Documents/CODE/wdl
 top_builddir = ..
-VPATH = /home/wiky/Documents/CODE/Bazaar/wdl/po
+VPATH = /home/wiky/Documents/CODE/wdl/po
 
 prefix = /usr/local
 exec_prefix = ${prefix}
@@ -36,7 +36,7 @@ libdir = ${exec_prefix}/lib
 DATADIRNAME = share
 itlocaledir = $(prefix)/$(DATADIRNAME)/locale
 subdir = po
-install_sh = ${SHELL} /home/wiky/Documents/CODE/Bazaar/wdl/install-sh
+install_sh = ${SHELL} /home/wiky/Documents/CODE/wdl/install-sh
 # Automake >= 1.8 provides $(MKDIR_P).
 # Until it can be supposed, use the safe fallback:
 mkdir_p = $(install_sh) -d
@@ -66,7 +66,7 @@ DISTFILES = Makefile.in.in POTFILES.in $(POFILES)
 EXTRA_DISTFILES = ChangeLog POTFILES.skip Makevars LINGUAS
 
 POTFILES = \
-	/home/wiky/Documents/CODE/Bazaar/wdl/src/main.c
+	/home/wiky/Documents/CODE/wdl/src/main.c
 
 CATALOGS=$(shell LINGUAS="$(USE_LINGUAS)"; for lang in $$LINGUAS; do printf "$$lang.gmo "; done)
 
