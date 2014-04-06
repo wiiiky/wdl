@@ -207,6 +207,11 @@ inline const gchar *wl_httper_get_title(WlHttper * httper);
 void wl_httper_set_status_callback(WlHttper * httper,
                                    WlHttperStatusCallback callback,
                                    gpointer data);
+/*
+ * @description 获取文件总长度/已下载长度
+ */
+guint64 wl_httper_get_total_size(WlHttper *httper);
+guint64 wl_httper_get_dl_size(WlHttper *httper);
 
 G_END_DECLS
 #endif							/* __WL_HTTPER_H__ */

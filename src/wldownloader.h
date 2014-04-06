@@ -70,6 +70,8 @@ struct _WlDownloader {
     GList *list;
     gpointer *selected;
     tr_session *session;
+    /* Configure */
+    gchar *keyFilePath;
 
     /* Callback */
     WlDownloaderSelectedCallback selectedCB;
@@ -179,6 +181,12 @@ tr_torrent *wl_downloader_create_torrent(WlDownloader * dl,
  * @return tr_ctor
  */
 tr_ctor *wl_downloader_create_ctor(WlDownloader * dl);
+
+/*
+ * @description 保存和读取下载任务
+ */
+void wl_downloader_save_tasks(WlDownloader *dl);
+void wl_downloader_load_tasks(WlDownloader *dl);
 
 
 G_END_DECLS

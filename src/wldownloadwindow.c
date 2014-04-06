@@ -344,6 +344,8 @@ static void wl_dl_window_bter_status_callback(WlBter * bter, gpointer data)
 
 static void wl_dl_window_destroy(GtkWidget * window, gpointer data)
 {
+    WlDownloadWindow *dlWindow=WL_DOWNLOAD_WINDOW(window);
+    wl_downloader_save_tasks (dlWindow->downloader);
     gtk_main_quit();
 }
 
@@ -585,5 +587,6 @@ static void wl_dl_window_remove_download(GtkToolButton * button,
 WlDownloadWindow *wl_download_window_new(void)
 {
     WlDownloadWindow *window = g_object_new(WL_TYPE_DOWNLOAD_WINDOW, NULL);
+    wl_downloader_load_tasks (window->downloader);
     return window;
 }

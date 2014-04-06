@@ -37,6 +37,11 @@ static gpointer wl_downloader_pressed_callback(GtkWidget * widget,
 static inline void wl_downloader_set_selected(WlDownloader * dl,
         gpointer obj);
 
+static inline void wl_downloader_save_httper(WlDownloader *dl);
+static inline void wl_downloader_load_httper(WlDownloader *dl);
+static inline void wl_downloader_save_bter(WlDownloader *dl);
+static inline void wl_downloader_load_bter(WlDownloader *dl);
+
 static void wl_downloader_init(WlDownloader * dl)
 {
     g_object_set(G_OBJECT(dl), "hadjustment", NULL,
@@ -47,7 +52,8 @@ static void wl_downloader_init(WlDownloader * dl)
 
     tr_session *session;
     tr_variant settings;
-    const char *configDir = tr_getDefaultConfigDir("wdl");
+    const gchar *configDir = tr_getDefaultConfigDir("wdl");
+    dl->keyFilePath=g_strdup_printf("%s/http.conf",configDir);
     tr_variantInitDict(&settings, 0);
     if (!tr_sessionLoadSettings(&settings, configDir, "wdl"))
         tr_sessionGetDefaultSettings(&settings);
@@ -75,6 +81,8 @@ static void wl_downloader_finalize(GObject * object)
     WlDownloader *dl = WL_DOWNLOADER(object);
     if (dl->list)
         g_list_free(dl->list);
+    if(dl->keyFilePath)
+        g_free (dl->keyFilePath);
     tr_sessionClose(dl->session);
 }
 
@@ -319,6 +327,43 @@ static gpointer wl_downloader_pressed_callback(GtkWidget * widget,
     return FALSE;
 }
 
+static inline void wl_downloader_save_httper(WlDownloader *dl)
+{
+    GKeyFile *key_file=g_key_file_new ();
+
+    GList *lp=dl->list;
+    guint i=0;
+    gchar group[20];
+    while(lp) {
+        if(WL_IS_HTTPER(lp->data)) {
+            WlHttper *httper=lp->data;
+            g_snprintf(group,20,"%u",i++);
+            g_key_file_set_string (key_file,group,"title",wl_httper_get_title (httper));
+            g_key_file_set_string (key_file,group,"url",wl_httper_get_url (httper));
+            g_key_file_set_string (key_file,group,"path",wl_httper_get_path (httper));
+            g_key_file_set_uint64 (key_file,group,"total size",wl_httper_get_total_size (httper));
+            g_key_file_set_uint64 (key_file,group,"download size",wl_httper_get_dl_size (httper));
+            g_key_file_set_uint64 (key_file,group,"status",wl_httper_get_status (httper));
+            g_message("%s",g_key_file_to_data(key_file,NULL,NULL));
+
+        }
+        lp=g_list_next(lp);
+    }
+
+    g_key_file_free (key_file);
+}
+
+static inline void wl_downloader_save_bter(WlDownloader *dl)
+{
+}
+static inline void wl_downloader_load_bter(WlDownloader *dl)
+{
+}
+
+static inline void wl_downloader_load_httper(WlDownloader *dl)
+{
+}
+
 /**************************************************
  * PUBLIC
  ***************************************************/
@@ -520,4 +565,15 @@ tr_ctor *wl_downloader_create_ctor(WlDownloader * dl)
     g_return_val_if_fail(WL_IS_DOWNLOADER(dl), NULL);
     tr_ctor *ctor = tr_ctorNew(dl->session);
     return ctor;
+}
+
+void wl_downloader_save_tasks(WlDownloader *dl)
+{
+    wl_downloader_save_httper (dl);
+    wl_downloader_save_bter (dl);
+}
+void wl_downloader_load_tasks(WlDownloader *dl)
+{
+    wl_downloader_load_bter (dl);
+    wl_downloader_load_httper (dl);
 }

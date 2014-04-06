@@ -321,6 +321,11 @@ static inline void wl_httper_set_complete_info(WlHttper * httper)
     gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(httper->progressBar),
                                   1.0);
     wl_httper_set_status(httper, WL_HTTPER_STATUS_COMPLETE);
+    if(httper->dlTotal==0) {
+        httper->dlTotal=httper->dlNow;
+        wl_httper_set_dl_size(httper, httper->dlNow);
+        wl_httper_set_total_size(httper, httper->dlTotal);
+    }
 }
 
 static inline void wl_httper_set_invalid_info(WlHttper * httper,
@@ -905,4 +910,15 @@ void wl_httper_set_status_callback(WlHttper * httper,
     g_return_if_fail(WL_IS_HTTPER(httper));
     httper->statusCallback = callback;
     httper->statusData = data;
+}
+
+guint64 wl_httper_get_total_size(WlHttper *httper)
+{
+    g_return_val_if_fail(WL_IS_HTTPER(httper),0);
+    return httper->dlTotal;
+}
+guint64 wl_httper_get_dl_size(WlHttper *httper)
+{
+    g_return_val_if_fail(WL_IS_HTTPER(httper),0);
+    return httper->dlNow;
 }
