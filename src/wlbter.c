@@ -49,6 +49,7 @@ static inline void wl_bter_set_status(WlBter * bter, WlBterStatus status);
 static inline void wl_bter_set_complete_info(WlBter * bter);
 static inline void wl_bter_set_pause_info(WlBter * bter);
 static inline void wl_bter_set_start_info(WlBter * bter);
+static inline void wl_bter_set_error_info(WlBter *bter,const gchar *error);
 /* 将libtransmission定义的状态转化为wdl定义的状态 */
 static inline gint wl_bter_convert_status(tr_torrent_activity activity);
 
@@ -105,7 +106,6 @@ static void wl_bter_init(WlBter * bter)
     gtk_label_set_single_line_mode(GTK_LABEL(timeLabel), TRUE);
     gtk_box_pack_start(GTK_BOX(iBox), timeLabel, FALSE, FALSE, 0);
 
-    /* TODO */
 
     bter->icon=image;
     bter->titleLabel = titleLabel;
@@ -233,10 +233,32 @@ static inline void wl_bter_set_status(WlBter * bter, WlBterStatus status)
         wl_bter_set_pause_info(bter);
     else if (status == WL_BTER_STATUS_START)
         wl_bter_set_start_info(bter);
+    else if(status==WL_BTER_STATUS_ABORT) {
+        const tr_stat *stat=tr_torrentStatCached (bter->torrent);
+        wl_bter_set_error_info (bter,stat->errorString);
+    }
     if (bter->statusCB)
         bter->statusCB(bter, bter->statusCBData);
     if (bter->popMenu)
         wl_bter_menu_set_sensitive(WL_BTER_MENU(bter->popMenu), bter);
+}
+
+static inline void wl_bter_set_error_info(WlBter *bter,const gchar *error)
+{
+    gchar *label = g_strdup_printf(" %s", error);
+    gtk_label_set_text(GTK_LABEL(bter->speedLabel), label);
+    gtk_label_set_text(GTK_LABEL(bter->timeLabel), "");
+    //gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(httper->progressBar),
+    //                            0.0);
+    static PangoAttrList *attrList = NULL;
+    if (attrList == NULL) {
+        attrList = pango_attr_list_new();
+        pango_attr_list_insert(attrList,
+                               pango_attr_foreground_new(-1, 0, 0));
+    }
+    gtk_label_set_attributes(GTK_LABEL(bter->speedLabel), attrList);
+    g_free(label);
+    //wl_httper_set_status(httper, WL_HTTPER_STATUS_ABORT);
 }
 
 static inline void wl_bter_set_complete_info(WlBter * bter)
@@ -309,6 +331,12 @@ static gboolean wl_bter_timeout(gpointer data)
     WlBter *bter = WL_BTER(data);
     tr_torrent *torrent = bter->torrent;
     const tr_stat *stat = tr_torrentStatCached(torrent);
+
+    if(stat->error!=0) {
+        g_message("bt error");
+        wl_bter_set_status (bter,WL_BTER_STATUS_ABORT);
+        return FALSE;
+    }
 
     /* 下载百分比 */
     gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(bter->progressBar),
