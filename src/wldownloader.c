@@ -327,6 +327,13 @@ static gpointer wl_downloader_pressed_callback(GtkWidget * widget,
     return FALSE;
 }
 
+#define KEY_TITLE   "title"
+#define KEY_URL		"url"
+#define KEY_PATH	"path"
+#define	KEY_TOTAL_SIZE  "total size"
+#define KEY_DL_SIZE "download size"
+#define KEY_STATUS  "status"
+
 static inline void wl_downloader_save_httper(WlDownloader *dl)
 {
     GKeyFile *key_file=g_key_file_new ();
@@ -338,19 +345,52 @@ static inline void wl_downloader_save_httper(WlDownloader *dl)
         if(WL_IS_HTTPER(lp->data)) {
             WlHttper *httper=lp->data;
             g_snprintf(group,20,"%u",i++);
-            g_key_file_set_string (key_file,group,"title",wl_httper_get_title (httper));
-            g_key_file_set_string (key_file,group,"url",wl_httper_get_url (httper));
-            g_key_file_set_string (key_file,group,"path",wl_httper_get_path (httper));
-            g_key_file_set_uint64 (key_file,group,"total size",wl_httper_get_total_size (httper));
-            g_key_file_set_uint64 (key_file,group,"download size",wl_httper_get_dl_size (httper));
-            g_key_file_set_uint64 (key_file,group,"status",wl_httper_get_status (httper));
+            g_key_file_set_string (key_file,group,KEY_TITLE,wl_httper_get_title (httper));
+            g_key_file_set_string (key_file,group,KEY_URL,wl_httper_get_url (httper));
+            g_key_file_set_string (key_file,group,KEY_PATH,wl_httper_get_path (httper));
+            g_key_file_set_uint64 (key_file,group,KEY_TOTAL_SIZE,wl_httper_get_total_size (httper));
+            g_key_file_set_uint64 (key_file,group,KEY_DL_SIZE,wl_httper_get_dl_size (httper));
+            g_key_file_set_uint64 (key_file,group,KEY_STATUS,wl_httper_get_status (httper));
             g_message("%s",g_key_file_to_data(key_file,NULL,NULL));
 
         }
         lp=g_list_next(lp);
     }
+    g_file_set_contents (dl->keyFilePath,g_key_file_to_data(key_file,NULL,NULL),-1,NULL);
 
     g_key_file_free (key_file);
+}
+
+static inline void wl_downloader_load_httper(WlDownloader *dl)
+{
+    GKeyFile *key_file=g_key_file_new ();
+    g_key_file_load_from_file (key_file,dl->keyFilePath,G_KEY_FILE_NONE,NULL);
+    gchar **groups=g_key_file_get_groups(key_file,NULL);
+    if(groups==NULL) {
+        g_key_file_unref (key_file);
+        return;
+    }
+    gint i=0;
+    gchar *group=groups[i++];
+    while(group) {
+        gchar *title=g_key_file_get_string(key_file,group,KEY_TITLE,NULL);
+        gchar *url=g_key_file_get_string(key_file,group,KEY_URL,NULL);
+        gchar *path=g_key_file_get_string(key_file,group,KEY_PATH,NULL);
+        guint64 total_size=g_key_file_get_uint64 (key_file,group,KEY_TOTAL_SIZE,NULL);
+        guint64 dl_size=g_key_file_get_uint64 (key_file,group,KEY_DL_SIZE,NULL);
+        guint64 status=g_key_file_get_uint64 (key_file,group,KEY_STATUS,NULL);
+
+        if(title&&url&&path) {  /* 三个值都必须存在 */
+            WlHttper *httper=wl_downloader_append_httper (dl,url,path);
+            wl_httper_load (httper,total_size,dl_size,status);
+        }
+
+        g_free (title);
+        g_free(url);
+        g_free(path);
+        group=groups[i++];
+    }
+    g_strfreev (groups);
 }
 
 static inline void wl_downloader_save_bter(WlDownloader *dl)
@@ -359,11 +399,6 @@ static inline void wl_downloader_save_bter(WlDownloader *dl)
 static inline void wl_downloader_load_bter(WlDownloader *dl)
 {
 }
-
-static inline void wl_downloader_load_httper(WlDownloader *dl)
-{
-}
-
 /**************************************************
  * PUBLIC
  ***************************************************/

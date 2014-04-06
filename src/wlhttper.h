@@ -212,6 +212,10 @@ void wl_httper_set_status_callback(WlHttper * httper,
  */
 guint64 wl_httper_get_total_size(WlHttper *httper);
 guint64 wl_httper_get_dl_size(WlHttper *httper);
+/*
+ * @description
+ */
+void wl_httper_load(WlHttper *httper,guint64 total_size,guint64 dl_size,guint status);
 
 G_END_DECLS
 #endif							/* __WL_HTTPER_H__ */

@@ -922,3 +922,9 @@ guint64 wl_httper_get_dl_size(WlHttper *httper)
     g_return_val_if_fail(WL_IS_HTTPER(httper),0);
     return httper->dlNow;
 }
+
+void wl_httper_load(WlHttper *httper,guint64 total_size,guint64 dl_size,guint status)
+{
+    g_return_if_fail(WL_IS_HTTPER(httper));
+    /* TODO */
+}
