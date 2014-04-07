@@ -47,6 +47,7 @@ static inline void wl_httper_set_complete_info(WlHttper * httper);
 static inline void wl_httper_set_abort_info(WlHttper * httper);
 static inline void wl_httper_set_invalid_info(WlHttper * httper,
         const gchar * strerror);
+static inline void wl_httper_set_resume_info(WlHttper *httper,guint64 now,guint64 total);
 static inline void wl_httper_set_pause_info(WlHttper * httper);
 static inline void wl_httper_set_start_info(WlHttper * httper);
 static inline void wl_httper_set_default_info(WlHttper * httper);
@@ -328,6 +329,19 @@ static inline void wl_httper_set_complete_info(WlHttper * httper)
     }
     wl_httper_set_dl_size(httper, httper->dlNow);
     wl_httper_set_total_size(httper, httper->dlTotal);
+}
+
+static inline void wl_httper_set_resume_info(WlHttper *httper,guint64 now,guint64 total)
+{
+    wl_httper_set_pause_info (httper);
+    wl_httper_set_dl_size (httper,now);
+    wl_httper_set_total_size (httper,total);
+    if(total)
+        gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(httper->progressBar),
+                                      (gdouble)now/(gdouble)total);
+    else
+        gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(httper->progressBar),
+                                      0.0);
 }
 
 static inline void wl_httper_set_invalid_info(WlHttper * httper,
@@ -777,11 +791,17 @@ void wl_httper_pause(WlHttper * httper)
 void wl_httper_continue(WlHttper * httper)
 {
     g_return_if_fail(WL_IS_HTTPER(httper));
-    if (httper->status != WL_HTTPER_STATUS_PAUSE)
-        return;
-    curl_easy_pause(httper->easyCURL, CURLPAUSE_RECV_CONT);
-    wl_httper_add_timeout(httper);
-    wl_httper_set_start_info(httper);
+    if(httper->status==WL_HTTPER_STATUS_PAUSE) {
+        curl_easy_pause(httper->easyCURL, CURLPAUSE_RECV_CONT);
+        wl_httper_add_timeout(httper);
+        wl_httper_set_start_info(httper);
+    } else if(httper->status==WL_HTTPER_STATUS_RESUME) {
+        httper->thread =
+            g_thread_new("http-download", wl_httper_download_thread, httper);
+        g_thread_unref(httper->thread);
+        wl_httper_add_timeout(httper);
+        wl_httper_set_start_info(httper);
+    }
 }
 
 void wl_httper_abort(WlHttper * httper)
@@ -933,7 +953,7 @@ guint64 wl_httper_get_dl_size(WlHttper *httper)
     return httper->dlNow;
 }
 
-static inline void wl_httper_resume(WlHttper *httper,gsize length)
+static inline void wl_httper_resume(WlHttper *httper,guint64 length,guint64 total)
 {
     g_return_if_fail(WL_IS_HTTPER(httper));
     g_return_if_fail(httper->status == WL_HTTPER_STATUS_START ||
@@ -984,19 +1004,15 @@ static inline void wl_httper_resume(WlHttper *httper,gsize length)
     wl_httper_set_default_info(httper);
     /* 设置图标 */
     wl_httper_set_icon_from_file(httper, httper->savePath);
-    httper->thread =
-        g_thread_new("http-download", wl_httper_download_thread, httper);
-    g_thread_unref(httper->thread);
-    wl_httper_add_timeout(httper);
-    wl_httper_set_start_info(httper);
     //wl_httper_set_status (httper,WL_HTTPER_STATUS_START);
-    //wl_httper_set_pause_info (httper);
+    wl_httper_set_resume_info (httper,length,total);
+    httper->status=WL_HTTPER_STATUS_RESUME;
 }
 
 void wl_httper_load(WlHttper *httper,guint64 total_size,guint64 dl_size,guint status)
 {
     g_return_if_fail(WL_IS_HTTPER(httper));
-    /* TODO */
+
     wl_httper_set_status (httper,status);
     httper->dlTotal=total_size;
     httper->dlNow=dl_size;
@@ -1011,10 +1027,11 @@ void wl_httper_load(WlHttper *httper,guint64 total_size,guint64 dl_size,guint st
         break;
     case WL_HTTPER_STATUS_PAUSE:
     case WL_HTTPER_STATUS_START:
+    case WL_HTTPER_STATUS_RESUME:
         if(g_file_get_contents (httper->savePath,&contents,&length,NULL)) {
             /* 断点叙传 */
             g_free(contents);
-            wl_httper_resume (httper,length);
+            wl_httper_resume (httper,length,total_size);
         } else {
             wl_httper_set_default_info (httper);
             wl_httper_set_status (httper,WL_HTTPER_STATUS_NOT_START);

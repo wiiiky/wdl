@@ -287,6 +287,7 @@ wl_dl_window_enable_button_by_httper_status(WlDownloadWindow * window,
     case WL_HTTPER_STATUS_NOT_START:
     case WL_HTTPER_STATUS_ABORT:
     case WL_HTTPER_STATUS_PAUSE:
+    case WL_HTTPER_STATUS_RESUME:
         wl_dl_window_set_start_enabled(window, TRUE);
         wl_dl_window_set_pause_enabled(window, FALSE);
         wl_dl_window_set_remove_enabled(window, TRUE);
@@ -540,7 +541,7 @@ static void wl_dl_window_start_download(GtkToolButton * button,
 {
     WlDownloadWindow *window = (WlDownloadWindow *) data;
     gint status = wl_downloader_get_selected_status(window->downloader);
-    if (status == WL_HTTPER_STATUS_PAUSE)
+    if (status == WL_HTTPER_STATUS_PAUSE||status==WL_HTTPER_STATUS_RESUME)
         wl_downloader_continue_selected(window->downloader);
     else if (status != WL_HTTPER_STATUS_COMPLETE)
         wl_downloader_start_selected(window->downloader);

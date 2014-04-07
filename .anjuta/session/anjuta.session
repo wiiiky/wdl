@@ -3,7 +3,7 @@ Maximized=1
 Geometry=1366x702+0+27
 
 [File Loader]
-Files=../../src/wlbter.c#248%%%../../src/wlbter.h#56%%%../../src/wldownloader.c#385%%%../../src/wldownloader.h#189%%%../../src/wldownloadwindow.c#590%%%../../src/wlhttper.h#75%%%../../src/wlhttper.c#972
+Files=../../src/wldownloadwindow.c#290%%%../../src/wlhttper.h#112%%%../../src/wlhttper.c#1015
 
 [Document Manager]
 bookmarks=<?xml version="1.0" encoding="UTF-8"?>\n<bookmarks/>\n
@@ -17,9 +17,6 @@ Working directories=../../../wdl
 Shortcut=wdl//src//wdl
 Expand=wdl%%%wdl//data%%%wdl//data//nobase_dist_ui%%%wdl//src%%%wdl//src//wdl%%%wdl//wdldoc
 
-[Debugger]
-Stop at beginning=2
-
 [Build]
 Configuration list=1:Default:%%%1:Debug:Debug%%%1:Profiling:Profiling%%%1:Optimized:Optimized
 Selected Configuration=Debug
@@ -27,3 +24,6 @@ BuildArgs/Default=--enable-maintainer-mode
 BuildArgs/Debug=--enable-maintainer-mode 'CFLAGS=-g -O0' 'CXXFLAGS=-g -O0' 'JFLAGS=-g -O0' 'FFLAGS=-g -O0'
 BuildArgs/Profiling=--enable-maintainer-mode 'CFLAGS=-g -pg' 'CXXFLAGS=-g -pg' 'JFLAGS=-g -pg' 'FFLAGS=-g -pg'
 BuildArgs/Optimized=--enable-maintainer-mode 'CFLAGS=-O2' 'CXXFLAGS=-O2' 'JFLAGS=-O2' 'FFLAGS=-O2'
+
+[Debugger]
+Stop at beginning=2

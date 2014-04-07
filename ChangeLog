@@ -2,3 +2,6 @@
 
 2014-3-20 Wiky L 完成基本的FTP和HTTP下载功能
 
+2014-4-7 Wiky L 添加BT下载功能，FTP和HTTP的断点续传
+
+
