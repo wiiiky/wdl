@@ -148,6 +148,7 @@ static void wl_httper_init(WlHttper * httper)
     httper->cbData = NULL;
     httper->statusCallback = NULL;
     httper->statusData = NULL;
+    httper->alreadyHave=0;
 }
 
 static void wl_httper_finalize(GObject * object)
@@ -249,6 +250,7 @@ static inline void wl_httper_set_default_data(WlHttper * httper)
     httper->dlData = 0;
     httper->dlTime = 0;
     httper->dlNow = 0;
+    httper->alreadyHave=0;
     httper->dlTotal = 0;
 }
 
@@ -323,9 +325,9 @@ static inline void wl_httper_set_complete_info(WlHttper * httper)
     wl_httper_set_status(httper, WL_HTTPER_STATUS_COMPLETE);
     if(httper->dlTotal==0) {
         httper->dlTotal=httper->dlNow;
-        wl_httper_set_dl_size(httper, httper->dlNow);
-        wl_httper_set_total_size(httper, httper->dlTotal);
     }
+    wl_httper_set_dl_size(httper, httper->dlNow);
+    wl_httper_set_total_size(httper, httper->dlTotal);
 }
 
 static inline void wl_httper_set_invalid_info(WlHttper * httper,
@@ -578,10 +580,10 @@ static int on_curl_progress_callback(gpointer * clientp, double dltotal,
     GAsyncQueue *cqueue = cdata->cqueue;
     if (g_async_queue_try_pop(cqueue))
         return 1;
-    httper->dlTotal = dltotal;
-    httper->dlNow = dlnow;
-    if (dltotal)
-        httper->percentDone = dlnow / dltotal;
+    httper->dlTotal = dltotal+httper->alreadyHave;
+    httper->dlNow = dlnow+httper->alreadyHave;
+    if (httper->dlTotal)
+        httper->percentDone =(gdouble) httper->dlNow / (gdouble)httper->dlTotal;
     else
         httper->percentDone = 0;
     return 0;
@@ -684,6 +686,14 @@ static inline void wl_httper_open_file(WlHttper * httper)
     GFile *file = g_file_new_for_path(httper->savePath);
     g_file_delete(file, NULL, NULL);
     httper->fOutput = g_file_create(file, G_FILE_CREATE_NONE, NULL, NULL);
+    g_object_unref(file);
+}
+
+static inline void wl_httper_append_file(WlHttper *httper)
+{
+    wl_httper_close_file(httper);
+    GFile *file = g_file_new_for_path(httper->savePath);
+    httper->fOutput = g_file_append_to (file, G_FILE_CREATE_NONE, NULL, NULL);
     g_object_unref(file);
 }
 
@@ -923,8 +933,98 @@ guint64 wl_httper_get_dl_size(WlHttper *httper)
     return httper->dlNow;
 }
 
+static inline void wl_httper_resume(WlHttper *httper,gsize length)
+{
+    g_return_if_fail(WL_IS_HTTPER(httper));
+    g_return_if_fail(httper->status == WL_HTTPER_STATUS_START ||
+                     httper->status == WL_HTTPER_STATUS_PAUSE);
+
+    /* 如果保存路径无效则直接退出 */
+    wl_httper_append_file (httper);
+    if (httper->fOutput == NULL)
+        return;
+
+    CURL *easyCURL = curl_easy_init();
+    /* 设置URL */
+    curl_easy_setopt(easyCURL, CURLOPT_URL, httper->url);
+    /* 关闭详细信息 */
+    curl_easy_setopt(easyCURL, CURLOPT_VERBOSE, 0L);
+    /* 自动重定向 */
+    curl_easy_setopt(easyCURL, CURLOPT_FOLLOWLOCATION, 1L);
+    /* 设置接收到数据后的回调函数 */
+    curl_easy_setopt(easyCURL, CURLOPT_WRITEFUNCTION,
+                     on_curl_write_callback);
+    /* 设置进度回调函数 */
+    curl_easy_setopt(easyCURL, CURLOPT_NOPROGRESS, 0L);
+    curl_easy_setopt(easyCURL, CURLOPT_PROGRESSFUNCTION,
+                     on_curl_progress_callback);
+    /* 启用SSL  */
+    curl_easy_setopt(easyCURL, CURLOPT_USE_SSL, CURLUSESSL_TRY);
+    /* 关闭证书认证 */
+    curl_easy_setopt(easyCURL, CURLOPT_SSL_VERIFYPEER, 0L);
+    /* 设置用户代理,冒充FIREFOX */
+    curl_easy_setopt(easyCURL, CURLOPT_USERAGENT,
+                     "Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:24.0)"
+                     " Gecko/20100101 Firefox/24.0");
+    /* 关闭信号，这可能会引发一个BUG */
+    curl_easy_setopt(easyCURL, CURLOPT_NOSIGNAL, 1L);
+
+    /* 断点续传 */
+    struct curl_slist *slist=NULL;
+    gchar *range=g_strdup_printf("RANGE: bytes=%lu-",length);
+    slist=curl_slist_append(slist,range);
+    curl_easy_setopt(easyCURL,CURLOPT_HTTPHEADER,slist);
+    g_free (range);
+    //curl_slist_free_all(slist);
+
+    httper->easyCURL = easyCURL;
+    /* GAsyncQueue */
+    wl_httper_async_queue_new(httper);
+    g_async_queue_ref(httper->cqueue);
+    g_async_queue_ref(httper->rqueue);
+    /* 初始化数据 */
+    wl_httper_set_default_data(httper);
+    httper->alreadyHave=length;
+    /* 重置所有信息 */
+    wl_httper_set_default_info(httper);
+    /* 设置图标 */
+    wl_httper_set_icon_from_file(httper, httper->savePath);
+    httper->thread =
+        g_thread_new("http-download", wl_httper_download_thread, httper);
+    g_thread_unref(httper->thread);
+    wl_httper_add_timeout(httper);
+    wl_httper_set_start_info(httper);
+    //wl_httper_set_status (httper,WL_HTTPER_STATUS_START);
+    //wl_httper_set_pause_info (httper);
+}
+
 void wl_httper_load(WlHttper *httper,guint64 total_size,guint64 dl_size,guint status)
 {
     g_return_if_fail(WL_IS_HTTPER(httper));
     /* TODO */
+    wl_httper_set_status (httper,status);
+    httper->dlTotal=total_size;
+    httper->dlNow=dl_size;
+    gsize length;
+    gchar *contents=NULL;
+    switch(status) {
+    case WL_HTTPER_STATUS_COMPLETE:
+        wl_httper_set_complete_info (httper);
+        break;
+    case WL_HTTPER_STATUS_NOT_START:
+        wl_httper_set_default_info (httper);
+        break;
+    case WL_HTTPER_STATUS_PAUSE:
+    case WL_HTTPER_STATUS_START:
+        if(g_file_get_contents (httper->savePath,&contents,&length,NULL)) {
+            /* 断点叙传 */
+            g_free(contents);
+            wl_httper_resume (httper,length);
+        }
+        break;
+    case WL_HTTPER_STATUS_ABORT:
+    default:
+        wl_httper_set_invalid_info (httper,"aborted");
+        break;
+    }
 }

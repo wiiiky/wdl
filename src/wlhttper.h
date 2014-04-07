@@ -69,6 +69,10 @@ struct _WlHttper {
      */
     guint64 dlData;
     guint64 dlTime;
+    /*
+     * 下面的子段在断点续传用到，表示已经下载的数据
+     */
+    guint64 alreadyHave;
     /* */
     guint timeout;
     /* 已下载的数据和总数据 */
