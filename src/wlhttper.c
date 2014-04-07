@@ -970,12 +970,7 @@ static inline void wl_httper_resume(WlHttper *httper,gsize length)
     curl_easy_setopt(easyCURL, CURLOPT_NOSIGNAL, 1L);
 
     /* 断点续传 */
-    struct curl_slist *slist=NULL;
-    gchar *range=g_strdup_printf("RANGE: bytes=%lu-",length);
-    slist=curl_slist_append(slist,range);
-    curl_easy_setopt(easyCURL,CURLOPT_HTTPHEADER,slist);
-    g_free (range);
-    //curl_slist_free_all(slist);
+    curl_easy_setopt(easyCURL,CURLOPT_RESUME_FROM,(glong)length);
 
     httper->easyCURL = easyCURL;
     /* GAsyncQueue */
@@ -1020,6 +1015,9 @@ void wl_httper_load(WlHttper *httper,guint64 total_size,guint64 dl_size,guint st
             /* 断点叙传 */
             g_free(contents);
             wl_httper_resume (httper,length);
+        } else {
+            wl_httper_set_default_info (httper);
+            wl_httper_set_status (httper,WL_HTTPER_STATUS_NOT_START);
         }
         break;
     case WL_HTTPER_STATUS_ABORT:
