@@ -345,7 +345,7 @@ static gboolean wl_bter_timeout(gpointer data)
     wl_bter_set_dl_speed(bter, stat->pieceDownloadSpeed_KBps);
     /* 已下载数据和总数据 */
     wl_bter_set_total_size(bter, stat->sizeWhenDone);
-    wl_bter_set_dl_size(bter, stat->haveValid);
+    wl_bter_set_dl_size(bter, stat->haveValid+stat->haveUnchecked);
     /* 剩余时间 */
     wl_bter_set_rtime(bter, stat->pieceDownloadSpeed_KBps,
                       stat->leftUntilDone);
@@ -442,6 +442,30 @@ WlBter *wl_bter_new(tr_session * session, tr_torrent * torrent)
                                            "session", session,
                                            "torrent", torrent,
                                            NULL);
+
+    const tr_stat *stat = tr_torrentStatCached(torrent);
+
+    if(stat->error!=0) {
+        g_message("bt error");
+        wl_bter_set_status (bter,WL_BTER_STATUS_ABORT);
+        return FALSE;
+    }
+
+    /* 下载百分比 */
+    gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(bter->progressBar),
+                                  stat->percentDone);
+    /* 下载速度 */
+    //wl_bter_set_dl_speed(bter, stat->pieceDownloadSpeed_KBps);
+    /* 已下载数据和总数据 */
+    wl_bter_set_total_size(bter, stat->sizeWhenDone);
+    wl_bter_set_dl_size(bter, stat->haveValid+stat->haveUnchecked);
+    /* 剩余时间 */
+    //wl_bter_set_rtime(bter, stat->pieceDownloadSpeed_KBps,
+    //                stat->leftUntilDone);
+    if (stat->percentDone == 1.0) {
+        g_message("complete");
+        wl_bter_set_status(bter, WL_BTER_STATUS_COMPLETE);
+    }
     return bter;
 }
 

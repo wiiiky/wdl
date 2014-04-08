@@ -398,6 +398,18 @@ static inline void wl_downloader_save_bter(WlDownloader *dl)
 }
 static inline void wl_downloader_load_bter(WlDownloader *dl)
 {
+    tr_ctor *ctor=tr_ctorNew (dl->session);
+    gint count=0;
+    tr_torrent **tors;
+    if(tors=tr_sessionLoadTorrents (dl->session,ctor,&count)) {
+        gint i;
+        for(i=0; i<count; i++) {
+            const tr_info *info=tr_torrentInfo (tors[i]);
+            wl_downloader_append_bter (dl,tors[i]);
+            g_message("%s",info->originalName);
+        }
+    }
+    tr_ctorFree (ctor);
 }
 /**************************************************
  * PUBLIC
