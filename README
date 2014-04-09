@@ -8,6 +8,13 @@
 界面使用GTK+来完成
 
 
+编译运行:
+	mkdir build
+	cd build
+	../configure
+	make
+	make install
+
 
 Wiky L(wiiiky@yeah.net)
 2014-3-20更新

@@ -58,6 +58,7 @@ GType wl_bter_properties_get_type(void) G_GNUC_CONST;
 /* Public */
 GtkWidget *wl_bter_properties_new (void);
 GtkWidget *wl_bter_properties_new_with_torrent(tr_torrent *torrent);
+void wl_bter_properties_set_torrent(WlBterProperties *dialog,tr_torrent *torrent);
 
 
 G_END_DECLS

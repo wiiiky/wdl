@@ -34,11 +34,33 @@ static void wl_bter_properties_getter(GObject *object,guint property_id,
 static void wl_bter_properties_setter(GObject *object,guint property_id,
                                       const GValue *value,GParamSpec *ps);
 
+static void onDialogResponse(GtkDialog *dialog,gint reponseId,gpointer data);
+static gboolean onDialogDelete(GtkWidget *dialog,GdkEvent *event,gpointer data);
+
 static void wl_bter_properties_init(WlBterProperties *obj)
 {
+    gtk_container_set_border_width (GTK_CONTAINER(obj),8);
+    gtk_window_set_modal (GTK_WINDOW(obj),TRUE);
+    gtk_window_set_default_size (GTK_WINDOW(obj),480,560);
     gtk_dialog_add_button (GTK_DIALOG(obj),"Close",GTK_RESPONSE_CLOSE);
+    gtk_dialog_set_default_response (GTK_DIALOG(obj),GTK_RESPONSE_CLOSE);
+
+    GtkWidget *box=gtk_dialog_get_content_area (GTK_DIALOG(obj));
+    GtkWidget *notebook=gtk_notebook_new ();
+    gtk_box_pack_start (GTK_BOX(box),notebook,TRUE,TRUE,0);
+
+
+    GtkWidget *infoBox=gtk_box_new (GTK_ORIENTATION_VERTICAL,5);
+    gtk_notebook_append_page (GTK_NOTEBOOK(notebook),infoBox,
+                              gtk_label_new ("infomation"));
 
     obj->torrent=NULL;
+
+    /* signals */
+    g_signal_connect(G_OBJECT(obj),"response",
+                     G_CALLBACK(onDialogResponse),NULL);
+    g_signal_connect(G_OBJECT(obj),"delete-event",
+                     G_CALLBACK(onDialogDelete),NULL);
 }
 
 static void wl_bter_properties_finalize(GObject *obj)
@@ -58,7 +80,7 @@ static void wl_bter_properties_class_init(WlBterPropertiesClass *klass)
                              "tr_torrent",
                              "Tr Torrent",
                              G_PARAM_READABLE|G_PARAM_WRITABLE|
-                             G_PARAM_CONSTRUCT_ONLY);
+                             G_PARAM_CONSTRUCT);
     g_object_class_install_property (objClass,PROPERTY_TORRENT,ps);
 }
 
@@ -88,6 +110,17 @@ static void wl_bter_properties_setter(GObject *object,guint property_id,
     }
 }
 
+static void onDialogResponse(GtkDialog *dialog,gint reponseId,gpointer data)
+{
+    gtk_widget_hide (GTK_WIDGET(dialog));
+}
+
+static gboolean onDialogDelete(GtkWidget *dialog,GdkEvent *event,gpointer data)
+{
+    gtk_dialog_response (GTK_DIALOG(dialog),GTK_RESPONSE_CLOSE);
+    return TRUE;
+}
+
 /**************************************************
  * PUBILC
  **************************************************/
@@ -103,5 +136,11 @@ GtkWidget *wl_bter_properties_new_with_torrent(tr_torrent *torrent)
                       "torrent",torrent,NULL);
 
     return dialog;
+}
+
+void wl_bter_properties_set_torrent(WlBterProperties *dialog,tr_torrent *torrent)
+{
+    g_return_if_fail(WL_IS_BTER_PROPERTIES(dialog));
+    g_object_set(G_OBJECT(dialog),"torrent",torrent,NULL);
 }
 
