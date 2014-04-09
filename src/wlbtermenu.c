@@ -19,6 +19,7 @@
  */
 
 #include "wlbtermenu.h"
+#include "wlbterproperties.h"
 
 
 enum {
@@ -102,6 +103,7 @@ static void wl_bter_menu_init(WlBterMenu * obj)
     obj->bter = NULL;
     obj->startDl = startDl;
     obj->pauseDl = pauseDl;
+    obj->propertiesDialog=wl_bter_properties_new ();
 }
 
 static void wl_bter_menu_finalize(GObject * obj)
@@ -154,7 +156,7 @@ static void wl_bter_menu_setter(GObject * object, guint property_id,
 static void onPropertiesActivate(GtkMenuItem * item, gpointer data)
 {
     WlBterMenu *menu = WL_BTER_MENU(data);
-    g_message("properties");
+    gtk_widget_show_all (menu->propertiesDialog);
 }
 
 static void onOpenFolderActivate(GtkMenuItem * item, gpointer data)

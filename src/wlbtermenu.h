@@ -45,6 +45,7 @@ struct _WlBterMenu {
 
     GtkWidget *startDl;
     GtkWidget *pauseDl;
+    GtkWidget *propertiesDialog;
 };
 
 struct _WlBterMenuClass {

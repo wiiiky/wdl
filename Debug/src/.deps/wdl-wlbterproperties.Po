@@ -1,6 +1,7 @@
-wdl-wlbtermenu.o: /home/wiky/Documents/CODE/wdl/src/wlbtermenu.c \
+wdl-wlbterproperties.o: \
+ /home/wiky/Documents/CODE/wdl/src/wlbterproperties.c \
  /usr/include/stdc-predef.h \
- /home/wiky/Documents/CODE/wdl/src/wlbtermenu.h \
+ /home/wiky/Documents/CODE/wdl/src/wlbterproperties.h \
  /usr/include/gtk-3.0/gtk/gtk.h /usr/include/gtk-3.0/gdk/gdk.h \
  /usr/include/gtk-3.0/gdk/gdkconfig.h /usr/include/glib-2.0/glib.h \
  /usr/include/glib-2.0/glib/galloca.h /usr/include/glib-2.0/glib/gtypes.h \
@@ -552,18 +553,16 @@ wdl-wlbtermenu.o: /home/wiky/Documents/CODE/wdl/src/wlbtermenu.c \
  /usr/include/gtk-3.0/gtk/deprecated/gtkvscale.h \
  /usr/include/gtk-3.0/gtk/deprecated/gtkvscrollbar.h \
  /usr/include/gtk-3.0/gtk/deprecated/gtkvseparator.h \
- /home/wiky/Documents/CODE/wdl/src/wlbter.h \
  /home/wiky/Documents/CODE/wdl/src/libtransmission/transmission.h \
  /usr/include/inttypes.h \
  /usr/lib/gcc/x86_64-redhat-linux/4.8.2/include/stdint.h \
  /usr/include/stdint.h /usr/include/bits/wchar.h \
  /home/wiky/Documents/CODE/wdl/src/libtransmission/variant.h \
- /home/wiky/Documents/CODE/wdl/src/libtransmission/quark.h \
- /home/wiky/Documents/CODE/wdl/src/wlbterproperties.h
+ /home/wiky/Documents/CODE/wdl/src/libtransmission/quark.h
 
 /usr/include/stdc-predef.h:
 
-/home/wiky/Documents/CODE/wdl/src/wlbtermenu.h:
+/home/wiky/Documents/CODE/wdl/src/wlbterproperties.h:
 
 /usr/include/gtk-3.0/gtk/gtk.h:
 
@@ -1797,8 +1796,6 @@ wdl-wlbtermenu.o: /home/wiky/Documents/CODE/wdl/src/wlbtermenu.c \
 
 /usr/include/gtk-3.0/gtk/deprecated/gtkvseparator.h:
 
-/home/wiky/Documents/CODE/wdl/src/wlbter.h:
-
 /home/wiky/Documents/CODE/wdl/src/libtransmission/transmission.h:
 
 /usr/include/inttypes.h:
@@ -1812,5 +1809,3 @@ wdl-wlbtermenu.o: /home/wiky/Documents/CODE/wdl/src/wlbtermenu.c \
 /home/wiky/Documents/CODE/wdl/src/libtransmission/variant.h:
 
 /home/wiky/Documents/CODE/wdl/src/libtransmission/quark.h:
-
-/home/wiky/Documents/CODE/wdl/src/wlbterproperties.h:

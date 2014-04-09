@@ -18,6 +18,7 @@
 #include "wlbter.h"
 #include "wlbtermenu.h"
 
+
 enum {
     WL_BTER_PROPERTY_SESSION = 1,
     WL_BTER_PROPERTY_TORRENT,

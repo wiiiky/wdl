@@ -39,7 +39,9 @@ wdl_SOURCES =  \
 			   icons.c \
 			   icons.h \
 			   wlbtermenu.c \
-			   wlbtermenu.h
+			   wlbtermenu.h \
+			   wlbterproperties.c \
+			   wlbterproperties.h
 
 wdl_LDFLAGS = \
 			  -Wl,--export-dynamic 
