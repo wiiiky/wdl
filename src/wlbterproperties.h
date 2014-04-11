@@ -59,6 +59,7 @@ struct _WlBterProperties {
     GtkWidget *privacyLabel;
     GtkWidget *originLabel;
     GtkWidget *commentView;
+    GtkWidget *creatorLabel;
 
     tr_torrent *torrent;
     guint timeout;

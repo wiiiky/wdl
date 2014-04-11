@@ -147,6 +147,7 @@ static void wl_bter_menu_setter(GObject * object, guint property_id,
     switch (property_id) {
     case WL_BTER_MENU_PROPERTY_BTER:
         obj->bter = g_value_get_pointer(value);
+        wl_bter_properties_set_torrent (obj->propertiesDialog,wl_bter_get_torrent (obj->bter));
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, ps);

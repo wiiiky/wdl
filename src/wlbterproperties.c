@@ -41,6 +41,10 @@ static gboolean onTimeout(gpointer data);
 static void startTimeout(WlBterProperties *dialog);
 static void stopTimeout(WlBterProperties *dialog);
 
+static void updateTorrentInfo(WlBterProperties *dialog);
+static const gchar *getSizePhrase(guint64 size);
+static const gchar *getStatePhrase(tr_torrent_activity activity);
+
 static void wl_bter_properties_init(WlBterProperties *obj)
 {
     gtk_container_set_border_width (GTK_CONTAINER(obj),8);
@@ -188,14 +192,22 @@ static void wl_bter_properties_init(WlBterProperties *obj)
     gtk_widget_set_halign (originLabel,GTK_ALIGN_START);
     gtk_grid_attach (GTK_GRID(detailsGrid),originLabel,1,3,1,1);
 
-    label=gtk_label_new("Comment :");
+    label=gtk_label_new("Creator :");
     gtk_widget_set_halign (label,GTK_ALIGN_START);
     gtk_grid_attach (GTK_GRID(detailsGrid),label,
                      0,4,1,1);
+    GtkWidget *creatorLabel=gtk_label_new ("Wiky");
+    gtk_widget_set_halign (creatorLabel,GTK_ALIGN_START);
+    gtk_grid_attach (GTK_GRID(detailsGrid),creatorLabel,1,4,1,1);
+
+    label=gtk_label_new("Comment :");
+    gtk_widget_set_halign (label,GTK_ALIGN_START);
+    gtk_grid_attach (GTK_GRID(detailsGrid),label,
+                     0,5,1,1);
     GtkWidget *commentView=gtk_text_view_new ();
     gtk_text_view_set_editable(GTK_TEXT_VIEW(commentView),FALSE);
     gtk_grid_attach (GTK_GRID(detailsGrid),commentView,
-                     1,4,1,1);
+                     1,5,1,1);
 
     gtk_widget_show_all (box);
 
@@ -211,6 +223,8 @@ static void wl_bter_properties_init(WlBterProperties *obj)
     obj->privacyLabel=privacyLabel;
     obj->originLabel=originLabel;
     obj->commentView=commentView;
+    obj->creatorLabel=creatorLabel;
+    obj->errorLabel=errorLabel;
     obj->torrent=NULL;
     obj->timeout=0;
 
@@ -262,6 +276,7 @@ static void wl_bter_properties_setter(GObject *object,guint property_id,
     switch(property_id) {
     case PROPERTY_TORRENT:
         obj->torrent=g_value_get_pointer (value);
+        updateTorrentInfo (obj);
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object,property_id,ps);
@@ -295,6 +310,107 @@ static void stopTimeout(WlBterProperties *dialog)
 {
     g_source_remove (dialog->timeout);
     dialog->timeout=0;
+}
+
+static void updateTorrentInfo(WlBterProperties *dialog)
+{
+    if(dialog->torrent==NULL)
+        return;
+
+    const tr_info *info=tr_torrentInfo (dialog->torrent);
+    gtk_window_set_title (GTK_WINDOW(dialog),info->originalName);
+    /* location */
+    gtk_label_set_text (GTK_LABEL(dialog->locationLabel),tr_torrentGetDownloadDir(dialog->torrent));
+    /* Comment */
+    GtkTextBuffer *buffer=gtk_text_buffer_new (NULL);
+    gtk_text_buffer_set_text (buffer,info->comment==NULL?"":info->comment,-1);
+    gtk_text_view_set_buffer (GTK_TEXT_VIEW(dialog->commentView),buffer);
+    /* Hash */
+    gtk_label_set_text (GTK_LABEL(dialog->hashLabel),info->hashString);
+    /* privacy */
+    gtk_label_set_text (GTK_LABEL(dialog->privacyLabel),info->isPrivate?"Private torrent":"Public torrent");
+    /* creator */
+    gtk_label_set_text(GTK_LABEL(dialog->creatorLabel),info->creator?info->creator:"");
+    /* origin */
+    GDateTime *dt=g_date_time_new_from_unix_utc (info->dateCreated);
+    gchar *format=g_date_time_format(dt,"Created on %d %m %Y");
+    gtk_label_set_text (GTK_LABEL(dialog->originLabel),format);
+    g_free (format);
+
+    /*****/
+    const tr_stat *stat=tr_torrentStatCached (dialog->torrent);
+    gtk_label_set_text (GTK_LABEL(dialog->errorLabel),stat->error!=TR_STAT_OK?stat->errorString:"No error");
+    /* torrent Size */
+    gchar *pieceSize=g_strdup(getSizePhrase (info->pieceSize));
+    gchar *total=g_strdup_printf("%s (%d pieces @ %s)",getSizePhrase(info->totalSize),info->pieceCount,
+                                 pieceSize);
+    g_free (pieceSize);
+    gtk_label_set_text (GTK_LABEL(dialog->torrentSize),total);
+    g_free (total);
+    /* have */
+    gchar *have=g_strdup_printf("%s (%.1f%%)",getSizePhrase (stat->haveValid+stat->haveUnchecked),
+                                stat->percentDone);
+    gtk_label_set_text (GTK_LABEL(dialog->haveSize),have);
+    g_free (have);
+    /* downloaded */
+    gtk_label_set_text (GTK_LABEL(dialog->downloadedSize),
+                        getSizePhrase (stat->sizeWhenDone-stat->leftUntilDone));
+    /* uploaded */
+    gtk_label_set_text (GTK_LABEL(dialog->uploadedSize),
+                        getSizePhrase(stat->uploadedEver));
+    /* state */
+    gtk_label_set_text (GTK_LABEL(dialog->stateLabel),getStatePhrase(stat->activity));
+
+    /* speed */
+    gtk_label_set_text (GTK_LABEL(dialog->downloadSpeed),"");
+    gtk_label_set_text (GTK_LABEL(dialog->uploadSpeed),"");
+}
+/* 将字节大小转化为可读的字符串形式 */
+static const gchar *getSizePhrase(guint64 size)
+{
+    static gchar string[20];
+    if (size >= 1000 * 1000 * 1000) {	/* GB */
+        g_snprintf(string, 20, "%.1f GB",
+                   (gdouble) size / (1000.0 * 1000.0 * 1000.0));
+    } else if (size >= 1000 * 1000) {
+        g_snprintf(string, 20, "%.1f MB",
+                   (gdouble) size / (1000.0 * 1000.0));
+    } else if (size >= 1000) {
+        g_snprintf(string, 20, "%.1f KB", (gdouble) size / (1000.0));
+    } else {
+        g_snprintf(string, 20, "%lu B", size);
+    }
+    return string;
+}
+static const gchar *getStatePhrase(tr_torrent_activity activity)
+{
+    switch(activity) {
+    case TR_STATUS_SEED:
+        return "Seeding";
+        break;
+    case TR_STATUS_SEED_WAIT:
+        return "Seeding wait";
+        break;
+    case TR_STATUS_CHECK:
+        return "Checking";
+        break;
+    case TR_STATUS_CHECK_WAIT:
+        return "Checking wait";
+        break;
+    case TR_STATUS_DOWNLOAD:
+        return "Downloading";
+        break;
+    case TR_STATUS_DOWNLOAD_WAIT:
+        return "Downloading wait";
+        break;
+    case TR_STATUS_STOPPED:
+        return "Stopped";
+        break;
+    default:
+        return "Unknown";
+        break;
+    }
+    return "Unknown";
 }
 
 /**************************************************
