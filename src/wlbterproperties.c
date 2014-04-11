@@ -44,6 +44,7 @@ static void stopTimeout(WlBterProperties *dialog);
 static void updateTorrentInfo(WlBterProperties *dialog);
 static const gchar *getSizePhrase(guint64 size);
 static const gchar *getStatePhrase(tr_torrent_activity activity);
+static const gchar *getSpeedPhrase(guint64 Kbs);
 
 static void wl_bter_properties_init(WlBterProperties *obj)
 {
@@ -298,7 +299,17 @@ static gboolean onDialogDelete(GtkWidget *dialog,GdkEvent *event,gpointer data)
 static gboolean onTimeout(gpointer data)
 {
     WlBterProperties *dialog=data;
-    g_message("hello world");
+    if(dialog->torrent==NULL) {
+        g_warning("torrent is NULL!!!");
+        return FALSE;
+    }
+
+    const tr_stat *stat=tr_torrentStatCached (dialog->torrent);
+
+    gtk_label_set_text (GTK_LABEL(dialog->downloadSpeed),
+                        getSpeedPhrase (stat->pieceDownloadSpeed_KBps));
+    gtk_label_set_text (GTK_LABEL(dialog->uploadSpeed),
+                        getSpeedPhrase (stat->pieceUploadSpeed_KBps));
     return TRUE;
 }
 
@@ -382,6 +393,20 @@ static const gchar *getSizePhrase(guint64 size)
     }
     return string;
 }
+
+static const gchar *getSpeedPhrase(guint64 Kbs)
+{
+    static gchar label[20];
+    if (Kbs > 1000) {			/* mB/s */
+        g_snprintf(label, 20, " %.2f mB/s", Kbs / 1000);
+    } else if (Kbs < 1) {
+        g_snprintf(label, 20, " %.0f B/s", Kbs * 1000);
+    } else {
+        g_snprintf(label, 20, " %.2f kB/s", Kbs);
+    }
+    return label;
+}
+
 static const gchar *getStatePhrase(tr_torrent_activity activity)
 {
     switch(activity) {
