@@ -156,7 +156,8 @@ static void wl_bter_menu_setter(GObject * object, guint property_id,
 static void onPropertiesActivate(GtkMenuItem * item, gpointer data)
 {
     WlBterMenu *menu = WL_BTER_MENU(data);
-    gtk_widget_show_all (menu->propertiesDialog);
+    //gtk_widget_show_all (menu->propertiesDialog);
+    wl_bter_properties_run (WL_BTER_PROPERTIES(menu->propertiesDialog));
 }
 
 static void onOpenFolderActivate(GtkMenuItem * item, gpointer data)

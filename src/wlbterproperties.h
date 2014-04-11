@@ -45,7 +45,23 @@ typedef struct _WlBterPropertiesClass	WlBterPropertiesClass;
 struct _WlBterProperties {
     GtkDialog parent;
     /*Private*/
+    GtkWidget *torrentSize;
+    GtkWidget *haveSize;
+    GtkWidget *downloadedSize;
+    GtkWidget *uploadedSize;
+    GtkWidget *stateLabel;
+    GtkWidget *downloadSpeed;
+    GtkWidget *uploadSpeed;
+    GtkWidget *errorLabel;
+
+    GtkWidget *locationLabel;
+    GtkWidget *hashLabel;
+    GtkWidget *privacyLabel;
+    GtkWidget *originLabel;
+    GtkWidget *commentView;
+
     tr_torrent *torrent;
+    guint timeout;
 };
 
 struct _WlBterPropertiesClass {
@@ -59,6 +75,8 @@ GType wl_bter_properties_get_type(void) G_GNUC_CONST;
 GtkWidget *wl_bter_properties_new (void);
 GtkWidget *wl_bter_properties_new_with_torrent(tr_torrent *torrent);
 void wl_bter_properties_set_torrent(WlBterProperties *dialog,tr_torrent *torrent);
+
+void wl_bter_properties_run(WlBterProperties *dialog);
 
 
 G_END_DECLS

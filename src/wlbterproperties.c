@@ -36,6 +36,10 @@ static void wl_bter_properties_setter(GObject *object,guint property_id,
 
 static void onDialogResponse(GtkDialog *dialog,gint reponseId,gpointer data);
 static gboolean onDialogDelete(GtkWidget *dialog,GdkEvent *event,gpointer data);
+static gboolean onTimeout(gpointer data);
+
+static void startTimeout(WlBterProperties *dialog);
+static void stopTimeout(WlBterProperties *dialog);
 
 static void wl_bter_properties_init(WlBterProperties *obj)
 {
@@ -51,10 +55,164 @@ static void wl_bter_properties_init(WlBterProperties *obj)
 
 
     GtkWidget *infoBox=gtk_box_new (GTK_ORIENTATION_VERTICAL,5);
+    gtk_container_set_border_width (GTK_CONTAINER(infoBox),5);
     gtk_notebook_append_page (GTK_NOTEBOOK(notebook),infoBox,
                               gtk_label_new ("infomation"));
 
+    /* Activity */
+    GtkWidget *label;
+    label=gtk_label_new ("<b>Activity</b>");
+    gtk_label_set_use_markup (GTK_LABEL(label),TRUE);
+    GtkWidget *activityFrame=gtk_frame_new ("Activity");
+    gtk_frame_set_label_widget (GTK_FRAME(activityFrame),label);
+    gtk_box_pack_start (GTK_BOX(infoBox),activityFrame,FALSE,FALSE,0);
+    gtk_frame_set_shadow_type (GTK_FRAME(activityFrame),GTK_SHADOW_NONE);
+    GtkWidget *activityGrid=gtk_grid_new();
+    gtk_container_add (GTK_CONTAINER(activityFrame),activityGrid);
+    gtk_container_set_border_width (GTK_CONTAINER(activityGrid),8);
+    gtk_widget_set_margin_left (activityGrid,10);
+    gtk_grid_set_row_spacing (GTK_GRID(activityGrid),3);
+    gtk_grid_set_column_spacing (GTK_GRID(activityGrid),12);
+
+    label=gtk_label_new("Torrent Size :");
+    gtk_widget_set_halign (label,GTK_ALIGN_START);
+    gtk_grid_attach (GTK_GRID(activityGrid),label,
+                     0,0,1,1);
+    GtkWidget *torrentSize=gtk_label_new ("12.0 GB (100 pieces @ 256 KB)");
+    gtk_widget_set_halign (torrentSize,GTK_ALIGN_START);
+    gtk_grid_attach (GTK_GRID(activityGrid),torrentSize,
+                     1,0,1,1);
+
+    label=gtk_label_new("Have :");
+    gtk_widget_set_halign (label,GTK_ALIGN_START);
+    gtk_grid_attach (GTK_GRID(activityGrid),label,
+                     0,1,1,1);
+    GtkWidget *haveSize=gtk_label_new ("12.0 GB (100%)");
+    gtk_widget_set_halign (haveSize,GTK_ALIGN_START);
+    gtk_grid_attach (GTK_GRID(activityGrid),haveSize,
+                     1,1,1,1);
+
+    label=gtk_label_new("Downloaded :");
+    gtk_widget_set_halign (label,GTK_ALIGN_START);
+    gtk_grid_attach (GTK_GRID(activityGrid),label,
+                     0,2,1,1);
+    GtkWidget *downloadedSize=gtk_label_new ("12.0 GB");
+    gtk_widget_set_halign (downloadedSize,GTK_ALIGN_START);
+    gtk_grid_attach (GTK_GRID(activityGrid),downloadedSize,1,2,1,1);
+
+    label=gtk_label_new("Uploaded :");
+    gtk_widget_set_halign (label,GTK_ALIGN_START);
+    gtk_grid_attach (GTK_GRID(activityGrid),label,
+                     0,3,1,1);
+    GtkWidget *uploadedSize=gtk_label_new ("12.0 GB (Ratio: 1.0)");
+    gtk_widget_set_halign (uploadedSize,GTK_ALIGN_START);
+    gtk_grid_attach (GTK_GRID(activityGrid),uploadedSize,1,3,1,1);
+
+    label=gtk_label_new("State :");
+    gtk_widget_set_halign (label,GTK_ALIGN_START);
+    gtk_grid_attach (GTK_GRID(activityGrid),label,
+                     0,4,1,1);
+    GtkWidget *stateLabel=gtk_label_new ("Seeding");
+    gtk_widget_set_halign (stateLabel,GTK_ALIGN_START);
+    gtk_grid_attach (GTK_GRID(activityGrid),stateLabel,1,4,1,1);
+
+    label=gtk_label_new("Download Speed :");
+    gtk_widget_set_halign (label,GTK_ALIGN_START);
+    gtk_grid_attach (GTK_GRID(activityGrid),label,
+                     0,5,1,1);
+    GtkWidget *downloadSpeed=gtk_label_new ("15 Kb/s");
+    gtk_widget_set_halign (downloadSpeed,GTK_ALIGN_START);
+    gtk_grid_attach (GTK_GRID(activityGrid),downloadSpeed,1,5,1,1);
+
+    label=gtk_label_new("Upload Speed :");
+    gtk_widget_set_halign (label,GTK_ALIGN_START);
+    gtk_grid_attach (GTK_GRID(activityGrid),label,
+                     0,6,1,1);
+    GtkWidget *uploadSpeed=gtk_label_new("15 Kb/s");
+    gtk_widget_set_halign (uploadSpeed,GTK_ALIGN_START);
+    gtk_grid_attach (GTK_GRID(activityGrid),uploadSpeed,1,6,1,1);
+
+    label=gtk_label_new("Error :");
+    gtk_widget_set_halign (label,GTK_ALIGN_START);
+    gtk_grid_attach (GTK_GRID(activityGrid),label,
+                     0,7,1,1);
+    GtkWidget *errorLabel=gtk_label_new ("No error");
+    gtk_widget_set_halign (errorLabel,GTK_ALIGN_START);
+    gtk_grid_attach (GTK_GRID(activityGrid),errorLabel,1,7,1,1);
+
+
+    /* Details */
+    label=gtk_label_new ("<b>Details</b>");
+    gtk_label_set_use_markup (GTK_LABEL(label),TRUE);
+    GtkWidget *detailsFrame=gtk_frame_new ("Details");
+    gtk_frame_set_label_widget (GTK_FRAME(detailsFrame),label);
+    gtk_box_pack_start (GTK_BOX(infoBox),detailsFrame,TRUE,TRUE,0);
+    gtk_frame_set_shadow_type (GTK_FRAME(detailsFrame),GTK_SHADOW_NONE);
+    GtkWidget *detailsGrid=gtk_grid_new ();
+    gtk_container_add (GTK_CONTAINER(detailsFrame),detailsGrid);
+    gtk_container_set_border_width (GTK_CONTAINER(detailsGrid),8);
+    gtk_widget_set_margin_left (detailsGrid,10);
+    gtk_grid_set_row_spacing (GTK_GRID(detailsGrid),3);
+    gtk_grid_set_column_spacing (GTK_GRID(detailsGrid),12);
+
+    label=gtk_label_new("Location :      ");
+    gtk_widget_set_halign (label,GTK_ALIGN_START);
+    gtk_grid_attach (GTK_GRID(detailsGrid),label,
+                     0,0,1,1);
+    GtkWidget *locationLabel=gtk_label_new ("/home/username/Download");
+    gtk_widget_set_halign (locationLabel,GTK_ALIGN_START);
+    gtk_grid_attach (GTK_GRID(detailsGrid),locationLabel,
+                     1,0,1,1);
+
+    label=gtk_label_new("Hash :");
+    gtk_widget_set_halign (label,GTK_ALIGN_START);
+    gtk_grid_attach (GTK_GRID(detailsGrid),label,
+                     0,1,1,1);
+    GtkWidget *hashLabel=gtk_label_new ("724bcc8a53b854daa844e6bc204b95124a1074d6");
+    gtk_widget_set_halign (hashLabel,GTK_ALIGN_START);
+    gtk_grid_attach (GTK_GRID(detailsGrid),hashLabel,1,1,1,1);
+
+    label=gtk_label_new("Privacy :");
+    gtk_widget_set_halign (label,GTK_ALIGN_START);
+    gtk_grid_attach (GTK_GRID(detailsGrid),label,
+                     0,2,1,1);
+    GtkWidget *privacyLabel=gtk_label_new ("Public torrent");
+    gtk_widget_set_halign (privacyLabel,GTK_ALIGN_START);
+    gtk_grid_attach (GTK_GRID(detailsGrid),privacyLabel,1,2,1,1);
+
+    label=gtk_label_new("Origin :");
+    gtk_widget_set_halign (label,GTK_ALIGN_START);
+    gtk_grid_attach (GTK_GRID(detailsGrid),label,
+                     0,3,1,1);
+    GtkWidget *originLabel=gtk_label_new ("Created on 17 Dec 2013");
+    gtk_widget_set_halign (originLabel,GTK_ALIGN_START);
+    gtk_grid_attach (GTK_GRID(detailsGrid),originLabel,1,3,1,1);
+
+    label=gtk_label_new("Comment :");
+    gtk_widget_set_halign (label,GTK_ALIGN_START);
+    gtk_grid_attach (GTK_GRID(detailsGrid),label,
+                     0,4,1,1);
+    GtkWidget *commentView=gtk_text_view_new ();
+    gtk_text_view_set_editable(GTK_TEXT_VIEW(commentView),FALSE);
+    gtk_grid_attach (GTK_GRID(detailsGrid),commentView,
+                     1,4,1,1);
+
+    gtk_widget_show_all (box);
+
+    obj->torrentSize=torrentSize;
+    obj->haveSize=haveSize;
+    obj->downloadedSize=downloadedSize;
+    obj->uploadedSize=uploadedSize;
+    obj->stateLabel=stateLabel;
+    obj->downloadSpeed=downloadSpeed;
+    obj->uploadSpeed=uploadSpeed;
+    obj->locationLabel=locationLabel;
+    obj->hashLabel=hashLabel;
+    obj->privacyLabel=privacyLabel;
+    obj->originLabel=originLabel;
+    obj->commentView=commentView;
     obj->torrent=NULL;
+    obj->timeout=0;
 
     /* signals */
     g_signal_connect(G_OBJECT(obj),"response",
@@ -113,12 +271,30 @@ static void wl_bter_properties_setter(GObject *object,guint property_id,
 static void onDialogResponse(GtkDialog *dialog,gint reponseId,gpointer data)
 {
     gtk_widget_hide (GTK_WIDGET(dialog));
+    stopTimeout(WL_BTER_PROPERTIES(dialog));
 }
 
 static gboolean onDialogDelete(GtkWidget *dialog,GdkEvent *event,gpointer data)
 {
     gtk_dialog_response (GTK_DIALOG(dialog),GTK_RESPONSE_CLOSE);
     return TRUE;
+}
+
+static gboolean onTimeout(gpointer data)
+{
+    WlBterProperties *dialog=data;
+    g_message("hello world");
+    return TRUE;
+}
+
+static void startTimeout(WlBterProperties *dialog)
+{
+    dialog->timeout=g_timeout_add (1000,onTimeout,dialog);
+}
+static void stopTimeout(WlBterProperties *dialog)
+{
+    g_source_remove (dialog->timeout);
+    dialog->timeout=0;
 }
 
 /**************************************************
@@ -142,5 +318,13 @@ void wl_bter_properties_set_torrent(WlBterProperties *dialog,tr_torrent *torrent
 {
     g_return_if_fail(WL_IS_BTER_PROPERTIES(dialog));
     g_object_set(G_OBJECT(dialog),"torrent",torrent,NULL);
+}
+
+void wl_bter_properties_run(WlBterProperties *dialog)
+{
+    g_return_if_fail(WL_IS_BTER_PROPERTIES(dialog));
+
+    startTimeout (dialog);
+    gtk_dialog_run(GTK_DIALOG(dialog));
 }
 
