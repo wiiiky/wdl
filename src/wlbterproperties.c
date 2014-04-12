@@ -46,6 +46,14 @@ static const gchar *getSizePhrase(guint64 size);
 static const gchar *getStatePhrase(tr_torrent_activity activity);
 static const gchar *getSpeedPhrase(guint64 Kbs);
 
+enum {
+    PEER_VIEW_ADDR=0,
+    PEER_VIEW_CLIENT,
+    PEER_VIEW_PRO,
+    PEER_VIEW_UP,
+    PEER_VIEW_DOWN,
+};
+
 static void wl_bter_properties_init(WlBterProperties *obj)
 {
     gtk_container_set_border_width (GTK_CONTAINER(obj),8);
@@ -210,6 +218,37 @@ static void wl_bter_properties_init(WlBterProperties *obj)
     gtk_grid_attach (GTK_GRID(detailsGrid),commentView,
                      1,5,1,1);
 
+    /* Peers */
+    GtkWidget *peerBox=gtk_box_new (GTK_ORIENTATION_VERTICAL,5);
+    gtk_container_set_border_width (GTK_CONTAINER(peerBox),5);
+    gtk_notebook_append_page (GTK_NOTEBOOK(notebook),peerBox,
+                              gtk_label_new ("Peers"));
+
+    GtkWidget *scrolledWindow=gtk_scrolled_window_new (NULL,NULL);
+    gtk_box_pack_start (GTK_BOX(peerBox),scrolledWindow,TRUE,TRUE,0);
+    GtkListStore *listStore=gtk_list_store_new (5,G_TYPE_STRING,G_TYPE_STRING,G_TYPE_STRING,
+                            G_TYPE_STRING,G_TYPE_STRING);
+    GtkWidget *peerView=gtk_tree_view_new_with_model (GTK_TREE_MODEL(listStore));
+    gtk_container_add(GTK_CONTAINER(scrolledWindow),peerView);
+    GtkCellRenderer *renderer=gtk_cell_renderer_text_new ();
+    GtkTreeViewColumn *col=gtk_tree_view_column_new_with_attributes("Address",
+                           renderer,
+                           "text",PEER_VIEW_ADDR,NULL);
+    gtk_tree_view_append_column (GTK_TREE_VIEW(peerView),col);
+
+    renderer=gtk_cell_renderer_text_new();
+    col=gtk_tree_view_column_new_with_attributes("Client",renderer,"text",PEER_VIEW_CLIENT,NULL);
+    gtk_tree_view_append_column (GTK_TREE_VIEW(peerView),col);
+    renderer=gtk_cell_renderer_text_new();
+    col=gtk_tree_view_column_new_with_attributes("%",renderer,"text",PEER_VIEW_PRO,NULL);
+    gtk_tree_view_append_column (GTK_TREE_VIEW(peerView),col);
+    renderer=gtk_cell_renderer_text_new();
+    col=gtk_tree_view_column_new_with_attributes("Up",renderer,"text",PEER_VIEW_UP,NULL);
+    gtk_tree_view_append_column (GTK_TREE_VIEW(peerView),col);
+    renderer=gtk_cell_renderer_text_new();
+    col=gtk_tree_view_column_new_with_attributes("Down",renderer,"text",PEER_VIEW_DOWN,NULL);
+    gtk_tree_view_append_column (GTK_TREE_VIEW(peerView),col);
+
     gtk_widget_show_all (box);
 
     obj->torrentSize=torrentSize;
@@ -226,6 +265,8 @@ static void wl_bter_properties_init(WlBterProperties *obj)
     obj->commentView=commentView;
     obj->creatorLabel=creatorLabel;
     obj->errorLabel=errorLabel;
+    obj->peerView=peerView;
+    obj->peerStore=listStore;
     obj->torrent=NULL;
     obj->timeout=0;
 
@@ -323,6 +364,33 @@ static gboolean onTimeout(gpointer data)
     /* 当前状态 */
     gtk_label_set_text (GTK_LABEL(dialog->stateLabel),getStatePhrase(stat->activity));
     g_free (have);
+
+    /* peers 5秒更新一次 */
+    static gint five=5;
+    if(five<=0) {
+        five=5;
+        gint peerCount=0,i;
+        tr_peer_stat *peerStats=tr_torrentPeers (dialog->torrent,&peerCount);
+        GtkListStore *listStore=dialog->peerStore;
+        gtk_list_store_clear (listStore);
+        for(i=0; i<peerCount; i++) {
+            GtkTreeIter iter;
+            gtk_list_store_append (listStore,&iter);
+            gchar progress[10];
+            g_snprintf(progress,10,"%.1f%%",peerStats[i].progress*100.0);
+            gchar up[10];
+            g_snprintf(up,10,"%s",getSpeedPhrase (peerStats[i].rateToPeer_KBps));
+            gtk_list_store_set (listStore,&iter,PEER_VIEW_ADDR,
+                                peerStats[i].addr,
+                                PEER_VIEW_CLIENT,peerStats[i].client,
+                                PEER_VIEW_PRO,progress,
+                                PEER_VIEW_UP,up,
+                                PEER_VIEW_DOWN,getSpeedPhrase (peerStats[i].rateToClient_KBps),
+                                -1);
+        }
+        tr_torrentPeersFree (peerStats,peerCount);
+    } else
+        five--;
     return TRUE;
 }
 
@@ -411,11 +479,11 @@ static const gchar *getSpeedPhrase(guint64 Kbs)
 {
     static gchar label[20];
     if (Kbs > 1000) {			/* mB/s */
-        g_snprintf(label, 20, " %.2f mB/s", Kbs / 1000);
+        g_snprintf(label, 20, "%.2f mB/s", Kbs / 1000);
     } else if (Kbs < 1) {
-        g_snprintf(label, 20, " %.0f B/s", Kbs * 1000);
+        g_snprintf(label, 20, "%.0f B/s", Kbs * 1000);
     } else {
-        g_snprintf(label, 20, " %.2f kB/s", Kbs);
+        g_snprintf(label, 20, "%.2f kB/s", Kbs);
     }
     return label;
 }

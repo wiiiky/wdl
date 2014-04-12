@@ -53,6 +53,8 @@ struct _WlBterProperties {
     GtkWidget *downloadSpeed;
     GtkWidget *uploadSpeed;
     GtkWidget *errorLabel;
+    GtkWidget *peerView;
+    GtkListStore *peerStore;
 
     GtkWidget *locationLabel;
     GtkWidget *hashLabel;
