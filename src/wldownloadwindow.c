@@ -472,12 +472,8 @@ static void wl_dl_window_open_torrent(GtkMenuItem * item, gpointer data)
         tr_torrent *torrent =
             wl_bt_file_chooser_run(window->bf_chooser, file);
         if (torrent) {
-            g_message("torrent");
-            //tr_torrentRemove(torrent, FALSE, NULL);
             WlBter *bter =
                 wl_downloader_append_bter(window->downloader, torrent);
-        } else {
-            g_message("cancelled");
         }
     }
     g_free(file);

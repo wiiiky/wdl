@@ -17,6 +17,7 @@
 
 #include "wlbter.h"
 #include "wlbtermenu.h"
+#include "icons.h"
 
 
 enum {
@@ -433,6 +434,21 @@ static inline void wl_bter_set_rtime(WlBter * bter, gdouble Kbs,
     gtk_label_set_text(GTK_LABEL(bter->timeLabel), label);
 }
 
+static void updateIcon(WlBter *bter)
+{
+    if(bter->torrent==NULL)
+        return;
+    tr_info *torInfo=tr_torrentInfo (bter->torrent);
+    if(torInfo->isMultifile) {
+        gtk_image_set_from_icon_name(GTK_IMAGE(bter->icon),"folder",
+                                     GTK_ICON_SIZE_DIALOG);
+    } else {
+        gtk_image_set_from_pixbuf (GTK_IMAGE(bter->icon),
+                                   wdl_get_pixbuf_from_filename (torInfo->files[0].name,
+                                           GTK_ICON_SIZE_DIALOG));
+    }
+}
+
 /**********************************************************
  * PUBLIC
  *******************************************************/
@@ -460,6 +476,7 @@ WlBter *wl_bter_new(tr_session * session, tr_torrent * torrent)
     /* 已下载数据和总数据 */
     wl_bter_set_total_size(bter, stat->sizeWhenDone);
     wl_bter_set_dl_size(bter, stat->haveValid+stat->haveUnchecked);
+    updateIcon(bter);
     /* 剩余时间 */
     //wl_bter_set_rtime(bter, stat->pieceDownloadSpeed_KBps,
     //                stat->leftUntilDone);
