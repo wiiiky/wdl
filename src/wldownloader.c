@@ -428,6 +428,7 @@ WlHttper *wl_downloader_append_httper(WlDownloader * dl, const gchar * url,
     WlHttper *httper = wl_httper_new(url, path);
     GtkWidget *menu = wl_downloader_httper_popmenu(httper);
     wl_httper_set_user_data(httper, dl);
+    wl_httper_start (httper);
     g_signal_connect(G_OBJECT(httper), "button-press-event",
                      G_CALLBACK(wl_downloader_pressed_callback), dl);
 
@@ -468,6 +469,7 @@ WlBter *wl_downloader_append_bter(WlDownloader * dl, tr_torrent * torrent)
     //wl_bter_menu_new(bter);
     wl_downloader_bter_popmenu(bter);
     wl_bter_set_user_data(bter, dl);
+    wl_bter_start (bter);
 
     g_signal_connect(G_OBJECT(bter), "button-press-event",
                      G_CALLBACK(wl_downloader_pressed_callback), dl);

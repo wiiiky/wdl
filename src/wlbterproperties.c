@@ -306,10 +306,23 @@ static gboolean onTimeout(gpointer data)
 
     const tr_stat *stat=tr_torrentStatCached (dialog->torrent);
 
+    /* 下载和上传速度 */
     gtk_label_set_text (GTK_LABEL(dialog->downloadSpeed),
                         getSpeedPhrase (stat->pieceDownloadSpeed_KBps));
     gtk_label_set_text (GTK_LABEL(dialog->uploadSpeed),
                         getSpeedPhrase (stat->pieceUploadSpeed_KBps));
+    /* 已下载数据 */
+    gtk_label_set_text (GTK_LABEL(dialog->downloadedSize),
+                        getSizePhrase (stat->haveUnchecked+stat->haveValid));
+    /* 已经有的数据(已验证) */
+    gchar *have=g_strdup_printf("%s (%.1f%%)",getSizePhrase (stat->haveValid),
+                                stat->percentDone*100.0);
+    gtk_label_set_text (GTK_LABEL(dialog->haveSize),have);
+    /* 上传的数据 */
+    gtk_label_set_text (GTK_LABEL(dialog->uploadedSize),getSizePhrase (stat->uploadedEver));
+    /* 当前状态 */
+    gtk_label_set_text (GTK_LABEL(dialog->stateLabel),getStatePhrase(stat->activity));
+    g_free (have);
     return TRUE;
 }
 
