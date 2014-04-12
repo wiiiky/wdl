@@ -52,6 +52,8 @@ enum {
     PEER_VIEW_PRO,
     PEER_VIEW_UP,
     PEER_VIEW_DOWN,
+    PEER_VIEW_FLAG,
+    PEER_VIEW_COUNT,
 };
 
 static void wl_bter_properties_init(WlBterProperties *obj)
@@ -226,8 +228,8 @@ static void wl_bter_properties_init(WlBterProperties *obj)
 
     GtkWidget *scrolledWindow=gtk_scrolled_window_new (NULL,NULL);
     gtk_box_pack_start (GTK_BOX(peerBox),scrolledWindow,TRUE,TRUE,0);
-    GtkListStore *listStore=gtk_list_store_new (5,G_TYPE_STRING,G_TYPE_STRING,G_TYPE_STRING,
-                            G_TYPE_STRING,G_TYPE_STRING);
+    GtkListStore *listStore=gtk_list_store_new (PEER_VIEW_COUNT,G_TYPE_STRING,G_TYPE_STRING,G_TYPE_STRING,
+                            G_TYPE_STRING,G_TYPE_STRING,G_TYPE_STRING);
     GtkWidget *peerView=gtk_tree_view_new_with_model (GTK_TREE_MODEL(listStore));
     gtk_container_add(GTK_CONTAINER(scrolledWindow),peerView);
     GtkCellRenderer *renderer=gtk_cell_renderer_text_new ();
@@ -238,6 +240,9 @@ static void wl_bter_properties_init(WlBterProperties *obj)
 
     renderer=gtk_cell_renderer_text_new();
     col=gtk_tree_view_column_new_with_attributes("Client",renderer,"text",PEER_VIEW_CLIENT,NULL);
+    gtk_tree_view_append_column (GTK_TREE_VIEW(peerView),col);
+    renderer=gtk_cell_renderer_text_new();
+    col=gtk_tree_view_column_new_with_attributes("Flag",renderer,"text",PEER_VIEW_FLAG,NULL);
     gtk_tree_view_append_column (GTK_TREE_VIEW(peerView),col);
     renderer=gtk_cell_renderer_text_new();
     col=gtk_tree_view_column_new_with_attributes("%",renderer,"text",PEER_VIEW_PRO,NULL);
@@ -365,10 +370,11 @@ static gboolean onTimeout(gpointer data)
     gtk_label_set_text (GTK_LABEL(dialog->stateLabel),getStatePhrase(stat->activity));
     g_free (have);
 
-    /* peers 5秒更新一次 */
-    static gint five=5;
+    /* peers 8秒更新一次 */
+#define CYCLE   (8)
+    static gint five=0;
     if(five<=0) {
-        five=5;
+        five=CYCLE;
         gint peerCount=0,i;
         tr_peer_stat *peerStats=tr_torrentPeers (dialog->torrent,&peerCount);
         GtkListStore *listStore=dialog->peerStore;
@@ -386,11 +392,13 @@ static gboolean onTimeout(gpointer data)
                                 PEER_VIEW_PRO,progress,
                                 PEER_VIEW_UP,up,
                                 PEER_VIEW_DOWN,getSpeedPhrase (peerStats[i].rateToClient_KBps),
+                                PEER_VIEW_FLAG,peerStats[i].flagStr,
                                 -1);
         }
         tr_torrentPeersFree (peerStats,peerCount);
     } else
         five--;
+#undef CYCLE
     return TRUE;
 }
 
