@@ -285,22 +285,24 @@ static inline void wl_bt_file_chooser_remove_torrent(WlBtFileChooser *
     }
 }
 
-static void wl_bt_file_chooser_open(GtkWidget * button, gpointer data)
+/*
+ * 如果有文件被选中返回TRUE
+ * 否则返回FALSE
+ */
+static gboolean isFileChoosed(WlBtFileChooser *chooser)
 {
-    WlBtFileChooser *chooser = data;
-    GMainLoop *loop = chooser->loop;
-    gtk_widget_hide(GTK_WIDGET(chooser->window));
-    if (g_main_loop_is_running(loop))
-        g_main_loop_quit(loop);
-
     GtkTreeModel *model =
         (GtkTreeModel *) gtk_builder_get_object(GTK_BUILDER(chooser),
-                "file_tree");
-    wl_bt_file_chooser_remove_torrent(chooser);
-    wdl_set_all_file_dl(model, chooser->torrent);
-    tr_torrentSetDownloadDir(chooser->torrent,
-                             wl_bt_file_chooser_get_path(chooser));
-    //g_message("%s",wl_bt_file_chooser_get_path (chooser));
+                UI_TREESTORE);
+    gboolean checked;
+    gboolean inc;
+    GtkTreeIter iter;
+
+    gtk_tree_model_get_iter_first (model,&iter);
+    gtk_tree_model_get (model,&iter,TREE_STORE_COL_DL,&checked,
+                        TREE_STORE_COL_INC,&inc,-1);
+
+    return inc||checked;
 }
 
 static void wl_bt_file_chooser_cancel(GtkWidget * button, gpointer data)
@@ -313,6 +315,29 @@ static void wl_bt_file_chooser_cancel(GtkWidget * button, gpointer data)
     chooser->torrent = NULL;
     if (g_main_loop_is_running(loop))
         g_main_loop_quit(loop);
+}
+
+static void wl_bt_file_chooser_open(GtkWidget * button, gpointer data)
+{
+    WlBtFileChooser *chooser = data;
+    GMainLoop *loop = chooser->loop;
+    gtk_widget_hide(GTK_WIDGET(chooser->window));
+    if (g_main_loop_is_running(loop))
+        g_main_loop_quit(loop);
+
+    if(isFileChoosed(chooser)==FALSE) {
+        /* 没有一个文件被选中,相当于取消 TODO */
+        wl_bt_file_chooser_cancel(button,data);
+        return;
+    }
+
+    GtkTreeModel *model =
+        (GtkTreeModel *) gtk_builder_get_object(GTK_BUILDER(chooser),
+                UI_TREESTORE);
+    wl_bt_file_chooser_remove_torrent(chooser);
+    wdl_set_all_file_dl(model, chooser->torrent);
+    tr_torrentSetDownloadDir(chooser->torrent,
+                             wl_bt_file_chooser_get_path(chooser));
 }
 
 /* 将字节大小转化为可读的字符串形式 */
