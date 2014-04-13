@@ -189,11 +189,11 @@ static void wl_download_window_init(WlDownloadWindow * window)
     g_signal_connect(G_OBJECT(btMenuItem), "activate",
                      G_CALLBACK(wl_dl_window_open_torrent), window);
     g_signal_connect(G_OBJECT(quitMenuItem), "activate",
-                     G_CALLBACK(wl_dl_window_destroy), NULL);
+                     G_CALLBACK(wl_dl_window_destroy), window);
     g_signal_connect(G_OBJECT(aboutMenuItem), "activate",
                      G_CALLBACK(wl_dl_window_show_about_dialog), NULL);
     g_signal_connect(G_OBJECT(window), "destroy",
-                     G_CALLBACK(wl_dl_window_destroy), NULL);
+                     G_CALLBACK(wl_dl_window_destroy),window);
 
     window->start = startButton;
     window->pause = pauseButton;
@@ -347,7 +347,7 @@ static void wl_dl_window_bter_status_callback(WlBter * bter, gpointer data)
 
 static void wl_dl_window_destroy(GtkWidget * window, gpointer data)
 {
-    WlDownloadWindow *dlWindow=WL_DOWNLOAD_WINDOW(window);
+    WlDownloadWindow *dlWindow=WL_DOWNLOAD_WINDOW(data);
     wl_downloader_save_tasks (dlWindow->downloader);
     gtk_main_quit();
 }
