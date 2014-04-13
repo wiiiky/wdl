@@ -501,7 +501,7 @@ static GtkWidget *wl_dl_window_about_dialog(void)
                                             WL_ICON_NAME);
         gtk_about_dialog_set_comments(GTK_ABOUT_DIALOG(dialog),
                                       "A Simple Download Manager");
-        gtk_about_dialog_set_version(GTK_ABOUT_DIALOG(dialog), "0.1");
+        gtk_about_dialog_set_version(GTK_ABOUT_DIALOG(dialog), "1.0");
         gtk_about_dialog_set_website(GTK_ABOUT_DIALOG(dialog),
                                      "https://launchpad.net/wdl");
         const gchar *authors[] = {
