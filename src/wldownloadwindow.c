@@ -22,6 +22,8 @@
 #define WL_DL_WINDOW_WIDTH  (600)
 #define WL_DL_WINDOW_HEIGHT (420)
 
+#define WL_ICON_NAME "gnome-terminal"
+
 enum {
     WL_DL_WINDOW_PROPERTY_TITLE = 1,
 };
@@ -75,7 +77,7 @@ static void wl_download_window_init(WlDownloadWindow * window)
 {
     gtk_window_set_title(GTK_WINDOW(window), WL_DL_WINDOW_TITLE);
     //gtk_window_set_icon_name (GTK_WINDOW(window),"midori");
-    gtk_window_set_default_icon_name("midori");
+    gtk_window_set_default_icon_name(WL_ICON_NAME);
     gtk_widget_set_size_request(GTK_WIDGET(window),
                                 WL_DL_WINDOW_WIDTH, WL_DL_WINDOW_HEIGHT);
     gtk_container_set_border_width(GTK_CONTAINER(window), 0);
@@ -496,7 +498,7 @@ static GtkWidget *wl_dl_window_about_dialog(void)
         gtk_about_dialog_set_copyright(GTK_ABOUT_DIALOG(dialog),
                                        "Copyright (c) Wiky L");
         gtk_about_dialog_set_logo_icon_name(GTK_ABOUT_DIALOG(dialog),
-                                            "midori");
+                                            WL_ICON_NAME);
         gtk_about_dialog_set_comments(GTK_ABOUT_DIALOG(dialog),
                                       "A Simple Download Manager");
         gtk_about_dialog_set_version(GTK_ABOUT_DIALOG(dialog), "0.1");
