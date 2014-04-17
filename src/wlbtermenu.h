@@ -39,18 +39,18 @@ typedef struct _WlBterMenuClass WlBterMenuClass;
 
 
 struct _WlBterMenu {
-    GtkMenu parent;
-    /*Private */
-    WlBter *bter;
+	GtkMenu parent;
+	/*Private */
+	WlBter *bter;
 
-    GtkWidget *startDl;
-    GtkWidget *pauseDl;
-    GtkWidget *propertiesDialog;
+	GtkWidget *startDl;
+	GtkWidget *pauseDl;
+	GtkWidget *propertiesDialog;
 };
 
 struct _WlBterMenuClass {
-    GtkMenuClass parent_klass;
-    /*Private */
+	GtkMenuClass parent_klass;
+	/*Private */
 };
 
 GType wl_bter_menu_get_type(void) G_GNUC_CONST;

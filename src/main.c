@@ -4,11 +4,11 @@
 
 int main(int argc, char *argv[])
 {
-    gtk_init(&argc, &argv);
+	gtk_init(&argc, &argv);
 
-    WlDownloadWindow *window = wl_download_window_new();
+	WlDownloadWindow *window = wl_download_window_new();
 
-    gtk_widget_show_all(GTK_WIDGET(window));
-    gtk_main();
-    return 0;
+	gtk_widget_show_all(GTK_WIDGET(window));
+	gtk_main();
+	return 0;
 }

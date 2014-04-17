@@ -43,47 +43,47 @@ typedef enum _WlBterStatus WlBterStatus;
 typedef void (*WlBterStatusCallback) (WlBter * bter, gpointer data);
 
 enum _WlBterStatus {
-    WL_BTER_STATUS_START = 11111,
-    WL_BTER_STATUS_PAUSE = 22222,
-    WL_BTER_STATUS_COMPLETE = 33333,
-    WL_BTER_STATUS_NOT_START = 44444,
-    WL_BTER_STATUS_ABORT = 55555,
+	WL_BTER_STATUS_START = 11111,
+	WL_BTER_STATUS_PAUSE = 22222,
+	WL_BTER_STATUS_COMPLETE = 33333,
+	WL_BTER_STATUS_NOT_START = 44444,
+	WL_BTER_STATUS_ABORT = 55555,
 };
 
 struct _WlBter {
-    GtkEventBox parent;
-    /* GUI */
-    GtkWidget *icon;
-    GtkWidget *titleLabel;
-    GtkWidget *dlLabel;
-    GtkWidget *totalLabel;
-    GtkWidget *speedLabel;
-    GtkWidget *timeLabel;
-    GtkWidget *progressBar;
-    /* Menu */
-    GtkWidget *popMenu;
+	GtkEventBox parent;
+	/* GUI */
+	GtkWidget *icon;
+	GtkWidget *titleLabel;
+	GtkWidget *dlLabel;
+	GtkWidget *totalLabel;
+	GtkWidget *speedLabel;
+	GtkWidget *timeLabel;
+	GtkWidget *progressBar;
+	/* Menu */
+	GtkWidget *popMenu;
 
-    guint64 totalLast;
+	guint64 totalLast;
 
-    /* libtransmission的会话，由外部传递进来 */
-    tr_session *session;
-    /* torrent的指针，可以是外部传递，也可以是自身创建 */
-    tr_torrent *torrent;
-    /* 当前的下载状态 */
-    WlBterStatus status;
-    /* 定时器 */
-    guint timeout;
+	/* libtransmission的会话，由外部传递进来 */
+	tr_session *session;
+	/* torrent的指针，可以是外部传递，也可以是自身创建 */
+	tr_torrent *torrent;
+	/* 当前的下载状态 */
+	WlBterStatus status;
+	/* 定时器 */
+	guint timeout;
 
-    /* 状态改变回调函数 */
-    WlBterStatusCallback statusCB;
-    gpointer statusCBData;
+	/* 状态改变回调函数 */
+	WlBterStatusCallback statusCB;
+	gpointer statusCBData;
 
-    /* */
-    gpointer userData;
+	/* */
+	gpointer userData;
 };
 
 struct _WlBterClass {
-    GtkEventBoxClass parentClass;
+	GtkEventBoxClass parentClass;
 };
 
 GType wl_bter_get_type(void) G_GNUC_CONST;
@@ -94,7 +94,7 @@ GType wl_bter_get_type(void) G_GNUC_CONST;
 WlBter *wl_bter_new(tr_session * session, tr_torrent * torrent);
 WlBter *wl_bter_new_from_file(tr_session * session, const gchar * path);
 WlBter *wl_bter_new_from_magnetlink(tr_session * session,
-                                    const gchar * link);
+									const gchar * link);
 
 /*
  * @description 开始下载任务
@@ -133,8 +133,8 @@ void wl_bter_clear_highlight(WlBter * bter);
  * @description 设置状态改变回调函数
  */
 void wl_bter_set_status_callback(WlBter * bter,
-                                 WlBterStatusCallback callback,
-                                 gpointer data);
+								 WlBterStatusCallback callback,
+								 gpointer data);
 
 /*
  * @description 设置右键菜单

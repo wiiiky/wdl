@@ -37,19 +37,19 @@ typedef struct _WlDownloadWindow WlDownloadWindow;
 typedef struct _WlDownloadWindowClass WlDownloadWindowClass;
 
 struct _WlDownloadWindow {
-    GtkWindow parent;			/* Parent */
+	GtkWindow parent;			/* Parent */
 
-    GtkToolItem *start;
-    GtkToolItem *pause;
-    GtkToolItem *remove;
-    WlDownloader *downloader;
-    WlUrlDialog *urlDialog;
+	GtkToolItem *start;
+	GtkToolItem *pause;
+	GtkToolItem *remove;
+	WlDownloader *downloader;
+	WlUrlDialog *urlDialog;
 
-    WlBtFileChooser *bf_chooser;
+	WlBtFileChooser *bf_chooser;
 };
 
 struct _WlDownloadWindowClass {
-    GtkWindowClass parentClass;
+	GtkWindowClass parentClass;
 };
 
 GType wl_download_window_get_type(void) G_GNUC_CONST;

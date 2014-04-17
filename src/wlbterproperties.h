@@ -26,7 +26,6 @@
 #include "libtransmission/variant.h"
 
 G_BEGIN_DECLS
-
 /* Macro for casting a pointer to a WlBterProperties or WlBterPropertiesClass pointer.
  * Macros for testing whether `object' or `klass' are of type WL_TYPE_BTER_PROPERTIES.
  */
@@ -36,52 +35,50 @@ G_BEGIN_DECLS
 #define WL_IS_BTER_PROPERTIES(obj)	(G_TYPE_CHECK_INSTANCE_TYPE ((obj), WL_TYPE_BTER_PROPERTIES))
 #define WL_IS_BTER_PROPERTIES_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE ((klass), WL_TYPE_BTER_PROPERTIES))
 #define WL_BTER_PROPERTIES_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS ((obj), WL_TYPE_BTER_PROPERTIES, WlBterPropertiesClass))
-
-
-typedef struct _WlBterProperties	WlBterProperties;
-typedef struct _WlBterPropertiesClass	WlBterPropertiesClass;
+typedef struct _WlBterProperties WlBterProperties;
+typedef struct _WlBterPropertiesClass WlBterPropertiesClass;
 
 
 struct _WlBterProperties {
-    GtkDialog parent;
-    /*Private*/
-    GtkWidget *torrentSize;
-    GtkWidget *haveSize;
-    GtkWidget *downloadedSize;
-    GtkWidget *uploadedSize;
-    GtkWidget *stateLabel;
-    GtkWidget *downloadSpeed;
-    GtkWidget *uploadSpeed;
-    GtkWidget *errorLabel;
-    GtkWidget *peerView;
-    GtkListStore *peerStore;
+	GtkDialog parent;
+	/*Private */
+	GtkWidget *torrentSize;
+	GtkWidget *haveSize;
+	GtkWidget *downloadedSize;
+	GtkWidget *uploadedSize;
+	GtkWidget *stateLabel;
+	GtkWidget *downloadSpeed;
+	GtkWidget *uploadSpeed;
+	GtkWidget *errorLabel;
+	GtkWidget *peerView;
+	GtkListStore *peerStore;
 
-    GtkWidget *locationLabel;
-    GtkWidget *hashLabel;
-    GtkWidget *privacyLabel;
-    GtkWidget *originLabel;
-    GtkWidget *commentView;
-    GtkWidget *creatorLabel;
+	GtkWidget *locationLabel;
+	GtkWidget *hashLabel;
+	GtkWidget *privacyLabel;
+	GtkWidget *originLabel;
+	GtkWidget *commentView;
+	GtkWidget *creatorLabel;
 
-    tr_torrent *torrent;
-    guint timeout;
+	tr_torrent *torrent;
+	guint timeout;
 };
 
 struct _WlBterPropertiesClass {
-    GtkDialogClass parentClass;
-    /*Private*/
+	GtkDialogClass parentClass;
+	/*Private */
 };
 
 GType wl_bter_properties_get_type(void) G_GNUC_CONST;
 
 /* Public */
-GtkWidget *wl_bter_properties_new (void);
-GtkWidget *wl_bter_properties_new_with_torrent(tr_torrent *torrent);
-void wl_bter_properties_set_torrent(WlBterProperties *dialog,tr_torrent *torrent);
+GtkWidget *wl_bter_properties_new(void);
+GtkWidget *wl_bter_properties_new_with_torrent(tr_torrent * torrent);
+void wl_bter_properties_set_torrent(WlBterProperties * dialog,
+									tr_torrent * torrent);
 
-void wl_bter_properties_run(WlBterProperties *dialog);
+void wl_bter_properties_run(WlBterProperties * dialog);
 
 
 G_END_DECLS
-
 #endif

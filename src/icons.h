@@ -15,14 +15,14 @@
 const char *gtr_get_mime_type_from_filename(const char *file);
 
 GdkPixbuf *gtr_get_mime_type_icon(const char *mime_type,
-                                  GtkIconSize icon_size,
-                                  GtkWidget * for_widget);
+								  GtkIconSize icon_size,
+								  GtkWidget * for_widget);
 
 /*
  * icons.[ch]是我从transmission的源代码中提取出来的，
  * 我自己加入了下面这个函数，只是对上面两个函数的简单封装
  */
 GdkPixbuf *wdl_get_pixbuf_from_filename(const gchar * file,
-                                        GtkIconSize size);
+										GtkIconSize size);
 
 #endif

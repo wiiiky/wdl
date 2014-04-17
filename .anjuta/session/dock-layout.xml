@@ -28,7 +28,7 @@
             <notebook orientation="vertical" locked="no" iconified="no" closed="yes" page="-1"/>
           </paned>
         </paned>
-        <notebook orientation="vertical" locked="no" iconified="no" closed="yes" page="-1">
+        <notebook orientation="vertical" locked="no" iconified="no" closed="yes" page="5">
           <item name="AnjutaDebuggerStack" orientation="horizontal" locked="no" iconified="no" closed="yes"/>
           <item name="AnjutaDebuggerLocals" orientation="horizontal" locked="no" iconified="no" closed="yes"/>
           <item name="AnjutaDebuggerWatch" orientation="vertical" locked="no" iconified="no" closed="yes"/>

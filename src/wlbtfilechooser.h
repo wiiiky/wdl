@@ -47,18 +47,18 @@ typedef struct _WlBtFileChooserClass WlBtFileChooserClass;
 
 
 struct _WlBtFileChooser {
-    GtkBuilder parent;
-    /*Private */
-    GtkWidget *window;
-    tr_torrent *torrent;
-    tr_ctor *ctor;
-    gchar *default_path;		/* 默认的下载位置 */
-    GMainLoop *loop;
+	GtkBuilder parent;
+	/*Private */
+	GtkWidget *window;
+	tr_torrent *torrent;
+	tr_ctor *ctor;
+	gchar *default_path;		/* 默认的下载位置 */
+	GMainLoop *loop;
 };
 
 struct _WlBtFileChooserClass {
-    GtkBuilderClass parent_class;
-    /*Private */
+	GtkBuilderClass parent_class;
+	/*Private */
 };
 
 GType wl_bt_file_chooser_get_type(void) G_GNUC_CONST;
@@ -73,14 +73,14 @@ WlBtFileChooser *wl_bt_file_chooser_new(tr_ctor * ctor);
  * @description 设置默认的下载位置
  */
 void wl_bt_file_chooser_set_download_path(WlBtFileChooser * chooser,
-        const gchar * path);
+										  const gchar * path);
 /*
  * @description 显示选择文件对话框
  * @param path 种子文件路径
  * @return 返回有效的tr_torrent，取消返回NULL
  */
 tr_torrent *wl_bt_file_chooser_run(WlBtFileChooser * chooser,
-                                   const gchar * path);
+								   const gchar * path);
 
 /*
  * @description 获取种子的保存路径
@@ -91,7 +91,7 @@ const gchar *wl_bt_file_chooser_get_path(WlBtFileChooser * chooser);
  * @description 获取种子元数据文件的路径
  */
 const gchar *wl_bt_file_chooser_get_torrent_file(WlBtFileChooser *
-        chooser);
+												 chooser);
 /*
  * @description 是否直接开始下载
  */

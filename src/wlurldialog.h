@@ -36,21 +36,21 @@ typedef struct _WlUrlDialog WlUrlDialog;
 typedef struct _WlUrlDialogClass WlUrlDialogClass;
 
 struct _WlUrlDialog {
-    GtkDialog parent;
-    GtkWidget *urlEntry;
-    GtkWidget *fileChooser;
-    GtkWidget *filenameEntry;
-    GtkWidget *expander;
-    GtkWidget *infoLabel;
-    GtkWidget *urlBox;
-    GtkWidget *spinner;
-    const gchar *url;
-    const gchar *location;
-    guint threadCounter;
+	GtkDialog parent;
+	GtkWidget *urlEntry;
+	GtkWidget *fileChooser;
+	GtkWidget *filenameEntry;
+	GtkWidget *expander;
+	GtkWidget *infoLabel;
+	GtkWidget *urlBox;
+	GtkWidget *spinner;
+	const gchar *url;
+	const gchar *location;
+	guint threadCounter;
 };
 
 struct _WlUrlDialogClass {
-    GtkDialogClass parentClass;
+	GtkDialogClass parentClass;
 };
 
 GType wl_url_dialog_get_type(void) G_GNUC_CONST;
@@ -66,7 +66,7 @@ WlUrlDialog *wl_url_dialog_new();
  * @return 返回GTK_RESPONSE_OK表示用户按下确定
  */
 gint wl_url_dialog_run(WlUrlDialog * dialog,
-                       const gchar * url, const gchar * path);
+					   const gchar * url, const gchar * path);
 /*
  * @description 获取URL和保存路径
  */
