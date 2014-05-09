@@ -357,7 +357,7 @@ static inline void wl_downloader_save_httper(WlDownloader * dl)
 								  wl_httper_get_dl_size(httper));
 			g_key_file_set_uint64(key_file, group, KEY_STATUS,
 								  wl_httper_get_status(httper));
-			g_message("%s", g_key_file_to_data(key_file, NULL, NULL));
+			/*g_message("%s", g_key_file_to_data(key_file, NULL, NULL));*/
 
 		}
 		lp = g_list_next(lp);
@@ -421,7 +421,7 @@ static inline void wl_downloader_load_bter(WlDownloader * dl)
 		for (i = 0; i < count; i++) {
 			const tr_info *info = tr_torrentInfo(tors[i]);
 			wl_downloader_append_bter(dl, tors[i]);
-			g_message("%s", info->originalName);
+			/*g_message("%s", info->originalName);*/
 		}
 	}
 	tr_ctorFree(ctor);
